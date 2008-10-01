@@ -1,0 +1,164 @@
+1000 - minor version`
+2e00 - major version
+
+Constant Pool
+00 uint_count
+00 int_count
+00 double_count
+
+0d string_count
+00 ?? null string?
+11 - length 17?
+456d7074795377662f456d707479537766
+"EmptySwf/EmptySwf"
+
+08
+456d707479537766
+"EmptySwf"
+
+0d
+666c6173682e646973706c6179
+"flash.display"
+
+06
+537072697465
+"Sprite"
+
+3d
+
+473a5c776f726b5c65636c697073655c61727469636c65735c44796e616d6963416374696f6e5363726970745c7372633b3b456d7074795377662e6173
+=> "G:\\work\\eclipse\\articles\\DynamicActionScript\\src;;EmptySwf.as"
+
+06
+4f626a656374
+
+0c
+666c6173682e6576656e7473
+
+0f
+4576656e7444697370617463686572
+
+0d
+446973706c61794f626a656374
+
+11
+496e7465726163746976654f626a656374
+
+16
+446973706c61794f626a656374436f6e7461696e6572
+
+
+# Namespaces
+05
+
+1601
+1604
+1803
+1608
+
+# NS Sets
+00
+
+# Multinames
+08
+
+070103
+070205
+070107
+070409
+07020a
+07020b
+07020c
+
+# Method signatures
+03
+
+00 param_count
+00 return_type
+01 name
+00 flags
+
+00 param_count
+00 return_type
+02 name
+00 flags
+
+00 param_count
+00 return_type
+01 name
+00 flags
+
+# Metadata count
+00
+
+# Class count
+01
+
+# Instance Info
+01 name
+02 super_name
+09 flags sealed, prot ns?
+03 protected namespace
+00 interface count
+# interfaces[interface_count]
+01 iinit
+00 trait_count
+# trait_info[trait_count]
+
+# Class Info
+00 cinit
+00 trait_count
+# traits[trait_count]
+
+# scripts
+01
+
+02 init
+01 trait_count
+# Trait 1
+01 Method
+04 disp_id
+01 method
+
+00
+
+# Method Bodies
+03
+
+00 method
+01 max_stack
+01 local_count
+08 init_scope_depth
+09 max_scope_depth
+03 code_length
+# Code:
+d03047
+00 exception_count
+# exceptions
+00 trait_count
+# traits
+
+01 method
+01 max_stack
+01 local_count
+09 init_scope_depth
+0a max_scope_depth
+0e code_length
+# code:
+f106f007d030f008d04900f00947
+00 exception_count
+00 trait_count
+
+
+02 method
+02 max_stack
+01 local_count
+01 init_scope_depth
+08 max_scope_depth
+2b code_length
+# code:
+d030f106f0056500600330600430600530600630600730600230600258001d1d1d1d1d1d6801f106f00347
+
+00
+00
+

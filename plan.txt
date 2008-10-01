@@ -1,0 +1,34 @@
+
+pretty print as3 so I can read it and understand what's happening
+write some as3, compile it, and look at the output
+
+translate basic ruby calls to as3
+insert byte codes into existing abc_file
+- have to search/update constant_pool - strings, multinames, namespaces
+
+goals:
+- enable code generation from Ruby to AS3 bytecode
+-- implement methods and event handlers
+-- shortcuts for properties and handling changes in commitProperties()
+-- automatic xxChanged:boolean generation and callback in commitProperties() based on some convention
+- enable tx of Flash vector definitions
+-- transform vectors into Degrafa definitions
+- transform fonts into Degrafa definitions
+- pointcut expressions to modify existing methods
+
+Awful things I don't want to think about:
+* converting floating point numbers
+
+
+New plans:
+
+* Implement a bunch of AS3 to support Ruby
+* Implement different send_external on Object.prototype and RObject.prototype
+* Don't use AS3 classes to implement Ruby classes
+* Ruby inheritance hierarchy implemented in plain AS3 to support proper semantics and method dispatch
+
+Problems:
+* How do you "subclass" Sprite; implement a Sprite object in Ruby if you cannot inherit from flash.display.Sprite?
+* method for proxying a typed class? include_typed_class Flash::Display::Sprite
+
+

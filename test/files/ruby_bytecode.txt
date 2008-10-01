@@ -1,0 +1,133 @@
+
+
+class Main < Sprite
+ def initialize
+  graphics.lineStyle(1,1,1)
+  graphics.beginFill(0xFF0000, 1)
+  graphics.moveTo(0,0)
+  graphics.drawRect(0,0, 100,100)
+ end
+end
+
+
+[
+	"YARVInstructionSequence/SimpleDataFormat",
+	1,
+	1,
+	1,
+	{ :arg_size=>0, :local_size=>1, :stack_max=>2 },
+	"<compiled>",
+	"<compiled>",
+	:top,
+	[],
+	0,
+	[],
+	[
+		1,
+		[ :putnil ],
+		:label_1,
+		[ :getinlinecache, nil, :label_8 ],
+		[ :getconstant, :Sprite ],
+		[ :setinlinecache, :label_1 ],
+		:label_8,
+		[ :defineclass, :Main,
+			[
+				"YARVInstructionSequence/SimpleDataFormat",
+				1,
+				1,
+				1,
+				{ :arg_size=>0, :local_size=>1, :stack_max=>1 },
+				"<class:Main>",
+				"<compiled>",
+				:class,
+				[],
+				0,
+				[],
+				[
+					2,
+					[ :putnil ],
+					[ :definemethod, :initialize,
+						[
+							"YARVInstructionSequence/SimpleDataFormat",
+							1,
+							1,
+							1,
+							{:arg_size=>0, :local_size=>1, :stack_max=>5},
+							"initialize",
+							"<compiled>",
+							:method,
+							[],
+							0,
+							[],
+							[
+								3,
+								[:putnil],
+								[:send, :graphics, 0, nil, 24, nil],
+								[:putobject, 1],
+								[:putobject, 1],
+								[:putobject, 1]
+								[:send, :lineStyle, 3, nil, 0, nil],
+								[:pop],
+								4,
+								[:putnil],
+								[:send, :graphics, 0, nil, 24, nil],
+								[:putobject, 16711680],
+								[:putobject, 1],
+								[:send, :beginFill, 2, nil, 0, nil],
+								[:pop],
+								5,
+								[:putnil],
+								[:send, :graphics, 0, nil, 24, nil],
+								[:putobject, 0],
+								[:putobject, 0],
+								[:send, :moveTo, 2, nil, 0, nil],
+								[:pop],
+								6,
+								[:putnil],
+								[:send, :graphics, 0, nil, 24, nil],
+								[:putobject, 0],
+								[:putobject, 0],
+								[:putobject, 100],
+								[:putobject, 100],
+								[:send, :drawRect, 4, nil, 0, nil],
+								[:leave]
+							]
+						],
+						0
+					],
+					[ :putnil ],
+					[ :leave ]
+				]
+			],
+		0
+		],
+		[ :leave ]
+	]
+]
+
+
+
+    4  get_local_0
+    5  push_scope
+    8  get_local_0
+    9  construct_super
+   13  get_lex
+   15  push_byte                 1
+   17  dup
+   18  dup
+   19  call_prop_void            :: with 3 args
+   24  get_lex
+   26  push_int
+   28  push_byte                 1
+   30  call_prop_void            :: with 2 args
+   35  get_lex
+   37  push_byte                 0
+   39  dup
+   40  call_prop_void            :: with 2 args
+   45  get_lex
+   47  push_byte                 0
+   49  dup
+   50  push_byte                 100
+   52  dup
+   53  call_prop_void            :: with 4 args
+   58  return_void
