@@ -3,4 +3,7 @@
 require 'redsun/stringio'
 require 'redsun/abc'
 require 'redsun/tags'
-require 'redsun/parser'
+require 'redsun/swf'
+require 'redsun/reading'
+require 'redsun/writing'
+require 'redsun/generate'

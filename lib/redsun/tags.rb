@@ -234,7 +234,7 @@ module RedSun
       @flags = io.read_ui32
       @name = io.read_string
       abc_data = io.read
-      @abc_file = ABCFile.new
+      @abc_file = ABC::ABCFile.new
       @abc_file.read_from_str(abc_data)
       @contents = nil
     end

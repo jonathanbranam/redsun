@@ -13,13 +13,13 @@ describe "(something)" do
   end
 end
 
-describe RedSun::ABCFile do
+describe RedSun::ABC::ABCFile do
   before(:each) do
     @empty_data = "10002e000000000d0011456d7074795377662f456d70747953776608456d7074795377660d666c6173682e646973706c6179065370726974653d473a5c776f726b5c65636c697073655c61727469636c65735c44796e616d6963416374696f6e5363726970745c7372633b3b456d7074795377662e6173064f626a6563740c666c6173682e6576656e74730f4576656e74446973706174636865720d446973706c61794f626a65637411496e7465726163746976654f626a65637416446973706c61794f626a656374436f6e7461696e6572051601160418031608000807010307020507010707040907020a07020b07020c0300000100000002000000010000010102090300010000000102010104010003000101080903d030470000010101090a0ef106f007d030f008d04900f00947000002020101082bd030f106f0056500600330600430600530600630600730600230600258001d1d1d1d1d1d6801f106f003470000".pack_as_hex
   end
   #describe "(read/write empty swf abc_data)" do
     it "should work" do
-      f = RedSun::ABCFile.new
+      f = RedSun::ABC::ABCFile.new
       f.read_from_str @empty_data
 
       str = f.to_s
@@ -34,7 +34,7 @@ describe RedSun::ABCFile do
 
   #describe "(read empty swf abc_data constant pool)" do
     before(:each) do
-      @f = RedSun::ABCFile.new
+      @f = RedSun::ABC::ABCFile.new
       @f.read_from_str @empty_data
     end
 
@@ -105,14 +105,14 @@ describe RedSun::ABCFile do
       cls = @f.classes[0]
 
       inst.name_index.should == 1
-      inst.name.kind == RedSun::ABCMultiname::MultinameQName
+      inst.name.kind == RedSun::ABC::Multiname::MultinameQName
       inst.name.name_index.should == 3
       inst.name.name.should == "EmptySwf".to_sym
       inst.name.ns.name_index.should == 1
       inst.name.ns.name.should == "".to_sym
 
       inst.super_name_index.should == 2
-      inst.super_name.kind == RedSun::ABCMultiname::MultinameQName
+      inst.super_name.kind == RedSun::ABC::Multiname::MultinameQName
       inst.super_name.name_index.should == 5
       inst.super_name.name.should == "Sprite".to_sym
       inst.super_name.ns.name_index.should == 4
@@ -122,7 +122,7 @@ describe RedSun::ABCFile do
       inst.protected_namespace.name.should == "EmptySwf".to_sym
       inst.protected_namespace.kind.should == 24
 
-      inst.flags.should == RedSun::ABCInstance::Sealed | RedSun::ABCInstance::ProtectedNamespace
+      inst.flags.should == RedSun::ABC::Instance::Sealed | RedSun::ABC::Instance::ProtectedNamespace
       inst.interfaces.length.should == 0
 
       inst.iinit_index.should == 1
@@ -164,7 +164,7 @@ describe RedSun::ABCFile do
 
       cp.multinames.length.should == 8
       cp.multinames.each do |m|
-        m.kind.should == RedSun::ABCMultiname::MultinameQName if m.kind
+        m.kind.should == RedSun::ABC::Multiname::MultinameQName if m.kind
       end
       cp.multinames[1].name_index.should == 3
       cp.multinames[1].name.should == "EmptySwf".to_sym
@@ -188,10 +188,10 @@ describe RedSun::ABCFile do
   #end
 end
 
-describe RedSun::ConstantPool do
+describe RedSun::ABC::ConstantPool do
   it "should find no constants " do
     data = "00000000000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.ints[0].should == nil
 
@@ -211,13 +211,13 @@ describe RedSun::ConstantPool do
     cp.ns_sets[0].should == nil
 
     cp.multinames.length.should == 1
-    cp.multinames[0].class.should == RedSun::ABCMultiname
+    cp.multinames[0].class.should == RedSun::ABC::Multiname
 
   end
 
   it "should read ints" do
     data = "0500017F7E000000000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
 
     cp.ints.length.should == 5
     cp.ints.length.should == 5
@@ -230,7 +230,7 @@ describe RedSun::ConstantPool do
 
   it "should read uints" do
     data = "000500017F7E0000000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
 
     cp.ints.length.should == 1
 
@@ -245,7 +245,7 @@ describe RedSun::ConstantPool do
 
   it "should read doubles" do
     data = "000002010203040506070800000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
 
     cp.ints.length.should == 1
     cp.uints.length.should == 1
@@ -260,7 +260,7 @@ describe RedSun::ConstantPool do
       "040001".pack_as_hex+"A"+
       "06".pack_as_hex + "hello!" +
       "000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.uints.length.should == 1
     cp.doubles.length.should == 1
@@ -274,7 +274,7 @@ describe RedSun::ConstantPool do
 
   it "should read empty string" do
     data = "0000000200000000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.uints.length.should == 1
     cp.doubles.length.should == 1
@@ -288,7 +288,7 @@ describe RedSun::ConstantPool do
   it "should read namespaces" do
     data = "000000020141".pack_as_hex+
       "0201010000".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.uints.length.should == 1
     cp.doubles.length.should == 1
@@ -306,7 +306,7 @@ describe RedSun::ConstantPool do
     data = "0000000301410142".pack_as_hex+
       "0301010102".pack_as_hex+
       "0202010200".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.uints.length.should == 1
     cp.doubles.length.should == 1
@@ -334,7 +334,7 @@ describe RedSun::ConstantPool do
       "11".pack_as_hex+
       "090101".pack_as_hex+
       "1B01".pack_as_hex
-    cp = RedSun::ConstantPool.new RedSun::StringSwfIO.new(data)
+    cp = RedSun::ABC::ConstantPool.new RedSun::StringSwfIO.new(data)
     cp.ints.length.should == 1
     cp.uints.length.should == 1
     cp.doubles.length.should == 1
@@ -343,21 +343,21 @@ describe RedSun::ConstantPool do
     cp.ns_sets.length.should == 2
 
     cp.multinames.length.should == 6
-    cp.multinames[0].class.should == RedSun::ABCMultiname
+    cp.multinames[0].class.should == RedSun::ABC::Multiname
 
-    cp.multinames[1].kind.should == RedSun::ABCMultiname::MultinameQName
+    cp.multinames[1].kind.should == RedSun::ABC::Multiname::MultinameQName
     cp.multinames[1].ns_index.should == 1
     cp.multinames[1].ns.name.should == "A".to_sym
     cp.multinames[1].name_index.should == 1
     cp.multinames[1].name.should == "A".to_sym
 
-    cp.multinames[2].kind.should == RedSun::ABCMultiname::MultinameRTQName
+    cp.multinames[2].kind.should == RedSun::ABC::Multiname::MultinameRTQName
     cp.multinames[2].name_index.should == 2
     cp.multinames[2].name.should == "B".to_sym
 
-    cp.multinames[3].kind.should == RedSun::ABCMultiname::MultinameRTQNameL
+    cp.multinames[3].kind.should == RedSun::ABC::Multiname::MultinameRTQNameL
 
-    cp.multinames[4].kind.should == RedSun::ABCMultiname::Multiname
+    cp.multinames[4].kind.should == RedSun::ABC::Multiname::MultinameC
     cp.multinames[4].ns_set_index.should == 1
     cp.multinames[4].ns_set.ns_indices.length.should == 2
     cp.multinames[4].ns_set.ns[0].name.should == "A".to_sym
@@ -365,7 +365,7 @@ describe RedSun::ConstantPool do
     cp.multinames[4].name_index.should == 1
     cp.multinames[4].name.should == "A".to_sym
 
-    cp.multinames[5].kind.should == RedSun::ABCMultiname::MultinameL
+    cp.multinames[5].kind.should == RedSun::ABC::Multiname::MultinameL
     cp.multinames[5].ns_set_index.should == 1
     cp.multinames[5].ns_set.ns_indices.length.should == 2
     cp.multinames[5].ns_set.ns[0].name.should == "A".to_sym
@@ -477,7 +477,7 @@ describe RedSun::Swf do
     s.read_from @empty_swf_contents
 
     cons = s.tags[8].abc_file.find_method "EmptySwf/EmptySwf".to_sym
-    cons.class.should == RedSun::ABCMethod
+    cons.class.should == RedSun::ABC::Method
     cons.name.should == "EmptySwf/EmptySwf".to_sym
     cons.name_index.should == 2
 
@@ -1358,13 +1358,13 @@ describe "stub swf generation" do
 
     cp = t.abc_file.constant_pool
 
-    namespaces.include?(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("".to_sym))).should == true
-    namespaces.include?(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("flash.display".to_sym))).should == true
-    namespaces.include?(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("flash.events".to_sym))).should == true
-    namespaces.include?(RedSun::ABCNamespace.new(RedSun::ABCNamespace::ProtectedNamespace, cp.find_string("EmptySwf".to_sym))).should == true
+    namespaces.include?(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("".to_sym))).should == true
+    namespaces.include?(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("flash.display".to_sym))).should == true
+    namespaces.include?(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("flash.events".to_sym))).should == true
+    namespaces.include?(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::ProtectedNamespace, cp.find_string("EmptySwf".to_sym))).should == true
 
     # There are more namespace, but we're stopping here for now
-    #namespaces.include?(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PrivateNs, cp.find_string("EmptySwf".to_sym))).should == true
+    #namespaces.include?(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PrivateNs, cp.find_string("EmptySwf".to_sym))).should == true
 
     #namespaces.length.should == 6
 
@@ -1376,20 +1376,20 @@ describe "stub swf generation" do
     t = @swf.tag_select(RedSun::DoABCTag)[0]
     multinames = t.abc_file.multinames
     multinames.length.should == 8
-    multinames[0].class.should == RedSun::ABCMultiname
+    multinames[0].class.should == RedSun::ABC::Multiname
 
     cp = t.abc_file.constant_pool
-    top_ns = cp.find_namespace(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("".to_sym)))
-    display = cp.find_namespace(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("flash.display".to_sym)))
-    events = cp.find_namespace(RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, cp.find_string("flash.events".to_sym)))
+    top_ns = cp.find_namespace(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("".to_sym)))
+    display = cp.find_namespace(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("flash.display".to_sym)))
+    events = cp.find_namespace(RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, cp.find_string("flash.events".to_sym)))
 
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("EmptySwf".to_sym), top_ns)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("Object".to_sym), top_ns)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("EventDispatcher".to_sym), events)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("DisplayObject".to_sym), display)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("InteractiveObject".to_sym), display)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("DisplayObjectContainer".to_sym), display)).should == true
-    multinames.include?(RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, cp.find_string("Sprite".to_sym), display)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("EmptySwf".to_sym), top_ns)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("Object".to_sym), top_ns)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("EventDispatcher".to_sym), events)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("DisplayObject".to_sym), display)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("InteractiveObject".to_sym), display)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("DisplayObjectContainer".to_sym), display)).should == true
+    multinames.include?(RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, cp.find_string("Sprite".to_sym), display)).should == true
 
   end
 
@@ -1412,10 +1412,10 @@ end
 
 describe "namespace, sets, multiname equality" do
   it "namespaces should be equal" do
-    ns = RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, 1)
-    ns2 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, 1)
-    ns3 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::ProtectedNamespace, 1)
-    ns4 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::ProtectedNamespace, 1)
+    ns = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, 1)
+    ns2 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, 1)
+    ns3 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::ProtectedNamespace, 1)
+    ns4 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::ProtectedNamespace, 1)
     ns.should == ns
     ns.should == ns2
     ns2.should == ns
@@ -1430,10 +1430,10 @@ describe "namespace, sets, multiname equality" do
     (ns3 != ns4).should == false
   end
   it "namespaces should not be equal" do
-    ns = RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, 1)
-    ns2 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace, 2)
-    ns3 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::ProtectedNamespace, 2)
-    ns4 = RedSun::ABCNamespace.new(RedSun::ABCNamespace::StaticProtectedNs, 1)
+    ns = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, 1)
+    ns2 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace, 2)
+    ns3 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::ProtectedNamespace, 2)
+    ns4 = RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::StaticProtectedNs, 1)
     (ns == ns2).should == false
     (ns != ns2).should == true
     (ns == ns3).should == false
@@ -1448,10 +1448,10 @@ describe "namespace, sets, multiname equality" do
     (ns3 != ns4).should == true
   end
   it "namespace sets should be equal" do
-    ns = RedSun::ABCNsSet.new([0,1,2])
-    ns2 = RedSun::ABCNsSet.new([0,1,2])
-    ns3 = RedSun::ABCNsSet.new([2,1,3])
-    ns4 = RedSun::ABCNsSet.new([2,1,3])
+    ns = RedSun::ABC::NsSet.new([0,1,2])
+    ns2 = RedSun::ABC::NsSet.new([0,1,2])
+    ns3 = RedSun::ABC::NsSet.new([2,1,3])
+    ns4 = RedSun::ABC::NsSet.new([2,1,3])
     ns.should == ns
     ns.should == ns2
     ns2.should == ns
@@ -1466,10 +1466,10 @@ describe "namespace, sets, multiname equality" do
     (ns3 != ns4).should == false
   end
   it "namespace sets should not be equal" do
-    ns = RedSun::ABCNsSet.new([0,1,2])
-    ns2 = RedSun::ABCNsSet.new([2,1,0])
-    ns3 = RedSun::ABCNsSet.new([0,1,3])
-    ns4 = RedSun::ABCNsSet.new([0])
+    ns = RedSun::ABC::NsSet.new([0,1,2])
+    ns2 = RedSun::ABC::NsSet.new([2,1,0])
+    ns3 = RedSun::ABC::NsSet.new([0,1,3])
+    ns4 = RedSun::ABC::NsSet.new([0])
     (ns == ns2).should == false
     (ns != ns2).should == true
     (ns == ns3).should == false
@@ -1484,10 +1484,10 @@ describe "namespace, sets, multiname equality" do
     (ns3 != ns4).should == true
   end
   it "multinames should be equal" do
-    ns = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, 1, 4)
-    ns2 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, 1, 4)
-    ns3 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::Multiname, 2, nil, 3)
-    ns4 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::Multiname, 2, nil, 3)
+    ns = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, 1, 4)
+    ns2 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, 1, 4)
+    ns3 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameC, 2, nil, 3)
+    ns4 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameC, 2, nil, 3)
     ns.should == ns
     ns.should == ns2
     ns2.should == ns
@@ -1502,10 +1502,10 @@ describe "namespace, sets, multiname equality" do
     (ns3 != ns4).should == false
   end
   it "multinames should not be equal" do
-    ns = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQName, 1, 4)
-    ns2 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameQNameA, 1, 4)
-    ns3 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameRTQNameL)
-    ns4 = RedSun::ABCMultiname.new(RedSun::ABCMultiname::MultinameL, nil, nil, 4)
+    ns = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQName, 1, 4)
+    ns2 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameQNameA, 1, 4)
+    ns3 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameRTQNameL)
+    ns4 = RedSun::ABC::Multiname.new(RedSun::ABC::Multiname::MultinameL, nil, nil, 4)
     (ns == ns2).should == false
     (ns != ns2).should == true
     (ns == ns3).should == false
@@ -1523,7 +1523,7 @@ end
 
 describe "abc file basic creation" do
   before(:each) do
-    @af = RedSun::ABCFile.new
+    @af = RedSun::ABC::ABCFile.new
     @empty_swf_ruby = <<HERE
 class EmptySwf < Flash::Display::Sprite
   def initialize
@@ -1543,12 +1543,12 @@ HERE
 
     inst.name_index.nil?.should == false
     inst.name.nil?.should == false
-    inst.name.kind.should == RedSun::ABCMultiname::MultinameQName
+    inst.name.kind.should == RedSun::ABC::Multiname::MultinameQName
     inst.name.name.nil?.should == false
     inst.name.name.should == :EmptySwf
     inst.name.name_index.should == @af.constant_pool.find_string(:EmptySwf)
     inst.name.ns.nil?.should == false
-    inst.name.ns.kind.should == RedSun::ABCNamespace::PackageNamespace
+    inst.name.ns.kind.should == RedSun::ABC::Namespace::PackageNamespace
     inst.name.ns.name.nil?.should == false
     inst.name.ns.name.should == "".to_sym
     inst.name.ns.name_index.should == @af.constant_pool.find_string("".to_sym)
@@ -1559,12 +1559,12 @@ HERE
 
     inst.super_name_index.nil?.should == false
     inst.super_name.nil?.should == false
-    inst.super_name.kind.should == RedSun::ABCMultiname::MultinameQName
+    inst.super_name.kind.should == RedSun::ABC::Multiname::MultinameQName
     inst.super_name.name.nil?.should == false
     inst.super_name.name.should == :Sprite
     inst.super_name.name_index.should == @af.constant_pool.find_string(:Sprite)
     inst.super_name.ns.nil?.should == false
-    inst.super_name.ns.kind.should == RedSun::ABCNamespace::PackageNamespace
+    inst.super_name.ns.kind.should == RedSun::ABC::Namespace::PackageNamespace
     inst.super_name.ns.name.nil?.should == false
     inst.super_name.ns.name.should == "flash.display".to_sym
     inst.super_name.ns.name_index.should == @af.constant_pool.find_string("flash.display".to_sym)
@@ -1600,23 +1600,23 @@ HERE
     inst.iinit.body.init_scope_depth.should == 0
     inst.iinit.body.max_scope_depth.should == 1
 
-    inst.iinit.body.code.codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    inst.iinit.body.code.codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    inst.iinit.body.code.codes[2].opcode.should == RedSun::ABCPushFalse::Opcode
-    inst.iinit.body.code.codes[3].opcode.should == RedSun::ABCGetLocal0::Opcode
-    inst.iinit.body.code.codes[4].opcode.should == RedSun::ABCConstructSuper::Opcode
+    inst.iinit.body.code.codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    inst.iinit.body.code.codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    inst.iinit.body.code.codes[2].opcode.should == RedSun::ABC::PushFalse::Opcode
+    inst.iinit.body.code.codes[3].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    inst.iinit.body.code.codes[4].opcode.should == RedSun::ABC::ConstructSuper::Opcode
     inst.iinit.body.code.codes[4].arg_count.should == 0
-    inst.iinit.body.code.codes[5].opcode.should == RedSun::ABCReturnVoid::Opcode
+    inst.iinit.body.code.codes[5].opcode.should == RedSun::ABC::ReturnVoid::Opcode
     inst.iinit.body.code.codes.length.should == 6
   end
   it "should setup basic instance settings" do
     inst = @af.instances[0]
 
-    inst.flags.should == RedSun::ABCInstance::ProtectedNamespace
+    inst.flags.should == RedSun::ABC::Instance::ProtectedNamespace
 
     inst.protected_namespace_index.nil?.should == false
     inst.protected_namespace.nil?.should == false
-    inst.protected_namespace.kind.should == RedSun::ABCNamespace::ProtectedNamespace
+    inst.protected_namespace.kind.should == RedSun::ABC::Namespace::ProtectedNamespace
     inst.protected_namespace.name.should == :EmptySwf
 
     inst.interface_indices.length.should == 0
@@ -1661,9 +1661,9 @@ HERE
     cls.cinit.body.max_scope_depth.should == 1
 
     cls.cinit.body.code.codes.length.should == 3
-    cls.cinit.body.code.codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    cls.cinit.body.code.codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    cls.cinit.body.code.codes[2].opcode.should == RedSun::ABCReturnVoid::Opcode
+    cls.cinit.body.code.codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    cls.cinit.body.code.codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    cls.cinit.body.code.codes[2].opcode.should == RedSun::ABC::ReturnVoid::Opcode
   end
   it "should have initialized a doc class script" do
     scr = @af.scripts[0]
@@ -1676,23 +1676,23 @@ HERE
     trait.has_metadata.should == false
     trait.final.should == false
     trait.override.should == false
-    trait.type.should == RedSun::ABCTrait::ClassId
+    trait.type.should == RedSun::ABC::Trait::ClassId
 
     # Trait name same as class name
     trait.name_index.nil?.should == false
     trait.name.nil?.should == false
-    trait.name.kind.should == RedSun::ABCMultiname::MultinameQName
+    trait.name.kind.should == RedSun::ABC::Multiname::MultinameQName
     trait.name.name.nil?.should == false
     trait.name.name.should == :EmptySwf
     trait.name.name_index.should == @af.constant_pool.find_string(:EmptySwf)
     trait.name.ns.nil?.should == false
-    trait.name.ns.kind.should == RedSun::ABCNamespace::PackageNamespace
+    trait.name.ns.kind.should == RedSun::ABC::Namespace::PackageNamespace
     trait.name.ns.name.nil?.should == false
     trait.name.ns.name.should == "".to_sym
     trait.name.ns.name_index.should == @af.constant_pool.find_string("".to_sym)
 
     trait.data.nil?.should == false
-    trait.data.class.should == RedSun::TraitClass
+    trait.data.class.should == RedSun::ABC::TraitClass
     trait.data.slot_id.should == 1
     trait.data.class_index.should == 0
 
@@ -1728,14 +1728,14 @@ HERE
 
     codes = scr.init.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    codes[2].opcode.should == RedSun::ABCGetScopeObject::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    codes[2].opcode.should == RedSun::ABC::GetScopeObject::Opcode
     codes[2].index.should == 0
 
     3.step(13,2) do |i|
-      codes[i].opcode.should == RedSun::ABCGetLex::Opcode
-      codes[i+1].opcode.should == RedSun::ABCPushScope::Opcode
+      codes[i].opcode.should == RedSun::ABC::GetLex::Opcode
+      codes[i+1].opcode.should == RedSun::ABC::PushScope::Opcode
     end
 
     codes[3].property.name.should == :Object
@@ -1754,25 +1754,25 @@ HERE
     codes[13].property.name.should == :Sprite
     codes[13].property.ns.name.should == fd
 
-    codes[15].opcode.should == RedSun::ABCGetLex::Opcode
+    codes[15].opcode.should == RedSun::ABC::GetLex::Opcode
     codes[15].property.name.should == :Sprite
     codes[15].property.ns.name.should == fd
-    codes[16].opcode.should == RedSun::ABCNewClass::Opcode
+    codes[16].opcode.should == RedSun::ABC::NewClass::Opcode
     codes[16].index.should == 0
 
     17.upto(22) do |i|
-      codes[i].opcode.should == RedSun::ABCPopScope::Opcode
+      codes[i].opcode.should == RedSun::ABC::PopScope::Opcode
     end
 
-    codes[23].opcode.should == RedSun::ABCInitProperty::Opcode
-    codes[24].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[23].opcode.should == RedSun::ABC::InitProperty::Opcode
+    codes[24].opcode.should == RedSun::ABC::ReturnVoid::Opcode
     codes.length.should == 25
   end
 end
 
 describe "typed method compiler" do
   before(:each) do
-    @af = RedSun::ABCFile.new
+    @af = RedSun::ABC::ABCFile.new
     @empty_swf_ruby = <<HERE
 class Traits < Flash::Display::Sprite
   def initialize
@@ -1797,33 +1797,33 @@ HERE
 
     codes = inst.iinit.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    codes[2].opcode.should == RedSun::ABCPushFalse::Opcode
-    codes[3].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[4].opcode.should == RedSun::ABCConstructSuper::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    codes[2].opcode.should == RedSun::ABC::PushFalse::Opcode
+    codes[3].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[4].opcode.should == RedSun::ABC::ConstructSuper::Opcode
     codes[4].arg_count.should == 0
-    codes[5].opcode.should == RedSun::ABCPop::Opcode
+    codes[5].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[6].opcode.should == RedSun::ABCFindPropStrict::Opcode
-    codes[6].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[6].opcode.should == RedSun::ABC::FindPropStrict::Opcode
+    codes[6].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[6].property.ns_index.should == nil
     codes[6].property.name.should == :hasEventListener
     verify_trait_ns_set(codes[6].property.ns_set.ns)
 
-    codes[7].opcode.should == RedSun::ABCPushString::Opcode
+    codes[7].opcode.should == RedSun::ABC::PushString::Opcode
     codes[7].string.should == :bar
 
-    codes[8].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[8].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[8].arg_count.should == 1
-    codes[8].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[8].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[8].property.ns_index.should == nil
     codes[8].property.name.should == :hasEventListener
     verify_trait_ns_set(codes[8].property.ns_set.ns)
 
-    codes[9].opcode.should == RedSun::ABCCoerceA::Opcode
+    codes[9].opcode.should == RedSun::ABC::CoerceA::Opcode
 
-    codes[10].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[10].opcode.should == RedSun::ABC::ReturnVoid::Opcode
 
     inst.iinit.body.code.codes.length.should == 11
   end
@@ -1843,29 +1843,29 @@ def verify_trait_ns_set(namespaces, additional=[])
   # StaticProtectedNs "flash.display:DisplayObject"
   # StaticProtectedNs "flash.events:EventDispatcher"
   # StaticProtectedNs "Object"
-  namespaces[0].kind.should == RedSun::ABCNamespace::PrivateNs
+  namespaces[0].kind.should == RedSun::ABC::Namespace::PrivateNs
   namespaces[0].name.should == "Traits".to_sym
-  namespaces[1].kind.should == RedSun::ABCNamespace::PrivateNs
+  namespaces[1].kind.should == RedSun::ABC::Namespace::PrivateNs
   namespaces[1].name.should == "file.as".to_sym
-  namespaces[2].kind.should == RedSun::ABCNamespace::PackageNamespace
+  namespaces[2].kind.should == RedSun::ABC::Namespace::PackageNamespace
   namespaces[2].name.should == "".to_sym
-  namespaces[3].kind.should == RedSun::ABCNamespace::PackageInternalNs
+  namespaces[3].kind.should == RedSun::ABC::Namespace::PackageInternalNs
   namespaces[3].name.should == "".to_sym
-  namespaces[4].kind.should == RedSun::ABCNamespace::ProtectedNamespace
+  namespaces[4].kind.should == RedSun::ABC::Namespace::ProtectedNamespace
   namespaces[4].name.should == "Traits".to_sym
-  namespaces[5].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[5].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[5].name.should == "Traits".to_sym
-  namespaces[6].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[6].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[6].name.should == "flash.display:Sprite".to_sym
-  namespaces[7].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[7].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[7].name.should == "flash.display:DisplayObjectContainer".to_sym
-  namespaces[8].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[8].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[8].name.should == "flash.display:InteractiveObject".to_sym
-  namespaces[9].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[9].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[9].name.should == "flash.display:DisplayObject".to_sym
-  namespaces[10].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[10].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[10].name.should == "flash.events:EventDispatcher".to_sym
-  namespaces[11].kind.should == RedSun::ABCNamespace::StaticProtectedNs
+  namespaces[11].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
   namespaces[11].name.should == "Object".to_sym
   num = 12
   additional.each do |o|
@@ -1877,7 +1877,7 @@ end
 
 describe "typed property compiler" do
   before(:each) do
-    @af = RedSun::ABCFile.new
+    @af = RedSun::ABC::ABCFile.new
     @empty_swf_ruby = <<HERE
 class Traits < Flash::Display::Sprite
   def initialize
@@ -1904,81 +1904,81 @@ HERE
 
     codes = inst.iinit.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    codes[2].opcode.should == RedSun::ABCPushFalse::Opcode
-    codes[3].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[4].opcode.should == RedSun::ABCConstructSuper::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    codes[2].opcode.should == RedSun::ABC::PushFalse::Opcode
+    codes[3].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[4].opcode.should == RedSun::ABC::ConstructSuper::Opcode
     codes[4].arg_count.should == 0
-    codes[5].opcode.should == RedSun::ABCPop::Opcode
+    codes[5].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[6].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[6].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[6].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[6].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[6].property.ns_index.should == nil
     codes[6].property.name.should == :graphics
     verify_trait_ns_set(codes[6].property.ns_set.ns)
 
-    codes[7].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[7].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[7].value.should == 1
-    codes[8].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[8].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[8].value.should == 1
-    codes[9].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[9].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[9].value.should == 1
 
-    codes[10].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[10].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[10].arg_count.should == 3
-    codes[10].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[10].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[10].property.ns_index.should == nil
     codes[10].property.name.should == :lineStyle
     verify_trait_ns_set(codes[10].property.ns_set.ns)
-    codes[11].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[12].opcode.should == RedSun::ABCPop::Opcode
+    codes[11].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[12].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[13].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[13].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[13].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[13].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[13].property.ns_index.should == nil
     codes[13].property.name.should == :graphics
     verify_trait_ns_set(codes[13].property.ns_set.ns)
 
-    codes[14].opcode.should == RedSun::ABCPushInt::Opcode
+    codes[14].opcode.should == RedSun::ABC::PushInt::Opcode
     codes[14].value.should == 0xFF00FF
-    codes[15].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[15].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[15].value.should == 1
 
-    codes[16].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[16].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[16].arg_count.should == 2
-    codes[16].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[16].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[16].property.ns_index.should == nil
     codes[16].property.name.should == :beginFill
     verify_trait_ns_set(codes[16].property.ns_set.ns)
-    codes[17].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[18].opcode.should == RedSun::ABCPop::Opcode
+    codes[17].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[18].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[19].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[19].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[19].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[19].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[19].property.ns_index.should == nil
     codes[19].property.name.should == :graphics
     verify_trait_ns_set(codes[19].property.ns_set.ns)
 
-    codes[20].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[20].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[20].value.should == 5
-    codes[21].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[21].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[21].value.should == 5
-    codes[22].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[22].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[22].value.should == 100
-    codes[23].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[23].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[23].value.should == 100
 
-    codes[24].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[24].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[24].arg_count.should == 4
-    codes[24].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[24].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[24].property.ns_index.should == nil
     codes[24].property.name.should == :drawRect
     verify_trait_ns_set(codes[24].property.ns_set.ns)
-    codes[25].opcode.should == RedSun::ABCCoerceA::Opcode
-    #codes[26].opcode.should == RedSun::ABCPop::Opcode
+    codes[25].opcode.should == RedSun::ABC::CoerceA::Opcode
+    #codes[26].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[26].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[26].opcode.should == RedSun::ABC::ReturnVoid::Opcode
 
     codes.length.should == 27
   end
@@ -1987,7 +1987,7 @@ end
 
 describe "compiler" do
   before(:each) do
-    @af = RedSun::ABCFile.new
+    @af = RedSun::ABC::ABCFile.new
     @empty_swf_ruby = <<HERE
 class Traits < Flash::Display::Sprite
   def initialize
@@ -2017,137 +2017,137 @@ HERE
 
     codes = inst.iinit.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    codes[2].opcode.should == RedSun::ABCPushFalse::Opcode
-    codes[3].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[4].opcode.should == RedSun::ABCConstructSuper::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    codes[2].opcode.should == RedSun::ABC::PushFalse::Opcode
+    codes[3].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[4].opcode.should == RedSun::ABC::ConstructSuper::Opcode
     codes[4].arg_count.should == 0
-    codes[5].opcode.should == RedSun::ABCPop::Opcode
+    codes[5].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[6].opcode.should == RedSun::ABCFindPropStrict::Opcode
-    codes[6].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[6].opcode.should == RedSun::ABC::FindPropStrict::Opcode
+    codes[6].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[6].property.ns_index.should == nil
     codes[6].property.name.should == :Sprite
     verify_trait_ns_set(codes[6].property.ns_set.ns,
-          [RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace,
+          [RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace,
               @af.constant_pool.find_string("flash.display".to_sym))
           ])
 
-    codes[7].opcode.should == RedSun::ABCConstructProp::Opcode
+    codes[7].opcode.should == RedSun::ABC::ConstructProp::Opcode
     codes[7].arg_count.should == 0
-    codes[7].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[7].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[7].property.ns_index.should == nil
     codes[7].property.name.should == :Sprite
     verify_trait_ns_set(codes[7].property.ns_set.ns,
-          [RedSun::ABCNamespace.new(RedSun::ABCNamespace::PackageNamespace,
+          [RedSun::ABC::Namespace.new(RedSun::ABC::Namespace::PackageNamespace,
               @af.constant_pool.find_string("flash.display".to_sym))
           ])
-    codes[8].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[9].opcode.should == RedSun::ABCSetLocal1::Opcode
+    codes[8].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[9].opcode.should == RedSun::ABC::SetLocal1::Opcode
 
-    codes[10].opcode.should == RedSun::ABCGetLocal1::Opcode
-    codes[11].opcode.should == RedSun::ABCGetProperty::Opcode
-    codes[11].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[10].opcode.should == RedSun::ABC::GetLocal1::Opcode
+    codes[11].opcode.should == RedSun::ABC::GetProperty::Opcode
+    codes[11].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[11].property.ns_index.should == nil
     codes[11].property.name.should == :graphics
     verify_trait_ns_set(codes[11].property.ns_set.ns)
 
-    codes[12].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[12].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[12].value.should == 1
-    codes[13].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[13].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[13].value.should == 1
-    codes[14].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[14].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[14].value.should == 1
 
-    codes[15].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[15].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[15].arg_count.should == 3
-    codes[15].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[15].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[15].property.ns_index.should == nil
     codes[15].property.name.should == :lineStyle
     verify_trait_ns_set(codes[15].property.ns_set.ns)
-    codes[16].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[17].opcode.should == RedSun::ABCPop::Opcode
+    codes[16].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[17].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[18].opcode.should == RedSun::ABCGetLocal1::Opcode
-    codes[19].opcode.should == RedSun::ABCGetProperty::Opcode
-    codes[19].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[18].opcode.should == RedSun::ABC::GetLocal1::Opcode
+    codes[19].opcode.should == RedSun::ABC::GetProperty::Opcode
+    codes[19].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[19].property.ns_index.should == nil
     codes[19].property.name.should == :graphics
     verify_trait_ns_set(codes[19].property.ns_set.ns)
 
-    codes[20].opcode.should == RedSun::ABCPushInt::Opcode
+    codes[20].opcode.should == RedSun::ABC::PushInt::Opcode
     codes[20].value.should == 0x005500
-    codes[21].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[21].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[21].value.should == 1
 
-    codes[22].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[22].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[22].arg_count.should == 2
-    codes[22].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[22].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[22].property.ns_index.should == nil
     codes[22].property.name.should == :beginFill
     verify_trait_ns_set(codes[22].property.ns_set.ns)
-    codes[23].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[24].opcode.should == RedSun::ABCPop::Opcode
+    codes[23].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[24].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[25].opcode.should == RedSun::ABCGetLocal1::Opcode
-    codes[26].opcode.should == RedSun::ABCGetProperty::Opcode
-    codes[26].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[25].opcode.should == RedSun::ABC::GetLocal1::Opcode
+    codes[26].opcode.should == RedSun::ABC::GetProperty::Opcode
+    codes[26].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[26].property.ns_index.should == nil
     codes[26].property.name.should == :graphics
     verify_trait_ns_set(codes[26].property.ns_set.ns)
 
-    codes[27].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[27].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[27].value.should == 50
-    codes[28].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[28].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[28].value.should == 50
-    codes[29].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[29].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[29].value.should == 45
 
-    codes[30].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[30].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[30].arg_count.should == 3
-    codes[30].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[30].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[30].property.ns_index.should == nil
     codes[30].property.name.should == :drawCircle
     verify_trait_ns_set(codes[30].property.ns_set.ns)
-    codes[31].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[32].opcode.should == RedSun::ABCPop::Opcode
+    codes[31].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[32].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[33].opcode.should == RedSun::ABCGetLocal1::Opcode
-    codes[34].opcode.should == RedSun::ABCGetProperty::Opcode
-    codes[34].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[33].opcode.should == RedSun::ABC::GetLocal1::Opcode
+    codes[34].opcode.should == RedSun::ABC::GetProperty::Opcode
+    codes[34].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[34].property.ns_index.should == nil
     codes[34].property.name.should == :graphics
     verify_trait_ns_set(codes[34].property.ns_set.ns)
 
-    codes[35].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[35].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[35].arg_count.should == 0
-    codes[35].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[35].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[35].property.ns_index.should == nil
     codes[35].property.name.should == :endFill
     verify_trait_ns_set(codes[35].property.ns_set.ns)
-    codes[36].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[37].opcode.should == RedSun::ABCPop::Opcode
+    codes[36].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[37].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[38].opcode.should == RedSun::ABCFindPropStrict::Opcode
-    codes[38].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[38].opcode.should == RedSun::ABC::FindPropStrict::Opcode
+    codes[38].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[38].property.ns_index.should == nil
     codes[38].property.name.should == :addChild
     verify_trait_ns_set(codes[38].property.ns_set.ns)
 
-    codes[39].opcode.should == RedSun::ABCGetLocal1::Opcode
-    codes[40].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[39].opcode.should == RedSun::ABC::GetLocal1::Opcode
+    codes[40].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[40].arg_count.should == 1
-    codes[40].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[40].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[40].property.ns_index.should == nil
     codes[40].property.name.should == :addChild
     verify_trait_ns_set(codes[40].property.ns_set.ns)
 
 
-    codes[41].opcode.should == RedSun::ABCCoerceA::Opcode
-    #codes[26].opcode.should == RedSun::ABCPop::Opcode
+    codes[41].opcode.should == RedSun::ABC::CoerceA::Opcode
+    #codes[26].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[42].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[42].opcode.should == RedSun::ABC::ReturnVoid::Opcode
 
     codes.length.should == 43
   end
@@ -2156,7 +2156,7 @@ end
 
 describe "compiler" do
   before(:each) do
-    @af = RedSun::ABCFile.new
+    @af = RedSun::ABC::ABCFile.new
     @empty_swf_ruby = <<HERE
 class Traits < Flash::Display::Sprite
   def initialize
@@ -2187,60 +2187,60 @@ HERE
 
     codes = inst.iinit.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
-    codes[2].opcode.should == RedSun::ABCPushFalse::Opcode
-    codes[3].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[4].opcode.should == RedSun::ABCConstructSuper::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
+    codes[2].opcode.should == RedSun::ABC::PushFalse::Opcode
+    codes[3].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[4].opcode.should == RedSun::ABC::ConstructSuper::Opcode
     codes[4].arg_count.should == 0
-    codes[5].opcode.should == RedSun::ABCPop::Opcode
+    codes[5].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[6].opcode.should == RedSun::ABCFindPropStrict::Opcode
-    codes[6].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[6].opcode.should == RedSun::ABC::FindPropStrict::Opcode
+    codes[6].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[6].property.ns_index.should == nil
     codes[6].property.name.should == :draw
     verify_trait_ns_set(codes[6].property.ns_set.ns)
 
-    codes[7].opcode.should == RedSun::ABCPushInt::Opcode
+    codes[7].opcode.should == RedSun::ABC::PushInt::Opcode
     codes[7].value.should == 0x334400
-    codes[8].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[8].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[8].value.should == 10
-    codes[9].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[9].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[9].value.should == 20
 
-    codes[10].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[10].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[10].arg_count.should == 3
-    codes[10].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[10].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[10].property.ns_index.should == nil
     codes[10].property.name.should == :draw
     verify_trait_ns_set(codes[10].property.ns_set.ns)
-    codes[11].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[12].opcode.should == RedSun::ABCPop::Opcode
+    codes[11].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[12].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[13].opcode.should == RedSun::ABCFindPropStrict::Opcode
-    codes[13].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[13].opcode.should == RedSun::ABC::FindPropStrict::Opcode
+    codes[13].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[13].property.ns_index.should == nil
     codes[13].property.name.should == :draw
     verify_trait_ns_set(codes[13].property.ns_set.ns)
 
-    codes[14].opcode.should == RedSun::ABCPushInt::Opcode
+    codes[14].opcode.should == RedSun::ABC::PushInt::Opcode
     codes[14].value.should == 0x336655
-    codes[15].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[15].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[15].value.should == 60
-    codes[16].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[16].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[16].value.should == 20
 
-    codes[17].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[17].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[17].arg_count.should == 3
-    codes[17].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[17].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[17].property.ns_index.should == nil
     codes[17].property.name.should == :draw
     verify_trait_ns_set(codes[17].property.ns_set.ns)
 
-    codes[18].opcode.should == RedSun::ABCCoerceA::Opcode
-    #codes[19].opcode.should == RedSun::ABCPop::Opcode
+    codes[18].opcode.should == RedSun::ABC::CoerceA::Opcode
+    #codes[19].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[19].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[19].opcode.should == RedSun::ABC::ReturnVoid::Opcode
 
     codes.length.should == 20
   end
@@ -2265,75 +2265,75 @@ HERE
 
     codes = method.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
 
-    codes[2].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[2].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[2].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[2].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[2].property.ns_index.should == nil
     codes[2].property.name.should == :graphics
     verify_trait_ns_set(codes[2].property.ns_set.ns)
 
-    codes[3].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[3].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[3].value.should == 4
-    codes[4].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[4].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[4].value.should == 0
-    codes[5].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[5].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[5].value.should == 1
 
-    codes[6].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[6].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[6].arg_count.should == 3
-    codes[6].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[6].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[6].property.ns_index.should == nil
     codes[6].property.name.should == :lineStyle
     verify_trait_ns_set(codes[6].property.ns_set.ns)
-    codes[7].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[8].opcode.should == RedSun::ABCPop::Opcode
+    codes[7].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[8].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[9].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[9].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[9].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[9].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[9].property.ns_index.should == nil
     codes[9].property.name.should == :graphics
     verify_trait_ns_set(codes[9].property.ns_set.ns)
 
-    codes[10].opcode.should == RedSun::ABCGetLocal3::Opcode
-    codes[11].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[10].opcode.should == RedSun::ABC::GetLocal3::Opcode
+    codes[11].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[11].value.should == 1
 
-    codes[12].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[12].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[12].arg_count.should == 2
-    codes[12].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[12].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[12].property.ns_index.should == nil
     codes[12].property.name.should == :beginFill
     verify_trait_ns_set(codes[12].property.ns_set.ns)
-    codes[13].opcode.should == RedSun::ABCCoerceA::Opcode
-    codes[14].opcode.should == RedSun::ABCPop::Opcode
+    codes[13].opcode.should == RedSun::ABC::CoerceA::Opcode
+    codes[14].opcode.should == RedSun::ABC::Pop::Opcode
 
-    codes[15].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[15].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[15].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[15].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[15].property.ns_index.should == nil
     codes[15].property.name.should == :graphics
     verify_trait_ns_set(codes[15].property.ns_set.ns)
 
-    codes[16].opcode.should == RedSun::ABCGetLocal2::Opcode
-    codes[17].opcode.should == RedSun::ABCGetLocal1::Opcode
+    codes[16].opcode.should == RedSun::ABC::GetLocal2::Opcode
+    codes[17].opcode.should == RedSun::ABC::GetLocal1::Opcode
 
-    codes[18].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[18].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[18].value.should == 40
-    codes[19].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[19].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[19].value.should == 30
-    codes[20].opcode.should == RedSun::ABCPushByte::Opcode
+    codes[20].opcode.should == RedSun::ABC::PushByte::Opcode
     codes[20].value.should == 5
 
-    codes[21].opcode.should == RedSun::ABCCallProperty::Opcode
+    codes[21].opcode.should == RedSun::ABC::CallProperty::Opcode
     codes[21].arg_count.should == 5
-    codes[21].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[21].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[21].property.ns_index.should == nil
     codes[21].property.name.should == :drawRoundRect
     verify_trait_ns_set(codes[21].property.ns_set.ns)
-    codes[22].opcode.should == RedSun::ABCCoerceA::Opcode
+    codes[22].opcode.should == RedSun::ABC::CoerceA::Opcode
 
-    codes[23].opcode.should == RedSun::ABCReturnValue::Opcode
+    codes[23].opcode.should == RedSun::ABC::ReturnValue::Opcode
 
     codes.length.should == 24
   end
@@ -2351,25 +2351,25 @@ HERE
 
     codes = cls.cinit.body.code.codes
 
-    codes[0].opcode.should == RedSun::ABCGetLocal0::Opcode
-    codes[1].opcode.should == RedSun::ABCPushScope::Opcode
+    codes[0].opcode.should == RedSun::ABC::GetLocal0::Opcode
+    codes[1].opcode.should == RedSun::ABC::PushScope::Opcode
 
-    codes[2].opcode.should == RedSun::ABCGetLex::Opcode
-    codes[2].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[2].opcode.should == RedSun::ABC::GetLex::Opcode
+    codes[2].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[2].property.ns_index.should == nil
     codes[2].property.name.should == :prototype
     verify_trait_ns_set(codes[2].property.ns_set.ns)
 
-    codes[3].opcode.should == RedSun::ABCNewFunction::Opcode
+    codes[3].opcode.should == RedSun::ABC::NewFunction::Opcode
     codes[3].index.should == 1
 
-    codes[4].opcode.should == RedSun::ABCSetProperty::Opcode
-    codes[4].property.kind.should == RedSun::ABCMultiname::Multiname
+    codes[4].opcode.should == RedSun::ABC::SetProperty::Opcode
+    codes[4].property.kind.should == RedSun::ABC::Multiname::MultinameC
     codes[4].property.ns_index.should == nil
     codes[4].property.name.should == :draw
     verify_trait_ns_set(codes[4].property.ns_set.ns)
 
-    codes[5].opcode.should == RedSun::ABCReturnVoid::Opcode
+    codes[5].opcode.should == RedSun::ABC::ReturnVoid::Opcode
   end
 
 end
