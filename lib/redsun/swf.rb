@@ -17,19 +17,19 @@ module RedSun
     attr_accessor :tags
 
     def initialize(filename=nil)
-      @tag_class = Hash.new( SwfTag )
-      @tag_class[0]= EndTag
-      @tag_class[1]= ShowFrameTag
-      @tag_class[9]= SetBackgroundColorTag
-      @tag_class[41]= ProductInfoTag
-      @tag_class[43]= FrameLabelTag
-      @tag_class[63]= DebugIdTag
-      @tag_class[64]= EnableDebugger2Tag
-      @tag_class[65]= ScriptLimitsTag
-      @tag_class[69]= FileAttributesTag
-      @tag_class[76]= SymbolClassTag
-      @tag_class[77]= MetadataTag
-      @tag_class[82]= DoABCTag
+      @tag_class = Hash.new( Tags::Base )
+      @tag_class[0]= Tags::End
+      @tag_class[1]= Tags::ShowFrame
+      @tag_class[9]= Tags::SetBackgroundColor
+      @tag_class[41]= Tags::ProductInfo
+      @tag_class[43]= Tags::FrameLabel
+      @tag_class[63]= Tags::DebugId
+      @tag_class[64]= Tags::EnableDebugger2
+      @tag_class[65]= Tags::ScriptLimits
+      @tag_class[69]= Tags::FileAttributes
+      @tag_class[76]= Tags::SymbolClass
+      @tag_class[77]= Tags::Metadata
+      @tag_class[82]= Tags::DoABC
       @tags = []
 
       set_defaults
@@ -50,7 +50,7 @@ module RedSun
     end
 
     def abc_files
-      @tags.select { |t| t.class == DoABCTag }.map { |t| t.abc_file }
+      @tags.select { |t| t.class == DoABC }.map { |t| t.abc_file }
     end
 
     def scripts

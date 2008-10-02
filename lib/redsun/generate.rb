@@ -13,26 +13,26 @@ module RedSun
       @compressed = true
       @tags = []
 
-      file_attributes = FileAttributesTag.new
+      file_attributes = Tags::FileAttributes.new
       file_attributes.actionscript3 = true
       file_attributes.use_network = true
       file_attributes.has_metadata = false
       @tags << file_attributes
 
-      script_limits = ScriptLimitsTag.new
+      script_limits = Tags::ScriptLimits.new
       script_limits.max_recursion_depth = 1000
       script_limits.script_timeout_secs = 60
       @tags << script_limits
 
-      bg_color = SetBackgroundColorTag.new
+      bg_color = Tags::SetBackgroundColor.new
       bg_color.background_color = 0x869ca7
       @tags << bg_color
 
-      frame_label = FrameLabelTag.new
+      frame_label = Tags::FrameLabel.new
       frame_label.name = doc_class_name
       @tags << frame_label
 
-      abc = DoABCTag.new
+      abc = Tags::DoABC.new
       abc.flags = 1
 
       abc.name = "frame1"
@@ -51,14 +51,14 @@ HERE
 
       @tags << abc
 
-      symbol_class = SymbolClassTag.new
+      symbol_class = Tags::SymbolClass.new
       symbol_class.symbols=[{:tag=>0, :name=>doc_class_name}]
       @tags << symbol_class
 
-      show_frame = ShowFrameTag.new
+      show_frame = Tags::ShowFrame.new
       @tags << show_frame
 
-      end_tag = EndTag.new
+      end_tag = Tags::End.new
       @tags << end_tag
 
     end

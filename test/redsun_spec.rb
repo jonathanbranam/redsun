@@ -393,9 +393,9 @@ describe "(string packing)" do
   end
 end
 
-describe RedSun::FileAttributesTag do
+describe RedSun::Tags::FileAttributes do
   before(:each) do
-    @fa = RedSun::FileAttributesTag.new
+    @fa = RedSun::Tags::FileAttributes.new
     @as3 = "08000000".pack_as_hex
     @m_as3_net = "19000000".pack_as_hex
     @as3_net = "09000000".pack_as_hex
@@ -1288,8 +1288,8 @@ describe "stub swf generation" do
     @swf.frame_count.should == 1
   end
   it "should have FileAttributes tag" do
-    t = @swf.tag_select(RedSun::FileAttributesTag)[0]
-    t.class.should == RedSun::FileAttributesTag
+    t = @swf.tag_select(RedSun::Tags::FileAttributes)[0]
+    t.class.should == RedSun::Tags::FileAttributes
     t.actionscript3.should == true
     t.use_network.should == true
     t.has_metadata.should == false
@@ -1298,31 +1298,31 @@ describe "stub swf generation" do
     t.reserved3.should == 0
   end
   it "should have ScriptLimits tag" do
-    t = @swf.tag_select(RedSun::ScriptLimitsTag)[0]
-    t.class.should == RedSun::ScriptLimitsTag
+    t = @swf.tag_select(RedSun::Tags::ScriptLimits)[0]
+    t.class.should == RedSun::Tags::ScriptLimits
     t.max_recursion_depth.should == 1000
     t.script_timeout_secs.should == 60
   end
   it "should have SetBackgroundColor tag" do
-    t = @swf.tag_select(RedSun::SetBackgroundColorTag)[0]
-    t.class.should == RedSun::SetBackgroundColorTag
+    t = @swf.tag_select(RedSun::Tags::SetBackgroundColor)[0]
+    t.class.should == RedSun::Tags::SetBackgroundColor
     t.background_color.should == 0x869ca7
   end
   it "should have FrameLabel tag" do
-    t = @swf.tag_select(RedSun::FrameLabelTag)[0]
-    t.class.should == RedSun::FrameLabelTag
+    t = @swf.tag_select(RedSun::Tags::FrameLabel)[0]
+    t.class.should == RedSun::Tags::FrameLabel
     t.name.should == "EmptySwf"
   end
   it "should have DoABC tag" do
-    t = @swf.tag_select(RedSun::DoABCTag)[0]
-    t.class.should == RedSun::DoABCTag
+    t = @swf.tag_select(RedSun::Tags::DoABC)[0]
+    t.class.should == RedSun::Tags::DoABC
     t.flags.should == 1
     t.name.should == "frame1"
     t.abc_file.minor_version.should == 16
     t.abc_file.major_version.should == 46
   end
   it "should have ints, uints, doubles setup" do
-    t = @swf.tag_select(RedSun::DoABCTag)[0]
+    t = @swf.tag_select(RedSun::Tags::DoABC)[0]
     t.abc_file.ints.length.should == 1
     t.abc_file.ints[0].should == nil
 
@@ -1332,7 +1332,7 @@ describe "stub swf generation" do
     t.abc_file.doubles[0].should == nil
   end
   it "should have strings setup" do
-    t = @swf.tag_select(RedSun::DoABCTag)[0]
+    t = @swf.tag_select(RedSun::Tags::DoABC)[0]
     strings = t.abc_file.strings
     strings[0].should == nil
     strings.include?("".to_sym).should == true
@@ -1352,7 +1352,7 @@ describe "stub swf generation" do
     #strings.length.should == 12
   end
   it "should have namespaces and ns_sets setup" do
-    t = @swf.tag_select(RedSun::DoABCTag)[0]
+    t = @swf.tag_select(RedSun::Tags::DoABC)[0]
     namespaces = t.abc_file.namespaces
     namespaces[0].should == nil
 
@@ -1373,7 +1373,7 @@ describe "stub swf generation" do
     ns_sets[0].should == nil
   end
   it "should have multinames setup" do
-    t = @swf.tag_select(RedSun::DoABCTag)[0]
+    t = @swf.tag_select(RedSun::Tags::DoABC)[0]
     multinames = t.abc_file.multinames
     multinames.length.should == 8
     multinames[0].class.should == RedSun::ABC::Multiname
@@ -1394,19 +1394,19 @@ describe "stub swf generation" do
   end
 
   it "should have SymbolClass tag" do
-    t = @swf.tag_select(RedSun::SymbolClassTag)[0]
-    t.class.should == RedSun::SymbolClassTag
+    t = @swf.tag_select(RedSun::Tags::SymbolClass)[0]
+    t.class.should == RedSun::Tags::SymbolClass
     t.symbols.length.should == 1
     t.symbols[0][:tag].should == 0
     t.symbols[0][:name].should == "EmptySwf"
   end
   it "should have ShowFrame tag" do
-    t = @swf.tag_select(RedSun::ShowFrameTag)[0]
-    t.class.should == RedSun::ShowFrameTag
+    t = @swf.tag_select(RedSun::Tags::ShowFrame)[0]
+    t.class.should == RedSun::Tags::ShowFrame
   end
   it "should have End tag" do
-    t = @swf.tag_select(RedSun::EndTag)[0]
-    t.class.should == RedSun::EndTag
+    t = @swf.tag_select(RedSun::Tags::End)[0]
+    t.class.should == RedSun::Tags::End
   end
 end
 
