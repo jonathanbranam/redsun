@@ -1,15 +1,7 @@
-
+#!/usr/bin/env ruby
 
 require 'redsun'
-module TestFiles
-    Dir.chdir(File.dirname(__FILE__)) do
-        Dir['files/*.{swf,xhtml,xml}'].each do |fname|
-            const_set fname[%r!/(\w+)\.\w+$!, 1].upcase, IO.read(fname)
-        end
-    end
-end
-
-#include TestFiles
+require 'load_files'
 
 describe "(something)" do
   before(:each) do
@@ -496,8 +488,9 @@ describe Swf do
 
   it "(read/write MethodDecompile file)" do
     s = Swf.new
-    uc = s.uncompress_swf MethodDecompile
-    s2 = Swf.new MethodDecompile
+    uc = s.uncompress_swf_string TestFiles::MethodDecompile
+    s2 = Swf.new
+    s2.read_from TestFiles::MethodDecompile
     s2.compressed = false
     uc2 = s2.write_to_string
 
