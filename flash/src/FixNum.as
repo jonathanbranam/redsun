@@ -1,6 +1,6 @@
 package
 {
-  public class FixNum
+  public dynamic class FixNum
   {
     public function FixNum(value:*)
     {

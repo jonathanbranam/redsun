@@ -2,12 +2,13 @@ package ruby.internals
 {
 import ruby.RObject;
 
-public class RGlobal extends RObject
+public dynamic class RGlobal extends RObject
 {
-  public static var global:RGlobal = new RGlobal();
+  public static var global:RGlobal;
 
-  public function RGlobal()
+  public function RGlobal(klass:RClass=null)
   {
+    super(klass);
   }
 
 }

@@ -5,7 +5,7 @@ import ruby.RObject;
 /**
  * Should be RModule probably.
  */
-public dynamic class RClass extends RObject
+public dynamic class RModule extends RObject
 {
   public static const SINGLETON:int = 1;
 
@@ -17,7 +17,7 @@ public dynamic class RClass extends RObject
   public var m_tbl:Object = {};
   public var super_class:RClass = null;
 
-  public function RClass(context:RClass=null, name:String = null, super_class:RClass = null, klass:RClass=null)
+  public function RModule(context:RClass=null, name:String = null, super_class:RClass = null, klass:RClass=null)
   {
     super(klass);
     this.context = context;
@@ -30,16 +30,6 @@ public dynamic class RClass extends RObject
     method.body = block;
     method.klass = this;
     this.m_tbl[name] = method;
-  }
-
-  RClass.prototype.defineclassmethod = function (name:*, block:Function):* {
-    var klass:RClass = this.rbasic.klass;
-    if ((klass.rbasic.flags & RClass.SINGLETON) == 0) {
-      klass = new RClass("Singleton", this.rbasic.klass, RGlobal.global.send_external(this, "const_get", "Class"));
-      klass.rbasic.flags |= RClass.SINGLETON;
-      this.rbasic.klass = klass;
-    }
-    klass.definemethod(name, block);
   }
 
   RClass.prototype.defineclass = function (name:*, block:Function):* {

@@ -32,3 +32,27 @@ Problems:
 * method for proxying a typed class? include_typed_class Flash::Display::Sprite
 
 
+Const (and other) scoping issues:
+
+Here's the code in question:
+
+class A
+  class B
+    def d
+      C
+    end
+  end
+  class C
+  end
+end
+
+b = A::B.new
+b.d # returns A::C
+
+How does this work? The :getconstant bytecode searches upwards in the scope
+stack at the time of definition to find the constant. When I define classes
+and methods, I'm not saving the scope stack currently so I don't know where
+to search for the constant definition.
+
+Solution: Obviously, the scope stack must be searched by this opcode and
+others. Is there a way to call up the scope stack that is created by AVM2?
