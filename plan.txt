@@ -56,3 +56,19 @@ to search for the constant definition.
 
 Solution: Obviously, the scope stack must be searched by this opcode and
 others. Is there a way to call up the scope stack that is created by AVM2?
+
+Looks like it is very hard to use the Flash call stack to look up this
+information. Decent solution is to store the call stack at each level, but
+where would this actually be stored? Then would local variables not really
+be local variables in the AS3 version? It seems like we are getting further
+and further away from a bytecode translater into a bytecode interpretter
+at this point. Is this a good idea?
+
+We have closures already in Flash, but do the opcodes for accessing closure
+variables allow us to translate into something that can be used in AS3?
+What are the opcodes in AS3 also?
+
+
+Moved test/files which are not used in tests to /research. This seems like
+a more appropriate and descriptive name.
+

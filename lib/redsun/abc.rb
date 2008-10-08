@@ -68,7 +68,7 @@ module RedSun
               pp_yarv(i[2],indent)
               puts("#{indent}]")
             when :send
-              if i[1] == :proc
+              if i[3]
                 puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},#{i[2].inspect},")
                 pp_yarv(i[3],indent)
                 puts("#{indent}#{i[4].inspect},#{i[5].inspect}]")
