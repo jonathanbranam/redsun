@@ -33,14 +33,24 @@ module RedSun
         vm.each do |i|
           if intro_step <= 10
             case intro_step
-            when 0,5,7
+            when 0,5
               print("#{indent}#{i.inspect}, ")
-            when 1..2,8..9
+            when 1..2
               print("#{i.inspect}, ")
-            when 4
+            when 4,7..9
               puts("#{indent}#{i.inspect},")
-            when 3..4,6,10
+            when 3..4,6
               puts("#{i.inspect},")
+            when 10
+              if i and i.length > 0
+                puts "#{indent}["
+                i.each do |label|
+                  puts "#{indent}  #{label.inspect},"
+                end
+                puts "#{indent}]"
+              else
+                puts "#{indent}#{i.inspect},"
+              end
             end
             intro_step = intro_step+1
           else
@@ -69,9 +79,9 @@ module RedSun
               puts("#{indent}]")
             when :send
               if i[3]
-                puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},#{i[2].inspect},")
+                puts("#{indent}[#{i[0].inspect}, #{i[1].inspect}, #{i[2].inspect},")
                 pp_yarv(i[3],indent)
-                puts("#{indent}#{i[4].inspect},#{i[5].inspect}]")
+                puts("#{indent}#{i[4].inspect}, #{i[5].inspect}]")
               else
                 puts("#{indent}#{i.inspect},")
               end

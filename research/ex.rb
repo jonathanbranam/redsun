@@ -26,31 +26,32 @@ p s.frame_count
 c=VM::InstructionSequence.compile(IO.read('rf.rb'))
 
 =end
-@s = RedSun::Swf.new "test/files/EmptySwf.swf"
-@md = RedSun::Swf.new "test/files/MethodDecompile.swf"
-@sc = RedSun::Swf.new "test/files/SeveralClasses.swf"
-@t = RedSun::Swf.new "test/files/Traits.swf"
+@s = RedSun::Swf.new "research/EmptySwf.swf"
+@md = RedSun::Swf.new "research/MethodDecompile.swf"
+@sc = RedSun::Swf.new "research/SeveralClasses.swf"
+@t = RedSun::Swf.new "research/Traits.swf"
 # @t.tags[8].abc_file.instances[0].iinit.body.code.pretty_print;nil
 
 @af = RedSun::ABC::ABCFile.new
-@e_vm=VM::InstructionSequence.compile(IO.read('test/files/empty.rb')).to_a
+@e_vm=VM::InstructionSequence.compile(IO.read('research/empty.rb')).to_a
 @af.load_ruby(@e_vm)
 
 @ss = RedSun::Swf.new
 @ss.create_stub_swf("EmptySwf")
 
 @bs = RedSun::Swf.new
-@bs.create_stub_swf("Basic", IO.read('test/files/basic.rb'))
+@bs.create_stub_swf("Basic", IO.read('research/basic.rb'))
 
 @ts = RedSun::Swf.new
-@ts.create_stub_swf("Traits", IO.read('test/files/traits.rb'))
+@ts.create_stub_swf("Traits", IO.read('research/traits.rb'))
 @ts.filename = 'traits'
 # @ts.write
 
-@bvm=VM::InstructionSequence.compile(IO.read('test/files/basic.rb')).to_a
+@bvm=VM::InstructionSequence.compile(IO.read('research/basic.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@bvm)
 
-@tvm=VM::InstructionSequence.compile(IO.read('test/files/traits.rb')).to_a
+@tvm=VM::InstructionSequence.compile(IO.read('research/traits.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@tvm)
 
-
+@sc=VM::InstructionSequence.compile(IO.read('research/scope.rb')).to_a
+# RedSun::ABC::ABCFile.pp_yarv(@sc)

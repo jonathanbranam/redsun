@@ -68,7 +68,24 @@ We have closures already in Flash, but do the opcodes for accessing closure
 variables allow us to translate into something that can be used in AS3?
 What are the opcodes in AS3 also?
 
+10/8/2008
 
 Moved test/files which are not used in tests to /research. This seems like
 a more appropriate and descriptive name.
+
+10/9/2008
+
+
+"YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+{:arg_size=>1, :local_size=>5, :stack_max=>2},
+"blah", "<compiled>",
+:method,
+[:parm1, :i, :i2, :ar],
+1,
+[
+  [:break, nil, :label_32, :label_40, :label_40, 0],
+  [:break, nil, :label_41, :label_49, :label_49, 0],
+  [:break, nil, :label_50, :label_58, :label_58, 0],
+]
+
 
