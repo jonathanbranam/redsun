@@ -89,3 +89,9 @@ a more appropriate and descriptive name.
 ]
 
 
+10/14/2008
+
+Migrating Red Sun work to new MacBook Pro. Authorizing github access and 
+testing commit privileges. Installing Ruby 1.9.0-4, looking into mspec instead
+of rspec.
+
