@@ -46,7 +46,7 @@ class EmptySwf < Flash::Display::Sprite
 end
 HERE
       ruby_code ||= empty_swf_ruby
-      vm = VM::InstructionSequence.compile(ruby_code)
+      vm = RubyVM::InstructionSequence.compile(ruby_code)
       abc.abc_file.load_ruby(vm.to_a)
 
       @tags << abc

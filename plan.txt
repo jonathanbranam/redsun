@@ -134,3 +134,17 @@ rb_class_new(VALUE super)
     }
 ...
 }
+
+10/16/2008
+
+Further research into initialization and basic structures.
+Have been reading through the Ruby Hacker's Guide.
+
+Plan is to generate AS3 bytecode from Ruby bytecode that operates as an AS3
+Ruby VM. Instead of interpretting the Ruby bytecode at runtime, the Ruby
+project will translate the Ruby bytecode into AS3 bytecode that interacts
+with the Ruby AS3 VM.
+
+Renamed research files from *.txt to *.c to help Emacs highlight them better.
+Probably a better way to convince Emacs to do that, but this is easy.
+

@@ -23,7 +23,7 @@ p s.frame_count
 #s.compressed = false
 #s.write
 
-c=VM::InstructionSequence.compile(IO.read('rf.rb'))
+c=RubyVM::InstructionSequence.compile(IO.read('rf.rb'))
 
 =end
 @s = RedSun::Swf.new "research/EmptySwf.swf"
@@ -33,7 +33,7 @@ c=VM::InstructionSequence.compile(IO.read('rf.rb'))
 # @t.tags[8].abc_file.instances[0].iinit.body.code.pretty_print;nil
 
 @af = RedSun::ABC::ABCFile.new
-@e_vm=VM::InstructionSequence.compile(IO.read('research/empty.rb')).to_a
+@e_vm=RubyVM::InstructionSequence.compile(IO.read('research/empty.rb')).to_a
 @af.load_ruby(@e_vm)
 
 @ss = RedSun::Swf.new
@@ -47,11 +47,11 @@ c=VM::InstructionSequence.compile(IO.read('rf.rb'))
 @ts.filename = 'traits'
 # @ts.write
 
-@bvm=VM::InstructionSequence.compile(IO.read('research/basic.rb')).to_a
+@bvm=RubyVM::InstructionSequence.compile(IO.read('research/basic.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@bvm)
 
-@tvm=VM::InstructionSequence.compile(IO.read('research/traits.rb')).to_a
+@tvm=RubyVM::InstructionSequence.compile(IO.read('research/traits.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@tvm)
 
-@sc=VM::InstructionSequence.compile(IO.read('research/scope.rb')).to_a
+@sc=RubyVM::InstructionSequence.compile(IO.read('research/scope.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@sc)
