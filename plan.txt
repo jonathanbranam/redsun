@@ -148,3 +148,11 @@ with the Ruby AS3 VM.
 Renamed research files from *.txt to *.c to help Emacs highlight them better.
 Probably a better way to convince Emacs to do that, but this is easy.
 
+Tagged previous version as 0.1 indicating last version that attempted to target
+the Flash AS3 VM directly with the Ruby bytecode translation. Further versions
+will include a Ruby VM in AS3 and will translate Ruby bytecode into AS3
+bytecode which will make calls into this VM.
+
+This means that lots of tests will completely break as the structure will be
+radically different. Breaking tests will be deleted and can be recovered
+(along with the previous implementation) through tag 0.1.
