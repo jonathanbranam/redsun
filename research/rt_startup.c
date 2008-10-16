@@ -19,7 +19,7 @@ void ruby_init() {
   PUSH_TAG();
   EXEC_TAG();
   rb_call_inits();
-  ruby_prog_init();
+  ruby_prog_init(); // setup some global hooks
   POP_TAG;
 }
 
@@ -91,7 +91,78 @@ th_init2(rb_thread_t *th, VALUE self)
 #endif
 }
 
+// inits.c:59
+void
+rb_call_inits()
+{
+    Init_RandomSeed();
+    Init_sym();
+    Init_var_tables();
+    Init_Object();
+    Init_top_self();
+    Init_Encoding();
+    Init_Comparable();
+    Init_Enumerable();
+    Init_Precision();
+    Init_String();
+    Init_Exception();
+    Init_eval();
+    Init_jump();
+    Init_Numeric();
+    Init_Bignum();
+    Init_syserr();
+    Init_Array();
+    Init_Hash();
+    Init_Struct();
+    Init_Regexp();
+    Init_pack();
+    Init_transcode();
+    Init_marshal();
+    Init_Range();
+    Init_IO();
+    Init_Dir();
+    Init_Time();
+    Init_Random();
+    Init_signal();
+    Init_process();
+    Init_load();
+    Init_Proc();
+    Init_Binding();
+    Init_Math();
+    Init_GC();
+    Init_Enumerator();
+    Init_VM();
+    Init_ISeq();
+    Init_Thread();
+    Init_Cont();
+    Init_Rational();
+    Init_Complex();
+    Init_version();
+}
 
+
+// eval.c:92
+VALUE ruby_options(int argc, int **argv) {
+  tree = ruby_process_options(argc, argv);
+}
+
+// ruby.c:1527
+void *ruby_process_options(int argc, char **argv) {
+    tree = (NODE *)rb_vm_call_cfunc(rb_vm_top_self(),
+				    process_options, (VALUE)&args,
+				    0, rb_progname);
+    return tree;
+}
+
+// ruby.c:961
+VALUE process_options(VALUE arg) {
+  opt->script == dln_find_file_r(argv[0], path, fbuf, ...);
+  tree = rb_parser_compile_string(parser, opt->script, opt->e_script, 1);
+  tree = load_file(parser, opt->script, 1, opt);
+  iseq = rb_iseq_new(tree, rb_str_new2("<main>"), opt->script_name, Qfalse,
+		     ISEQ_TYPE_TOP);
+  return iseq;
+}
 
 //eval.c:233
 void ruby_run_node(VALUE n) {
