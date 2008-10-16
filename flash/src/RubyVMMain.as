@@ -9,11 +9,12 @@ public class RubyVMMain extends Sprite
   public function RubyVMMain()
   {
     super();
-    RubyCore.init();
-    basic_rb();
+    var c:RubyCore = new RubyCore();
+    c.init();
+    basic_rb(c);
   }
 
-  protected function basic_rb():void
+  protected function basic_rb(c:RubyCore):void
   {
   }
 
