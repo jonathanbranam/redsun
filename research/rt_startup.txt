@@ -1,0 +1,50 @@
+Tracing initial ruby execution:
+main.c:23
+main(int argc, char **argv)
+ ruby_set_debug_option(getenv("RUBY_DEBUG"))
+ ruby_sysinit(&argc, &argv)
+ RUBY_INIT_STACK
+ ruby_init()
+ ruby_run_node(ruby_options(argc, argv))
+
+eval.c:48
+ruby_init()
+ Init_stack(&state)
+ Init_BareVM()
+ Init_heap()
+ PUSH_TAG()
+ EXEC_TAG()
+ rb_call_inits()
+ ruby_prog_init()
+ ALLOW_INTS
+ POP_TAG
+
+
+eval.c:233
+ruby_run_node(VALUE n)
+ Init_stack(n)
+ ruby_cleanup(ruby_exec_node(n, 0))
+
+eval.c:207
+ruby_exec_node(VALUE n, char *file):
+ PUSH_TAG()
+ EXEC_TAG()
+ rb_iseq_eval(n)
+ POP_TAG()
+ return state
+
+vm.c:1256
+rb_iseq_eval(VALUE iseqval)
+ vm_set_top_stack(GET_THREAD(), iseqval)
+ rb_define_global_const("TOPLEVEL_BINDING", rb_binding_new())
+ return vm_eval_body(th)
+
+vm.c:1051
+vm_eval_body(rb_thread_t *th)
+ TH_PUSH_TAG(th)
+ state = EXEC_TAG()
+ result = vm_eval(th, initial)
+ if (th->state != 0) goto exception_handler
+  COMPLICATED EXCEPTION HANDLING
+ TH_POP_TAG()
+ return result
