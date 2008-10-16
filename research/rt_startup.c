@@ -126,3 +126,34 @@ void vm_eval_body(rb_thread_t *th) {
   return result;
 }
 
+/*
+vm_eval() is defined in vm_evalbody.c and #includes "vm.inc" and "vmtc.inc"
+which are apparently generated files of some kind. There are two options,
+one appears to execute code directly and the other looks up the instruction
+somehow and dispatches a method to handle it.
+*/
+
+// vm_evalbody.c:119
+vm_eval(rb_thread_t *th, VALUE initial)
+{
+    register rb_control_frame_t *reg_cfp = th->cfp;
+    VALUE ret;
+
+    while (*GET_PC()) {
+	reg_cfp = ((rb_insn_func_t) (*GET_PC()))(th, reg_cfp);
+
+	if (reg_cfp == 0) {
+	    VALUE err = th->errinfo;
+	    th->errinfo = Qnil;
+	    return err;
+	}
+    }
+
+    if (VM_FRAME_TYPE(th->cfp) != VM_FRAME_MAGIC_FINISH) {
+	rb_bug("cfp consistency error");
+    }
+
+    ret = *(th->cfp->sp-1); /* pop */
+    th->cfp++; /* pop cf */
+    return ret;
+}

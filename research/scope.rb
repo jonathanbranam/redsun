@@ -16,7 +16,7 @@ class T
       puts "hi"+p1
     end
     ar.each do |hi|
-      puts hit+i+i2
+      puts hi+i+i2
     end
     ar.each do
       puts "hi"

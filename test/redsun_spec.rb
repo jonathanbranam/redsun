@@ -3,16 +3,6 @@
 require 'redsun'
 require 'load_files'
 
-describe "(something)" do
-  before(:each) do
-    @three_bytes = "d03047".pack_as_hex
-    @c2 = "f106f007d030f008d04900f00947".pack_as_hex
-    @c3 = "d030f106f0056500600330600430600530600630600730600230600258001d1d1d1d1d1d6801f106f00347".pack_as_hex
-  end
-  it "should parse something" do
-  end
-end
-
 describe RedSun::ABC::ABCFile do
   before(:each) do
     @empty_data = "10002e000000000d0011456d7074795377662f456d70747953776608456d7074795377660d666c6173682e646973706c6179065370726974653d473a5c776f726b5c65636c697073655c61727469636c65735c44796e616d6963416374696f6e5363726970745c7372633b3b456d7074795377662e6173064f626a6563740c666c6173682e6576656e74730f4576656e74446973706174636865720d446973706c61794f626a65637411496e7465726163746976654f626a65637416446973706c61794f626a656374436f6e7461696e6572051601160418031608000807010307020507010707040907020a07020b07020c0300000100000002000000010000010102090300010000000102010104010003000101080903d030470000010101090a0ef106f007d030f008d04900f00947000002020101082bd030f106f0056500600330600430600530600630600730600230600258001d1d1d1d1d1d6801f106f003470000".pack_as_hex
@@ -1531,7 +1521,7 @@ class EmptySwf < Flash::Display::Sprite
   end
 end
 HERE
-    @vm = VM::InstructionSequence.compile(@empty_swf_ruby)
+    @vm = RubyVM::InstructionSequence.compile(@empty_swf_ruby)
     @af.load_ruby(@vm.to_a)
   end
   it "should have one class definition" do
@@ -1770,6 +1760,54 @@ HERE
   end
 end
 
+
+def verify_trait_ns_set(namespaces, additional=[])
+  # Verify namespace set in order:
+  # PrivateNs "Traits"
+  # PrivateNs "Traits.as$23"
+  # PackageNamespace ""
+  # PackageInternalNs ""
+  # ProtectedNamespace "Traits"
+  # StaticProtectedNs "Traits"
+  # StaticProtectedNs "flash.display:Sprite"
+  # StaticProtectedNs "flash.display:DisplayObjectContainer"
+  # StaticProtectedNs "flash.display:InteractiveObject"
+  # StaticProtectedNs "flash.display:DisplayObject"
+  # StaticProtectedNs "flash.events:EventDispatcher"
+  # StaticProtectedNs "Object"
+  namespaces[0].kind.should == RedSun::ABC::Namespace::PrivateNs
+  namespaces[0].name.should == "Traits".to_sym
+  namespaces[1].kind.should == RedSun::ABC::Namespace::PrivateNs
+  namespaces[1].name.should == "file.as".to_sym
+  namespaces[2].kind.should == RedSun::ABC::Namespace::PackageNamespace
+  namespaces[2].name.should == "".to_sym
+  namespaces[3].kind.should == RedSun::ABC::Namespace::PackageInternalNs
+  namespaces[3].name.should == "".to_sym
+  namespaces[4].kind.should == RedSun::ABC::Namespace::ProtectedNamespace
+  namespaces[4].name.should == "Traits".to_sym
+  namespaces[5].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[5].name.should == "Traits".to_sym
+  namespaces[6].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[6].name.should == "flash.display:Sprite".to_sym
+  namespaces[7].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[7].name.should == "flash.display:DisplayObjectContainer".to_sym
+  namespaces[8].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[8].name.should == "flash.display:InteractiveObject".to_sym
+  namespaces[9].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[9].name.should == "flash.display:DisplayObject".to_sym
+  namespaces[10].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[10].name.should == "flash.events:EventDispatcher".to_sym
+  namespaces[11].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
+  namespaces[11].name.should == "Object".to_sym
+  num = 12
+  additional.each do |o|
+    namespaces[num].should == o
+    num += 1
+  end
+  namespaces.length.should == 12+additional.length
+end
+
+
 describe "typed method compiler" do
   before(:each) do
     @af = RedSun::ABC::ABCFile.new
@@ -1781,7 +1819,7 @@ class Traits < Flash::Display::Sprite
   end
 end
 HERE
-    @vm = VM::InstructionSequence.compile(@empty_swf_ruby)
+    @vm = RubyVM::InstructionSequence.compile(@empty_swf_ruby)
     @af.load_ruby(@vm.to_a)
   end
 
@@ -1829,51 +1867,6 @@ HERE
   end
 
 end
-def verify_trait_ns_set(namespaces, additional=[])
-  # Verify namespace set in order:
-  # PrivateNs "Traits"
-  # PrivateNs "Traits.as$23"
-  # PackageNamespace ""
-  # PackageInternalNs ""
-  # ProtectedNamespace "Traits"
-  # StaticProtectedNs "Traits"
-  # StaticProtectedNs "flash.display:Sprite"
-  # StaticProtectedNs "flash.display:DisplayObjectContainer"
-  # StaticProtectedNs "flash.display:InteractiveObject"
-  # StaticProtectedNs "flash.display:DisplayObject"
-  # StaticProtectedNs "flash.events:EventDispatcher"
-  # StaticProtectedNs "Object"
-  namespaces[0].kind.should == RedSun::ABC::Namespace::PrivateNs
-  namespaces[0].name.should == "Traits".to_sym
-  namespaces[1].kind.should == RedSun::ABC::Namespace::PrivateNs
-  namespaces[1].name.should == "file.as".to_sym
-  namespaces[2].kind.should == RedSun::ABC::Namespace::PackageNamespace
-  namespaces[2].name.should == "".to_sym
-  namespaces[3].kind.should == RedSun::ABC::Namespace::PackageInternalNs
-  namespaces[3].name.should == "".to_sym
-  namespaces[4].kind.should == RedSun::ABC::Namespace::ProtectedNamespace
-  namespaces[4].name.should == "Traits".to_sym
-  namespaces[5].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[5].name.should == "Traits".to_sym
-  namespaces[6].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[6].name.should == "flash.display:Sprite".to_sym
-  namespaces[7].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[7].name.should == "flash.display:DisplayObjectContainer".to_sym
-  namespaces[8].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[8].name.should == "flash.display:InteractiveObject".to_sym
-  namespaces[9].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[9].name.should == "flash.display:DisplayObject".to_sym
-  namespaces[10].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[10].name.should == "flash.events:EventDispatcher".to_sym
-  namespaces[11].kind.should == RedSun::ABC::Namespace::StaticProtectedNs
-  namespaces[11].name.should == "Object".to_sym
-  num = 12
-  additional.each do |o|
-    namespaces[num].should == o
-    num += 1
-  end
-  namespaces.length.should == 12+additional.length
-end
 
 describe "typed property compiler" do
   before(:each) do
@@ -1888,7 +1881,7 @@ class Traits < Flash::Display::Sprite
   end
 end
 HERE
-    @vm = VM::InstructionSequence.compile(@empty_swf_ruby)
+    @vm = RubyVM::InstructionSequence.compile(@empty_swf_ruby)
     @af.load_ruby(@vm.to_a)
   end
 
@@ -2001,7 +1994,7 @@ class Traits < Flash::Display::Sprite
   end
 end
 HERE
-    @vm = VM::InstructionSequence.compile(@empty_swf_ruby)
+    @vm = RubyVM::InstructionSequence.compile(@empty_swf_ruby)
     @af.load_ruby(@vm.to_a)
   end
 
@@ -2171,7 +2164,7 @@ class Traits < Flash::Display::Sprite
   end
 end
 HERE
-    @vm = VM::InstructionSequence.compile(@empty_swf_ruby)
+    @vm = RubyVM::InstructionSequence.compile(@empty_swf_ruby)
     @af.load_ruby(@vm.to_a)
   end
 

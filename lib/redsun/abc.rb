@@ -77,6 +77,10 @@ module RedSun
               puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},")
               pp_yarv(i[2],indent)
               puts("#{indent}]")
+            when :putiseq
+              puts("#{indent}[#{i[0].inspect},")
+              pp_yarv(i[1], indent)
+              puts("#{indent}],")
             when :send
               if i[3]
                 puts("#{indent}[#{i[0].inspect}, #{i[1].inspect}, #{i[2].inspect},")

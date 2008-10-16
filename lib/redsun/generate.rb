@@ -159,14 +159,21 @@ HERE
             case op
             when :putnil
               stack.push(line)
-            when :definemethod
-              stack.pop() # clear :putnil ??
-              index = load_ruby_method(class_index, line[1], line[2], class_ns_set)
-              if (line[1] == :initialize)
-                #constructor
-                inst.iinit_index = index
-              else
-                methods << index
+            when :putobject
+              stack.push(line)
+            when :putiseq
+              stack.push(line)
+            when :send
+              if line[1] == "core#define_method".to_sym
+                putiseq = stack.pop()
+                putobject = stack.pop()
+                index = load_ruby_method(class_index, putobject[1], putiseq[1], class_ns_set)
+                if (putobject[1] == :initialize)
+                  #constructor
+                  inst.iinit_index = index
+                else
+                  methods << index
+                end
               end
             end
           end
