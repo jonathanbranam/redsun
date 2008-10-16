@@ -164,6 +164,105 @@ VALUE process_options(VALUE arg) {
   return iseq;
 }
 
+// iseq.c:303
+VALUE
+rb_iseq_new(NODE *node, VALUE name, VALUE filename,
+	      VALUE parent, VALUE type)
+{
+    return rb_iseq_new_with_opt(node, name, filename, parent, type,
+				&COMPILE_OPTION_DEFAULT);
+}
+
+// iseq.c:328
+VALUE
+rb_iseq_new_with_opt(NODE *node, VALUE name, VALUE filename,
+		     VALUE parent, VALUE type,
+		     const rb_compile_option_t *option)
+{
+    return rb_iseq_new_with_bopt_and_opt(node, name, filename, parent, type,
+					   Qfalse, option);
+}
+
+// iseq.c:311
+static VALUE
+rb_iseq_new_with_bopt_and_opt(NODE *node, VALUE name, VALUE filename,
+				VALUE parent, VALUE type, VALUE bopt,
+				const rb_compile_option_t *option)
+{
+    rb_iseq_t *iseq;
+    VALUE self = iseq_alloc(rb_cISeq);
+
+    GetISeqPtr(self, iseq);
+    iseq->self = self;
+
+    prepare_iseq_build(iseq, name, filename, parent, type, bopt, option);
+    iseq_compile(self, node); // SEE compile.c
+    cleanup_iseq_build(iseq);
+    return self;
+}
+
+// iseq.c:152
+static VALUE
+prepare_iseq_build(rb_iseq_t *iseq,
+		   VALUE name, VALUE filename,
+		   VALUE parent, VALUE type, VALUE block_opt,
+		   const rb_compile_option_t *option)
+{
+    OBJ_FREEZE(name);
+    OBJ_FREEZE(filename);
+
+    iseq->name = name;
+    iseq->filename = filename;
+    iseq->defined_method_id = 0;
+    iseq->mark_ary = rb_ary_new();
+    RBASIC(iseq->mark_ary)->klass = 0;
+
+    iseq->type = type;
+    iseq->arg_rest = -1;
+    iseq->arg_block = -1;
+    iseq->klass = 0;
+
+    /*
+     * iseq->special_block_builder = GC_GUARDED_PTR_REF(block_opt);
+     * iseq->cached_special_block_builder = 0;
+     * iseq->cached_special_block = 0;
+     */
+
+    iseq->compile_data = ALLOC(struct iseq_compile_data);
+    MEMZERO(iseq->compile_data, struct iseq_compile_data, 1);
+    iseq->compile_data->mark_ary = rb_ary_new();
+    RBASIC(iseq->compile_data->mark_ary)->klass = 0;
+
+    iseq->compile_data->storage_head = iseq->compile_data->storage_current =
+      (struct iseq_compile_data_storage *)
+	ALLOC_N(char, INITIAL_ISEQ_COMPILE_DATA_STORAGE_BUFF_SIZE +
+		sizeof(struct iseq_compile_data_storage));
+
+    iseq->compile_data->catch_table_ary = rb_ary_new();
+    iseq->compile_data->storage_head->pos = 0;
+    iseq->compile_data->storage_head->next = 0;
+    iseq->compile_data->storage_head->size =
+      INITIAL_ISEQ_COMPILE_DATA_STORAGE_BUFF_SIZE;
+    iseq->compile_data->storage_head->buff =
+      (char *)(&iseq->compile_data->storage_head->buff + 1);
+    iseq->compile_data->option = option;
+
+    set_relation(iseq, parent);
+
+    iseq->coverage = Qfalse;
+    if (!GET_THREAD()->parse_in_eval) {
+	extern VALUE rb_get_coverages(void);
+	VALUE coverages = rb_get_coverages();
+	if (RTEST(coverages)) {
+	    iseq->coverage = rb_hash_lookup(coverages, filename);
+	    if (NIL_P(iseq->coverage)) iseq->coverage = Qfalse;
+	}
+    }
+
+    return Qtrue;
+}
+
+
 //eval.c:233
 void ruby_run_node(VALUE n) {
   Init_stack(n);

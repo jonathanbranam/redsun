@@ -4,14 +4,14 @@ Important Ruby structs
 
 //vm_core.h:343
 typedef struct {
-    VALUE *pc;			/* cfp[0] */
-    VALUE *sp;			/* cfp[1] */
-    VALUE *bp;			/* cfp[2] */
+  VALUE *pc;			/* cfp[0] */ /* Program counter? */
+  VALUE *sp;			/* cfp[1] */ /* Stack pointer? */
+  VALUE *bp;			/* cfp[2] */ /* Base pointer? */
     rb_iseq_t *iseq;		/* cfp[3] */
     VALUE flag;			/* cfp[4] */
     VALUE self;			/* cfp[5] / block[0] */
-    VALUE *lfp;			/* cfp[6] / block[1] */
-    VALUE *dfp;			/* cfp[7] / block[2] */
+  VALUE *lfp;			/* cfp[6] / block[1] */ /* Local Frame Ptr */
+  VALUE *dfp;			/* cfp[7] / block[2] */ /* Dynamic Frame Ptr*/
     rb_iseq_t *block_iseq;	/* cfp[8] / block[3] */
     VALUE proc;			/* cfp[9] / block[4] */
     ID method_id;               /* cfp[10] saved in special case */

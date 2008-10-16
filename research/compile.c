@@ -5,6 +5,9 @@ it emits.
 
 /*
 
+Initial compilation triggered from rt_startup.c when process_options() calls
+  rb_iseq_new() and passes in the filename and parse tree.
+
 Compilation appears to be triggered from:
 eval_string_with_cref() defined in
   vm_eval.c:669. This calls rb_iseq_compile() from iseq.c:472 which calls
@@ -19,6 +22,8 @@ and produces the bytecode necessary for later interpretation. The bytecode
 is produced as a linked list (LINK_ANCHOR?) and put into iseq(?). There are
 various #defines that append bytecode instructions to the linked list such
 as ADD_LABEL, ADD_INSN, ADD_INSN1, etc.
+
+Execution is handled by vm.inc which is generated from insns.def.
 */
 
 // compile.c:2659
