@@ -1,11 +1,11 @@
 package ruby
 {
+import ruby.internals.RBasic;
 import ruby.internals.RClass;
 import ruby.internals.Value;
 
-public dynamic class RObject extends Value
+public class RObject extends RBasic
 {
-  public var klass:RClass;
   public var iv_tbl:Object = {};
 
   public function RObject(klass:RClass=null)

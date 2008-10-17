@@ -29,6 +29,7 @@ module RedSun
       def self.pp_yarv(vm, indent="")
         intro_step = 0
         puts("#{indent}[")
+        o_indent = indent
         indent = indent + "  "
         vm.each do |i|
           if intro_step <= 10
@@ -57,11 +58,12 @@ module RedSun
             pp_yarv_ops(i, indent)
           end
         end
-        puts("#{indent}]")
+        puts("#{o_indent}]")
       end
 
       def self.pp_yarv_ops(vm, indent="")
         puts("#{indent}[")
+        o_indent = indent
         indent = indent + "  "
         vm.each do |i|
           case i.class.name
@@ -71,20 +73,20 @@ module RedSun
             case i[0]
             when :defineclass
               puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},")
-              pp_yarv(i[2],indent)
-              puts("#{indent}]")
+              pp_yarv(i[2],indent+"  ")
+              puts("#{indent}  , #{i[3]}]")
             when :definemethod
               puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},")
-              pp_yarv(i[2],indent)
+              pp_yarv(i[2],indent+"  ")
               puts("#{indent}]")
             when :putiseq
               puts("#{indent}[#{i[0].inspect},")
-              pp_yarv(i[1], indent)
+              pp_yarv(i[1], indent+"  ")
               puts("#{indent}],")
             when :send
               if i[3]
                 puts("#{indent}[#{i[0].inspect}, #{i[1].inspect}, #{i[2].inspect},")
-                pp_yarv(i[3],indent)
+                pp_yarv(i[3],indent+"  ")
                 puts("#{indent}#{i[4].inspect}, #{i[5].inspect}]")
               else
                 puts("#{indent}#{i.inspect},")
@@ -96,7 +98,7 @@ module RedSun
             puts("#{indent}#{i.inspect},")
           end
         end
-        puts("#{indent}]")
+        puts("#{o_indent}]")
       end
 
       def initialize

@@ -29,6 +29,10 @@ public class RubyCore
   public var rb_cModule:RClass;
   public var rb_cClass:RClass;
 
+  public var rb_cString:RClass;
+
+  public var rb_eTypeError:RClass;
+
   public static const ID_ALLOCATOR:String = "allocate";
 
   public function RubyCore()  {
@@ -49,6 +53,11 @@ public class RubyCore
   }
 
   public function init():void  {
+    Qnil = new RObject();
+    Qtrue = new RObject();
+    Qfalse = new RObject();
+    Qundef = new RObject();
+
     Init_var_tables();
     Init_Object();
     //define_ruby_classes();
@@ -237,19 +246,19 @@ public class RubyCore
     rb_add_method(klass, rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PRIVATE);
   }
 
-  protected function ivar_get(obj:RObject, id:String, warn:Boolean):* {
+  protected function ivar_get(obj:Value, id:String, warn:Boolean):* {
     var val:*;
 
     switch (obj.type()) {
       case Value.T_OBJECT:
-        val = obj.iv_tbl[id];
+        val = RObject(obj).iv_tbl[id];
         if (val != undefined && val != Qundef) {
           return val;
         }
         break;
       case Value.T_CLASS:
       case Value.T_MODULE:
-        val = obj.iv_tbl[id];
+        val = RObject(obj).iv_tbl[id];
         if (val != undefined) {
           return val;
         }
@@ -310,6 +319,10 @@ public class RubyCore
     return v != Qnil;
   }
 
+  public function NIL_P(v:Value):Boolean {
+    return v == Qnil;
+  }
+
   protected function rb_obj_not(obj:Value):Value {
     return RTEST(obj) ? Qfalse : Qtrue;
   }
@@ -331,6 +344,190 @@ public class RubyCore
     rb_define_method(rb_cBasicObject, "==", rb_obj_equal, 1);
     rb_define_method(rb_cBasicObject, "equal?", rb_obj_equal, 1);
     rb_define_method(rb_cBasicObject, "!", rb_obj_not, 0);
+  }
+
+  public function putspecialobject(stack:Array, id:uint):void
+  {
+    switch (id) {
+    case 2:
+      stack.push(rb_cObject);
+      break;
+    }
+  }
+
+  public function rb_raise(type:RClass, desc:String):void {
+    throw new Error(type.toString() + desc);
+  }
+
+  public function rb_id2name(id:String):String {
+    return id;
+  }
+
+  public function rb_const_defined_at(cbase:RClass, id:String):Boolean {
+    return false;
+  }
+
+  public function rb_const_get_at(cbase:RClass, id:String):Value {
+    return null;
+  }
+
+  public function str_new(klass:RClass, str:String):RObject {
+    var res:RObject = new RObject(klass);
+    rb_iv_set(res, "__string__", str);
+    return res;
+  }
+
+  public function rb_str_dup(str:RObject):RObject {
+    var dup:RObject = new RObject(str.klass);
+    rb_iv_set(dup, "__string__", rb_iv_get(str, "__string__"));
+    return dup;
+  }
+
+  public function rb_str_cat2(str:RObject, ptr:String):RObject {
+    rb_iv_set(str, "__string__", rb_iv_get(str, "__string__")+ptr);
+    return str;
+  }
+
+  public function rb_str_new(str:String):RObject {
+    return str_new(rb_cString, str);
+  }
+
+  public function rb_str_new_cstr(str:String):RObject {
+    return str_new(rb_cString, str);
+  }
+
+  public function rb_str_new2(str:String):RObject {
+    return rb_str_new_cstr(str);
+  }
+
+  public function classname(klass:RClass):Value {
+    var path:Value = Qnil;
+
+    if (!klass) {
+      klass = rb_cObject;
+    }
+    if (klass.iv_tbl[classpath] != undefined) {
+      var classid:String = rb_intern("__classid__");
+
+      if (klass.iv_tbl[classid] == undefined) {
+        return find_class_path(klass);
+      }
+      path = rb_str_dup(rb_id2str(SYM2ID(path)));
+      // OBJ_FREEZE(path);
+      klass.iv_tbl[classpath] = path;
+      delete klass.iv_tbl[classid];
+
+    }
+    if (!path.is_string()) {
+      // rb_bug("class path is not set propertly");
+    }
+    return path;
+  }
+
+  public function rb_class_path(klass:RClass):Value {
+    var path:Value = classname(klass);
+
+    if (NIL_P(path)) {
+      return path;
+    }
+    if (klass.iv_tbl[tmp_classpath] != undefined) {
+      return path;
+    } else {
+      var s:String = "Class";
+      if (klass.is_module()) {
+        if (rb_obj_class(klass) == rb_cModule) {
+          s = "Module";
+        } else {
+          s = rb_class2name(klass.klass);
+        }
+      }
+      path = rb_str_new("#<"+s+":"+klass.toString()+">");
+      // OBJ_FREEZE(path)
+      rb_ivar_set(klass, tmp_classpath, path);
+
+      return path;
+    }
+  }
+
+  public function rb_set_class_path(klass:RClass, under:RClass, name:String):void {
+    var str:RObject;
+
+    if (under == rb_cObject) {
+      str = rb_str_new2(name);
+    } else {
+      str = rb_str_dup(rb_class_path(under));
+      rb_str_cat2(str, "::");
+      rb_str_cat2(str, name);
+    }
+    // OBJ_FREEZE(str);
+    rb_ivar_set(klass, classpath, str);
+  }
+
+  public function rb_class_new(super_class:RClass):RClass {
+    // Check_Type(super_class, T_CLASS);
+    // rb_check_inheritable(super_class);
+    if (super_class == rb_cClass) {
+      rb_raise(rb_eTypeError, "can't make subclass of Class");
+    }
+    return rb_class_boot(super_class);
+  }
+
+  public function rb_define_class_id(id:String, super_class:RClass):RClass {
+    var klass:RClass;
+
+    if (!super_class) {
+      super_class = rb_cObject;
+    }
+
+    klass = rb_class_new(super_class);
+    rb_make_metaclass(klass, super_class.klass);
+
+    return klass;
+  }
+
+  public function defineclass(stack:Array, id:String, class_iseq:Function, define_type:uint):void
+  {
+    var klass:RClass;
+    var super_class:RClass = stack.pop();
+    var cbase:RClass = stack.pop();
+
+    switch (define_type) {
+    case 0:
+      // typical class definition
+      if (super_class == Qnil) {
+        super_class = rb_cObject;
+      }
+
+      // vm_check_if_namespace(cbase);
+
+      if (rb_const_defined_at(cbase, id)) {
+        var tmpValue:Value = rb_const_get_at(cbase, id);
+        if (!tmpValue.is_class()) {
+          rb_raise(rb_eTypeError, rb_id2name(id)+" is not a class");
+        }
+        klass = RClass(tmpValue);
+
+        if (super_class != rb_cObject) {
+          var tmp:RClass = rb_class_real(klass.super_class);
+          if (tmp != super_class) {
+            rb_raise(rb_eTypeError, "superclass mismatch for class " + rb_id2name(id));
+          }
+        }
+      } else {
+        // Create new class
+        klass = rb_define_class_id(id, super_class);
+        rb_set_class_path(klass, cbase, rb_id2name(id));
+        rb_const_set(cbase, id, klass);
+        rb_class_inherited(super_class, klass);
+      }
+      break;
+    case 1:
+      // create singleton class
+      break;
+    case 2:
+      // create module
+      break;
+    }
   }
 
   protected function rb_obj_dummy():Value {

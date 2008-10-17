@@ -1,3 +1,12 @@
+class A
+  class B < A
+  end
+  module C
+  end
+  class << self
+  end
+end
+=begin
 class T
   def parm_pos(p1, p2)
     i = p1
@@ -24,3 +33,4 @@ class T
   end
 end
 
+=end

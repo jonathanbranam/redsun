@@ -74,6 +74,14 @@ public class Value
     return false;
   }
 
+  public function is_string():Boolean {
+    return BUILTIN_TYPE() == T_STRING;
+  }
+
+  public function is_module():Boolean {
+    return BUILTIN_TYPE() == T_MODULE;
+  }
+
   public function is_class():Boolean {
     return BUILTIN_TYPE() == T_CLASS;
   }
@@ -82,6 +90,13 @@ public class Value
     return BUILTIN_TYPE() == T_ICLASS;
   }
 
+  public function type():uint {
+    /*
+    if (IMMEDIATE_P() {
+
+    }*/
+    return BUILTIN_TYPE();
+  }
 
 }
 }
