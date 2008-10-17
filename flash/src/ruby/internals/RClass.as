@@ -7,7 +7,7 @@ import ruby.RObject;
  */
 public dynamic class RClass extends RObject
 {
-  public static const SINGLETON:int = 1;
+  public static const FL_SINGLETON:int = 1;
 
   public var name:String = null;
   //public var rbasic:RBasic = new RBasic();
@@ -21,6 +21,10 @@ public dynamic class RClass extends RObject
     super(klass);
     this.name = name;
     this.super_class = super_class;
+  }
+
+  public function is_singleton():Boolean {
+    return (flags & FL_SINGLETON) != 0
   }
 
 
