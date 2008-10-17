@@ -179,15 +179,15 @@ public class RubyCore
     }
   }
 
-  protected function rb_node_newnode(type:uint, a0:Value, a1:Value, a2:Value):Node {
+  protected function rb_node_newnode(type:uint, a0:*, a1:*, a2:*):Node {
     var n:Node = new Node();//rb_newobj();
 
     n.flags |= Value.T_NODE;
     n.nd_set_type(type);
 
-    n.u1.value = a0;
-    n.u2.value = a1;
-    n.u3.value = a2;
+    n.u1 = a0;
+    n.u2 = a1;
+    n.u3 = a2;
 
     return n;
   }
