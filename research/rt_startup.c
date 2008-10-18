@@ -270,7 +270,8 @@ void ruby_run_node(VALUE n) {
 }
 
 //eval.c:207
-void ruby_exec_node(VALUE n, char *file) {
+int ruby_exec_node(VALUE n, char *file) {
+  int state;
   PUSH_TAG();
   EXEC_TAG();
   rb_iseq_eval(n);
@@ -279,7 +280,7 @@ void ruby_exec_node(VALUE n, char *file) {
 }
 
 //vm.c:1256
-void rb_iseq_eval(VALUE iseqval) {
+VALUE rb_iseq_eval(VALUE iseqval) {
   vm_set_top_stack(GET_THREAD(), iseqval);
   rb_define_global_const("TOPLEVEL_BINDING", rb_binding_new());
   return vm_eval_body(th);

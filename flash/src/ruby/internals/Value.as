@@ -90,7 +90,7 @@ public class Value
     return BUILTIN_TYPE() == T_ICLASS;
   }
 
-  public function type():uint {
+  public function get_type():uint {
     /*
     if (IMMEDIATE_P() {
 

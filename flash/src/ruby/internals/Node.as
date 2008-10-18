@@ -132,6 +132,12 @@ public class Node extends Value
   public static const CHAR_BIT:uint = 8;
   public static const NODE_LMASK:uint = ((1<< (4*CHAR_BIT-NODE_LSHIFT))-1);
 
+  public static const CALL_PUBLIC:uint = 0;
+  public static const CALL_FCALL:uint = 1;
+  public static const CALL_VCALL:uint = 2;
+  public static const CALL_SUPER:uint = 3;
+
+  public static const RUBY_VM_METHOD_NODE:uint = NODE_METHOD;
 
   public var u1:*;
   public var u2:*;
@@ -147,6 +153,18 @@ public class Node extends Value
 
   public function nd_set_type(type:uint):void {
     flags = ( (flags & ~(-1 << NODE_LSHIFT) ) | ( (type & NODE_LMASK) << NODE_LSHIFT) )
+  }
+
+  public function nd_noex():int {
+    return u3;
+  }
+
+  public function nd_clss():RClass {
+    return u1;
+  }
+
+  public function nd_body():Node {
+    return u2;
   }
 
 }

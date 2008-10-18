@@ -10,7 +10,7 @@ public class RObject extends RBasic
 
   public function RObject(klass:RClass=null)
   {
-    this.klass = klass;
+    super(klass);
     this.flags = Value.T_OBJECT;
   }
 
