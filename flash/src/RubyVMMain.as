@@ -23,8 +23,9 @@ public class RubyVMMain extends Sprite
   {
     var iseq:RbISeq = new RbISeq();
     iseq.type = RbVm.ISEQ_TYPE_TOP;
-    iseq.iseq_fn = function (th:RbThread, cfp:RbControlFrame):Value {
-      return this.Qnil;
+    iseq.iseq_fn = function (th:RbThread, cfp:RbControlFrame):void {
+      cfp.sp.push(this.Qnil);
+      this.bc_leave(th, cfp);
     }
     return Node(iseq);
   }

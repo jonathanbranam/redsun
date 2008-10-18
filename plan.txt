@@ -1,4 +1,3 @@
-
 pretty print as3 so I can read it and understand what's happening
 write some as3, compile it, and look at the output
 
@@ -161,4 +160,26 @@ radically different. Breaking tests will be deleted and can be recovered
 6pm EDT
 Implementing lots of methods from Ruby source as AS3 methods. Trying to get
 basic object structure setup: Object, Class, and Module.
+
+10/17/2008
+
+Finished implementing basic opcodes and internal Ruby code. Wrote a real
+rb_intern solution (probably wrong and/or naive). Ran a blank test.
+
+10/18/2008
+
+Going to step back from creating classes for a while and just compile:
+  puts "hi"
+until that works (directing puts to trace)
+
+Once method dispatch works for that basic case, then look at local vars such
+as:
+  var = "hi"
+  puts var
+
+
+Note: control frame is stored at the bottom of the stack in an upside-down
+stack that pops from the top to bottom. Not totally sure how overflow is
+controlled; probably through the stack_size field that is compared before
+execution begins.
 

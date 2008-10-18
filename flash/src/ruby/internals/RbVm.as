@@ -15,7 +15,7 @@ public class RbVm
   public static const VM_FRAME_MAGIC_EVAL:uint   = 0x91;
   public static const VM_FRAME_MAGIC_LAMBDA:uint = 0xa1;
   public static const VM_FRAME_MAGIC_MASK_BITS:uint = 8;
-  public static const VM_FRAME_MAGIC_MSK:uint    = (~(~0<<VM_FRAME_MAGIC_MASK_BITS));
+  public static const VM_FRAME_MAGIC_MASK:uint    = (~(~0<<VM_FRAME_MAGIC_MASK_BITS));
 
   public static const ISEQ_TYPE_TOP:uint     = 1;
   public static const ISEQ_TYPE_METHOD:uint  = 2;

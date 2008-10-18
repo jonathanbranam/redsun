@@ -139,7 +139,38 @@ public class RubyCore
   }
 
   public function vm_eval(th:RbThread, initial:Value):Value {
-    return th.cfp.pc.call(this, th, th.cfp);
+    var ret:Value;
+
+    ret = th.cfp.pc.call(this, th, th.cfp);
+
+    if (th.cfp.VM_FRAME_TYPE() != RbVm.VM_FRAME_MAGIC_FINISH) {
+      rb_bug("cfp consistency error");
+    }
+
+    ret = th.cfp.sp.pop();
+    //th.cfp++ // pop cf
+
+    return ret;
+  }
+
+  public function vm_pop_frame(th:RbThread):void {
+    // profile collection
+
+    //th.cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th.cfp);
+    th.cfp = th.cfp_stack.pop();
+  }
+
+  public function bc_leave(th:RbThread, cfp:RbControlFrame):void {
+    if (cfp.sp != cfp.bp) {
+      rb_bug("Stack consistency error (sp: "+cfp.sp+", bp: " +cfp.bp +")");
+    }
+    // RUBY_VM_CHECK_INTS();
+    vm_pop_frame(th);
+    // RESTORE_REGS();
+  }
+
+  public function rb_bug(message:String):void {
+    throw new Error("rb_bug: " + message);
   }
 
   protected function Init_var_tables():void {
@@ -189,7 +220,9 @@ public class RubyCore
                                pc:Function, sp:Array, lfp:Array, local_size:int):RbControlFrame
   {
     // rb_control_frame_t * const cfp = th->cfp = th->cfp - 1;
-    var cfp:RbControlFrame = th.cfp;
+    var cfp:RbControlFrame = new RbControlFrame();
+    th.cfp_stack.push(th.cfp);
+    th.cfp = cfp;
     var i:int;
 
     for (i = 0; i < local_size; i++) {
@@ -219,7 +252,8 @@ public class RubyCore
     th.stack_size = RbVm.RUBY_VM_THREAD_STACK_SIZE;
     th.stack = thread_recycle_stack(th.stack_size);
 
-    th.cfp = new RbControlFrame();
+    th.cfp_stack = new Array();
+    //th.cfp = new RbControlFrame();
 
     vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_TOP, Qnil, null, null, th.stack, null, 1);
 
@@ -255,10 +289,10 @@ public class RubyCore
 
   public function ruby_init():void {
     rb_id = new Id();
-    Qnil = new RObject();
-    Qtrue = new RObject();
-    Qfalse = new RObject();
-    Qundef = new RObject();
+    Qnil = new RNil();
+    Qtrue = new RTrue();
+    Qfalse = new RFalse();
+    Qundef = new RUndef();
 
 
     //Init_stack(&state);
@@ -634,7 +668,7 @@ public class RubyCore
 
     }
     if (!path.is_string()) {
-      // rb_bug("class path is not set propertly");
+      rb_bug("class path is not set propertly");
     }
     return path;
   }
@@ -783,10 +817,14 @@ public class RubyCore
     case Node.NODE_BMETHOD:
       break;
     default:
-      //rb_bug("unsupported: vm_call0("+ruby_node_name(body.nd_type())+")");
+      rb_bug("unsupported: vm_call0("+ruby_node_name(body.nd_type())+")");
       break;
     }
     return Qnil;
+  }
+
+  public function ruby_node_name(type:uint):String {
+    return "Node :" + type;
   }
 
   public function search_method(klass:RClass, id:int, klassp:RClass):Node {

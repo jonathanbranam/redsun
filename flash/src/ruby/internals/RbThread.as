@@ -17,6 +17,8 @@ public class RbThread
 
   public var stack_size:uint;
 
+  public var cfp_stack:Array;
+
   public var cfp:RbControlFrame;
 
   public var safe_level:int;

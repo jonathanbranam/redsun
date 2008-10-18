@@ -23,5 +23,11 @@ public class RbControlFrame
   {
   }
 
+  public function VM_FRAME_TYPE():uint {
+    return flag & RbVm.VM_FRAME_MAGIC_MASK;
+  }
+
+
+
 }
 }
