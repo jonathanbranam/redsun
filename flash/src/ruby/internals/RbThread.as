@@ -1,6 +1,6 @@
 package ruby.internals
 {
-public class RbThread
+public class RbThread extends Value
 {
   public static const THREAD_TO_KILL:uint = 0;
   public static const THREAD_RUNNABLE:uint = 1;

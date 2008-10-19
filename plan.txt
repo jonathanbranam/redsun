@@ -183,3 +183,12 @@ stack that pops from the top to bottom. Not totally sure how overflow is
 controlled; probably through the stack_size field that is compared before
 execution begins.
 
+Completed method dispatch for puts "hi". Amazing amount of work to do it
+"the right way" as opposed to just faking the whole thing. Had to add a bunch
+of class initializations, setup lots of different intermediate structures and
+methods. Execution path from VM initiated calls is different than execution
+path from Ruby C initiated calls.
+
+Split a bunch of methods into their Ruby C equivalent files for easier
+organization. Clearly a better structure could be devised for OO, but this
+layout helps when searching for methods from Ruby C.

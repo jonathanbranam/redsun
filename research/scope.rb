@@ -1,3 +1,5 @@
+puts("hi")
+=begin
 class A
   class B < A
   end
@@ -6,7 +8,6 @@ class A
   class << self
   end
 end
-=begin
 class T
   def parm_pos(p1, p2)
     i = p1

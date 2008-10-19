@@ -2,7 +2,6 @@ package
 {
 import flash.display.Sprite;
 
-import ruby.internals.Node;
 import ruby.internals.RbControlFrame;
 import ruby.internals.RbISeq;
 import ruby.internals.RbThread;
@@ -16,18 +15,29 @@ public class RubyVMMain extends Sprite
   {
     super();
     var c:RubyCore = new RubyCore();
-    c.main(basic_rb(c));
+    // Must do ruby_init to prep for creating iseq.
+    c.ruby_init();
+    c.ruby_run_node(basic_rb(c));
   }
 
-  protected function basic_rb(c:RubyCore):Node
+  protected function basic_rb(rc:RubyCore):Value
   {
     var iseq:RbISeq = new RbISeq();
     iseq.type = RbVm.ISEQ_TYPE_TOP;
-    iseq.iseq_fn = function (th:RbThread, cfp:RbControlFrame):void {
-      cfp.sp.push(this.Qnil);
-      this.bc_leave(th, cfp);
+    iseq.iseq_fn = function (rc:RubyCore, th:RbThread, cfp:RbControlFrame):void {
+      // [:putnil]
+      cfp.sp.push(rc.Qnil);
+
+      // [:putstring, "hi"]
+      cfp.sp.push(rc.rb_str_new("THIS IS A STRING FROM RUBY!!"));
+
+      // [:send, :puts, 1, nil, 8, nil]
+      rc.bc_send(th, cfp, rc.parse_y.rb_intern("puts"), 1, rc.Qnil, 8, rc.Qnil);
+
+      // [:leave]
+      rc.bc_leave(th, cfp);
     }
-    return Node(iseq);
+    return rc.Data_Wrap_Struct(rc.iseq_c.rb_cISeq, iseq, null, null);
   }
 
 }

@@ -3,114 +3,114 @@ package ruby.internals
 public class Node extends Value
 {
   public static const NODE_METHOD:uint = 1;
-  public static const NODE_FBODY:uint = 1;
-  public static const NODE_CFUNC:uint = 1;
-  public static const NODE_SCOPE:uint = 1;
-  public static const NODE_BLOCK:uint = 1;
-  public static const NODE_IF:uint = 1;
-  public static const NODE_CASE:uint = 1;
-  public static const NODE_WHEN:uint = 1;
-  public static const NODE_OPT_N:uint = 1;
-  public static const NODE_WHILE:uint = 1;
-  public static const NODE_UNTIL:uint = 1;
-  public static const NODE_ITER:uint = 1;
-  public static const NODE_FOR:uint = 1;
-  public static const NODE_BREAK:uint = 1;
-  public static const NODE_NEXT:uint = 1;
-  public static const NODE_REDO:uint = 1;
-  public static const NODE_RETRY:uint = 1;
-  public static const NODE_BEGIN:uint = 1;
-  public static const NODE_RESCUE:uint = 1;
-  public static const NODE_RESBODY:uint = 1;
-  public static const NODE_ENSURE:uint = 1;
-  public static const NODE_AND:uint = 1;
-  public static const NODE_OR:uint = 1;
-  public static const NODE_MASGN:uint = 1;
-  public static const NODE_LASGN:uint = 1;
-  public static const NODE_DASGN:uint = 1;
-  public static const NODE_DASGN_CURR:uint = 1;
-  public static const NODE_GASGN:uint = 1;
-  public static const NODE_IASGN:uint = 1;
-  public static const NODE_IASGN2:uint = 1;
-  public static const NODE_CDECL:uint = 1;
-  public static const NODE_CVASGN:uint = 1;
-  public static const NODE_CVDECL:uint = 1;
-  public static const NODE_OP_ASGN1:uint = 1;
-  public static const NODE_OP_ASGN2:uint = 1;
-  public static const NODE_OP_ASGN_AND:uint = 1;
-  public static const NODE_OP_ASGN_OR:uint = 1;
-  public static const NODE_CALL:uint = 1;
-  public static const NODE_FCALL:uint = 1;
-  public static const NODE_VCALL:uint = 1;
-  public static const NODE_SUPER:uint = 1;
-  public static const NODE_ZSUPER:uint = 1;
-  public static const NODE_ARRAY:uint = 1;
-  public static const NODE_ZARRAY:uint = 1;
-  public static const NODE_VALUES:uint = 1;
-  public static const NODE_HASH:uint = 1;
-  public static const NODE_RETURN:uint = 1;
-  public static const NODE_YIELD:uint = 1;
-  public static const NODE_LVAR:uint = 1;
-  public static const NODE_DVAR:uint = 1;
-  public static const NODE_GVAR:uint = 1;
-  public static const NODE_IVAR:uint = 1;
-  public static const NODE_CONST:uint = 1;
-  public static const NODE_CVAR:uint = 1;
-  public static const NODE_NTH_REF:uint = 1;
-  public static const NODE_BACK_REF:uint = 1;
-  public static const NODE_MATCH:uint = 1;
-  public static const NODE_MATCH2:uint = 1;
-  public static const NODE_MATCH3:uint = 1;
-  public static const NODE_LIT:uint = 1;
-  public static const NODE_STR:uint = 1;
-  public static const NODE_DSTR:uint = 1;
-  public static const NODE_XSTR:uint = 1;
-  public static const NODE_DXSTR:uint = 1;
-  public static const NODE_EVSTR:uint = 1;
-  public static const NODE_DREGX:uint = 1;
-  public static const NODE_DREGX_ONCE:uint = 1;
-  public static const NODE_ARGS:uint = 1;
-  public static const NODE_ARGS_AUX:uint = 1;
-  public static const NODE_OPT_ARG:uint = 1;
-  public static const NODE_POSTARG:uint = 1;
-  public static const NODE_ARGSCAT:uint = 1;
-  public static const NODE_ARGSPUSH:uint = 1;
-  public static const NODE_SPLAT:uint = 1;
-  public static const NODE_TO_ARY:uint = 1;
-  public static const NODE_BLOCK_ARG:uint = 1;
-  public static const NODE_BLOCK_PASS:uint = 1;
-  public static const NODE_DEFN:uint = 1;
-  public static const NODE_DEFS:uint = 1;
-  public static const NODE_ALIAS:uint = 1;
-  public static const NODE_VALIAS:uint = 1;
-  public static const NODE_UNDEF:uint = 1;
-  public static const NODE_CLASS:uint = 1;
-  public static const NODE_MODULE:uint = 1;
-  public static const NODE_SCLASS:uint = 1;
-  public static const NODE_COLON2:uint = 1;
-  public static const NODE_COLON3:uint = 1;
-  public static const NODE_DOT2:uint = 1;
-  public static const NODE_DOT3:uint = 1;
-  public static const NODE_FLIP2:uint = 1;
-  public static const NODE_FLIP3:uint = 1;
-  public static const NODE_ATTRSET:uint = 1;
-  public static const NODE_SELF:uint = 1;
-  public static const NODE_NIL:uint = 1;
-  public static const NODE_TRUE:uint = 1;
-  public static const NODE_FALSE:uint = 1;
-  public static const NODE_ERRINFO:uint = 1;
-  public static const NODE_DEFINED:uint = 1;
-  public static const NODE_POSTEXE:uint = 1;
-  public static const NODE_ALLOCA:uint = 1;
-  public static const NODE_BMETHOD:uint = 1;
-  public static const NODE_MEMO:uint = 1;
-  public static const NODE_IFUNC:uint = 1;
-  public static const NODE_DSYM:uint = 1;
-  public static const NODE_ATTRASGN:uint = 1;
-  public static const NODE_PRELUDE:uint = 1;
-  public static const NODE_LAMBDA:uint = 1;
-  public static const NODE_OPTBLOCK:uint = 1;
-  public static const NODE_LAST:uint = 1;
+  public static const NODE_FBODY:uint = 2;
+  public static const NODE_CFUNC:uint = 3;
+  public static const NODE_SCOPE:uint = 4;
+  public static const NODE_BLOCK:uint = 5;
+  public static const NODE_IF:uint = 6;
+  public static const NODE_CASE:uint = 7;
+  public static const NODE_WHEN:uint = 8;
+  public static const NODE_OPT_N:uint = 9;
+  public static const NODE_WHILE:uint = 10;
+  public static const NODE_UNTIL:uint = 11;
+  public static const NODE_ITER:uint = 12;
+  public static const NODE_FOR:uint = 13;
+  public static const NODE_BREAK:uint = 14;
+  public static const NODE_NEXT:uint = 15;
+  public static const NODE_REDO:uint = 16;
+  public static const NODE_RETRY:uint = 17;
+  public static const NODE_BEGIN:uint = 18;
+  public static const NODE_RESCUE:uint = 19;
+  public static const NODE_RESBODY:uint = 20;
+  public static const NODE_ENSURE:uint = 21;
+  public static const NODE_AND:uint = 22;
+  public static const NODE_OR:uint = 23;
+  public static const NODE_MASGN:uint = 24;
+  public static const NODE_LASGN:uint = 25;
+  public static const NODE_DASGN:uint = 26;
+  public static const NODE_DASGN_CURR:uint = 27;
+  public static const NODE_GASGN:uint = 28;
+  public static const NODE_IASGN:uint = 29;
+  public static const NODE_IASGN2:uint = 30;
+  public static const NODE_CDECL:uint = 31;
+  public static const NODE_CVASGN:uint = 32;
+  public static const NODE_CVDECL:uint = 33;
+  public static const NODE_OP_ASGN1:uint = 34;
+  public static const NODE_OP_ASGN2:uint = 35;
+  public static const NODE_OP_ASGN_AND:uint = 36;
+  public static const NODE_OP_ASGN_OR:uint = 37;
+  public static const NODE_CALL:uint = 38;
+  public static const NODE_FCALL:uint = 39;
+  public static const NODE_VCALL:uint = 40;
+  public static const NODE_SUPER:uint = 41;
+  public static const NODE_ZSUPER:uint = 42;
+  public static const NODE_ARRAY:uint = 43;
+  public static const NODE_ZARRAY:uint = 44;
+  public static const NODE_VALUES:uint = 45;
+  public static const NODE_HASH:uint = 46;
+  public static const NODE_RETURN:uint = 47;
+  public static const NODE_YIELD:uint = 48;
+  public static const NODE_LVAR:uint = 49;
+  public static const NODE_DVAR:uint = 50;
+  public static const NODE_GVAR:uint = 51;
+  public static const NODE_IVAR:uint = 52;
+  public static const NODE_CONST:uint = 53;
+  public static const NODE_CVAR:uint = 54;
+  public static const NODE_NTH_REF:uint = 55;
+  public static const NODE_BACK_REF:uint = 56;
+  public static const NODE_MATCH:uint = 57;
+  public static const NODE_MATCH2:uint = 58;
+  public static const NODE_MATCH3:uint = 59;
+  public static const NODE_LIT:uint = 60;
+  public static const NODE_STR:uint = 61;
+  public static const NODE_DSTR:uint = 62;
+  public static const NODE_XSTR:uint = 63;
+  public static const NODE_DXSTR:uint = 64;
+  public static const NODE_EVSTR:uint = 65;
+  public static const NODE_DREGX:uint = 66;
+  public static const NODE_DREGX_ONCE:uint = 67;
+  public static const NODE_ARGS:uint = 68;
+  public static const NODE_ARGS_AUX:uint = 69;
+  public static const NODE_OPT_ARG:uint = 70;
+  public static const NODE_POSTARG:uint = 71;
+  public static const NODE_ARGSCAT:uint = 72;
+  public static const NODE_ARGSPUSH:uint = 73;
+  public static const NODE_SPLAT:uint = 74;
+  public static const NODE_TO_ARY:uint = 75;
+  public static const NODE_BLOCK_ARG:uint = 76;
+  public static const NODE_BLOCK_PASS:uint = 77;
+  public static const NODE_DEFN:uint = 78;
+  public static const NODE_DEFS:uint = 79;
+  public static const NODE_ALIAS:uint = 80;
+  public static const NODE_VALIAS:uint = 81;
+  public static const NODE_UNDEF:uint = 82;
+  public static const NODE_CLASS:uint = 83;
+  public static const NODE_MODULE:uint = 84;
+  public static const NODE_SCLASS:uint = 85;
+  public static const NODE_COLON2:uint = 86;
+  public static const NODE_COLON3:uint = 87;
+  public static const NODE_DOT2:uint = 88;
+  public static const NODE_DOT3:uint = 89;
+  public static const NODE_FLIP2:uint = 90;
+  public static const NODE_FLIP3:uint = 91;
+  public static const NODE_ATTRSET:uint = 92;
+  public static const NODE_SELF:uint = 93;
+  public static const NODE_NIL:uint = 94;
+  public static const NODE_TRUE:uint = 95;
+  public static const NODE_FALSE:uint = 96;
+  public static const NODE_ERRINFO:uint = 97;
+  public static const NODE_DEFINED:uint = 98;
+  public static const NODE_POSTEXE:uint = 99;
+  public static const NODE_ALLOCA:uint = 100;
+  public static const NODE_BMETHOD:uint = 101;
+  public static const NODE_MEMO:uint = 102;
+  public static const NODE_IFUNC:uint = 103;
+  public static const NODE_DSYM:uint = 104;
+  public static const NODE_ATTRASGN:uint = 105;
+  public static const NODE_PRELUDE:uint = 106;
+  public static const NODE_LAMBDA:uint = 107;
+  public static const NODE_OPTBLOCK:uint = 108;
+  public static const NODE_LAST:uint = 109;
 
   public static const NOEX_PUBLIC:uint     = 0x00;
   public static const NOEX_NOSUPER:uint    = 0x01;
@@ -152,7 +152,7 @@ public class Node extends Value
   }
 
   public function nd_set_type(type:uint):void {
-    flags = ( (flags & ~(-1 << NODE_LSHIFT) ) | ( (type & NODE_LMASK) << NODE_LSHIFT) )
+    flags = (flags & ~NODE_TYPEMASK) | ( (type << NODE_TYPESHIFT) & NODE_TYPEMASK )
   }
 
   public function nd_noex():int {
@@ -164,6 +164,18 @@ public class Node extends Value
   }
 
   public function nd_body():Node {
+    return u2;
+  }
+
+  public function nd_oid():int {
+    return u1;
+  }
+
+  public function nd_cfnc():Function {
+    return u1;
+  }
+
+  public function nd_argc():int {
     return u2;
   }
 

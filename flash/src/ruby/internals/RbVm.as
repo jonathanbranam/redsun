@@ -1,8 +1,19 @@
 package ruby.internals
 {
+  import flash.utils.Dictionary;
+
 public class RbVm
 {
   public static const RUBY_VM_THREAD_STACK_SIZE:int = 128*1024;
+
+  public static const VM_CALL_ARGS_SPLAT_BIT:uint    = (0x01 << 1);
+  public static const VM_CALL_ARGS_BLOCKARG_BIT:uint = (0x01 << 2);
+  public static const VM_CALL_FCALL_BIT:uint         = (0x01 << 3);
+  public static const VM_CALL_VCALL_BIT:uint         = (0x01 << 4);
+  public static const VM_CALL_TAILCALL_BIT:uint      = (0x01 << 5);
+  public static const VM_CALL_TAILRECURSION_BIT:uint = (0x01 << 6);
+  public static const VM_CALL_SUPER_BIT:uint         = (0x01 << 7);
+  public static const VM_CALL_SEND_BIT:uint          = (0x01 << 8);
 
   public static const VM_FRAME_MAGIC_METHOD:uint = 0x11;
   public static const VM_FRAME_MAGIC_BLOCK:uint  = 0x21;
@@ -26,8 +37,45 @@ public class RbVm
   public static const ISEQ_TYPE_EVAL:uint    = 7;
   public static const ISEQ_TYPE_DEFINED_GUARD:uint = 8;
 
+  public var self:Value;
+
+  public var global_vm_lock:*;
+
+  public var main_thread:RbThread;
   public var running_thread:RbThread;
+
+  public var living_threads:Dictionary;
+  public var thgroup_default:Value;
+
+  public var running:Boolean;
+  public var thread_abort_on_exception:Boolean;
+
+  public var trace_flag:uint;
+  public var sleeper:int;
+
+  public var mark_object_ary:Value;
+
+  public var special_exceptions:Array;
+
+  public var top_self:Value;
+  public var load_path:Value;
+  public var loaded_features:Value;
+  public var loading_table:Object;
+
+  public var signal_buf:Array;
+  public var buffered_signal_size:uint;
+
+  public var event_hooks:Array;
+
   public var src_encoding_index:int;
+
+  public var verbose:Value;
+  public var debug:Value;
+  public var progname:Value;
+  public var coverages:Value;
+
+  // if defined(ENABLE_VM_OBJSPACE) && ENABLE_VM_OBJSPACE
+  public var objspace:*;
 
   public function RbVm()
   {

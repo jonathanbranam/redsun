@@ -7,17 +7,6 @@ import ruby.RObject;
  */
 public dynamic class RClass extends RObject
 {
-  public static const FL_SINGLETON:uint = FL_USER0;
-  public static const FL_MARK:uint      = 1 << 5;
-  public static const FL_RESERVED:uint  = 1 << 6;
-  public static const FL_FINALIZE:uint  = 1 << 7;
-  public static const FL_TAINT:uint     = 1 << 8;
-  public static const FL_UNTRUSTED:uint = 1 << 9;
-  public static const FL_EXIVAR:uint    = 1 << 10;
-  public static const FL_FREEZE:uint    = 1 << 11;
-
-  public static const FL_USHIFT:uint      = 12;
-
   public static const FL_USER0:uint      = 1 << (FL_USHIFT+0);
   public static const FL_USER1:uint      = 1 << (FL_USHIFT+1);
   public static const FL_USER2:uint      = 1 << (FL_USHIFT+2);
@@ -39,6 +28,17 @@ public dynamic class RClass extends RObject
   public static const FL_USER18:uint      = 1 << (FL_USHIFT+18);
   public static const FL_USER19:uint      = 1 << (FL_USHIFT+19);
 
+  public static const FL_SINGLETON:uint = FL_USER0;
+  public static const FL_MARK:uint      = 1 << 5;
+  public static const FL_RESERVED:uint  = 1 << 6;
+  public static const FL_FINALIZE:uint  = 1 << 7;
+  public static const FL_TAINT:uint     = 1 << 8;
+  public static const FL_UNTRUSTED:uint = 1 << 9;
+  public static const FL_EXIVAR:uint    = 1 << 10;
+  public static const FL_FREEZE:uint    = 1 << 11;
+
+  public static const FL_USHIFT:uint      = 12;
+
   public var name:String = null;
   //public var rbasic:RBasic = new RBasic();
 
@@ -51,6 +51,7 @@ public dynamic class RClass extends RObject
     super(klass);
     this.name = name;
     this.super_class = super_class;
+    this.flags = Value.T_CLASS;
   }
 
   public function is_singleton():Boolean {
