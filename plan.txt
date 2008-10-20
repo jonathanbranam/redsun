@@ -192,3 +192,31 @@ path from Ruby C initiated calls.
 Split a bunch of methods into their Ruby C equivalent files for easier
 organization. Clearly a better structure could be devised for OO, but this
 layout helps when searching for methods from Ruby C.
+
+10/20/2008
+
+Here's the plan:
+- local vars
+- class creation
+- class instantiation
+- class method creation
+- calling method on object
+- method params
+- class instance vars
+- block passing
+- yield
+- block exception tags - break, redo, continue
+- Arrays (maybe need this earlier?)
+- Numbers
+
+Reassess after this is done, but probably:
+- more Kernel methods
+- operators
+- Enumerable and Arrays
+- Numeric methods
+- mspec execution
+-- class methods
+-- namespaces
+-- modules
+-- ??
+

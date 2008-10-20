@@ -34,6 +34,12 @@ public class RubyVMMain extends Sprite
       // [:send, :puts, 1, nil, 8, nil]
       rc.bc_send(th, cfp, rc.parse_y.rb_intern("puts"), 1, rc.Qnil, 8, rc.Qnil);
 
+      // [:putstring, "hi"]
+      cfp.sp.push(rc.rb_str_new("This is another string."));
+
+      // [:send, :puts, 1, nil, 8, nil]
+      rc.bc_send(th, cfp, rc.parse_y.rb_intern("puts"), 1, rc.Qnil, 8, rc.Qnil);
+
       // [:leave]
       rc.bc_leave(th, cfp);
     }
