@@ -139,6 +139,8 @@ public class Node extends Value
 
   public static const RUBY_VM_METHOD_NODE:uint = NODE_METHOD;
 
+  public var nd_file:String;
+
   public var u1:*;
   public var u2:*;
   public var u3:*;
@@ -155,29 +157,43 @@ public class Node extends Value
     flags = (flags & ~NODE_TYPEMASK) | ( (type << NODE_TYPESHIFT) & NODE_TYPEMASK )
   }
 
-  public function nd_noex():int {
-    return u3;
-  }
+  public function get nd_noex():int { return u3; }
+  public function set nd_noex(v:int):void { u3 = v; }
 
-  public function nd_clss():RClass {
-    return u1;
-  }
+  public function get nd_clss():RClass { return u1; }
 
-  public function nd_body():Node {
-    return u2;
-  }
+  public function get nd_head():Node { return u1; }
+  public function get nd_alen():int  { return u2; }
+  public function get nd_next():Node { return u3; }
+  public function set nd_next(v:Node):void { u3 = v; }
 
-  public function nd_oid():int {
-    return u1;
-  }
+  public function get nd_cond():Node { return u1; }
+  public function get nd_body():Node { return u2; }
+  public function get nd_else():Node { return u3; }
 
-  public function nd_cfnc():Function {
-    return u1;
-  }
+  public function get nd_orig():Value { return u3; }
 
-  public function nd_argc():int {
-    return u2;
-  }
+  public function get nd_resq():Node { return u1; }
+  public function get nd_ensr():Node { return u2; }
+
+  public function get nd_1st():Node { return u1; }
+  public function get nd_2nd():Node { return u2; }
+
+  public function get nd_stts():Node { return u1; }
+
+  public function get nd_oid():int { return u1; }
+  public function get nd_cnt():int { return u2; }
+  public function get nd_tbl():Array { return u3; }
+
+  public function get nd_recv():Node { return u1; }
+  public function get nd_mid():int   { return u2; }
+  public function get nd_args():Node { return u3; }
+
+  public function get nd_cfnc():Function { return u1; }
+  public function get nd_argc():int { return u2; }
+
+  public function get nd_visi():int { return u2; }
+  public function set nd_visi(v:int):void { u2 = v; }
 
 }
 }

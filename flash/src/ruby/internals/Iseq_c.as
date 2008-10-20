@@ -3,7 +3,10 @@ package ruby.internals
 public class Iseq_c
 {
   protected var rc:RubyCore;
+
   public var vm_c:Vm_c;
+  public var object_c:Object_c;
+  public var class_c:Class_c;
 
   public var rb_cISeq:RClass;
 
@@ -110,7 +113,7 @@ public class Iseq_c
 
 
   public function Init_ISeq():void {
-    rb_cISeq = rc.rb_define_class_under(vm_c.rb_cRubyVM, "InstructionSequence", rc.rb_cObject);
+    rb_cISeq = class_c.rb_define_class_under(vm_c.rb_cRubyVM, "InstructionSequence", object_c.rb_cObject);
 
     // more methods
   }

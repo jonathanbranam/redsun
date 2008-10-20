@@ -5,10 +5,15 @@ package ruby.internals
 public class Vm_c
 {
   protected var rc:RubyCore;
+
   public var iseq_c:Iseq_c;
+  public var vm_insnhelper_c:Vm_insnhelper_c;
+  public var object_c:Object_c;
+  public var class_c:Class_c;
 
   public var rb_cRubyVM:RClass;
   public var rb_cThread:RClass;
+  public var rb_mRubyVMFrozenCore:Value;
 
   public function Vm_c(rc:RubyCore)
   {
@@ -17,10 +22,22 @@ public class Vm_c
 
   public function Init_VM():void
   {
-    rb_cRubyVM = rc.rb_define_class("RubyVM", rc.rb_cObject);
+    var opts:Value;
+    var klass:RClass;
+    var fcore:RClass;
+
+    // ::VM
+    rb_cRubyVM = class_c.rb_define_class("RubyVM", object_c.rb_cObject);
     // rb_undef_alloc_func(rb_cRubyVM);
 
-    rb_cThread = rc.rb_define_class("Thread", rc.rb_cObject);
+    // ::VM::FrozenCore
+    fcore = class_c.rb_class_new(object_c.rb_cBasicObject);
+    fcore.flags = Value.T_ICLASS;
+    // define various methods
+    // rc.rb_obj_freeze(fcore);
+    rb_mRubyVMFrozenCore = fcore;
+
+    rb_cThread = class_c.rb_define_class("Thread", object_c.rb_cObject);
     // rb_undef_alloc_func(rb_cThread);
 
     // VM bootstrap: phase 2
@@ -63,6 +80,39 @@ public class Vm_c
     //vm_opt_method_table = new Object();
 
   }
+
+  public function
+  vm_get_cbase(iseq:RbISeq, lfp:Array, dfp:Array):Value
+  {
+    var cref:Node = vm_insnhelper_c.vm_get_cref(iseq, lfp, dfp);
+    var klass:Value = rc.Qundef;
+
+    while (cref != null && cref != rc.Qnil) {
+      if ((klass = cref.nd_clss) != null) {
+        break;
+      }
+      cref = cref.nd_next;
+    }
+
+    return klass;
+  }
+
+  // vm_.c:747
+  public function
+  vm_cref_push(th:RbThread, klass:RClass, noex:int):Node
+  {
+    var cfp:RbControlFrame = vm_get_ruby_level_caller_cfp(th, th.cfp);
+    var cref:Node = NEW_BLOCK(klass);
+    cref.nd_file = null;
+    cref.nd_visi = noex;
+
+    if (cfp) {
+      cref.nd_next = vm_insnhelper_c.vm_get_cref(cfp.iseq, cfp.lfp, cfp.dfp);
+    }
+
+    return cref;
+  }
+
 
 }
 }

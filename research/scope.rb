@@ -1,4 +1,6 @@
 puts("hi")
+class A
+end
 =begin
 class A
   class B < A

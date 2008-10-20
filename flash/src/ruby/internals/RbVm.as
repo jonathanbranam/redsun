@@ -15,6 +15,9 @@ public class RbVm
   public static const VM_CALL_SUPER_BIT:uint         = (0x01 << 7);
   public static const VM_CALL_SEND_BIT:uint          = (0x01 << 8);
 
+  public static const VM_SPECIAL_OBJECT_VMCORE:uint = 0x01;
+  public static const VM_SPECIAL_OBJECT_CBASE:uint  = 0x02;
+
   public static const VM_FRAME_MAGIC_METHOD:uint = 0x11;
   public static const VM_FRAME_MAGIC_BLOCK:uint  = 0x21;
   public static const VM_FRAME_MAGIC_CLASS:uint  = 0x31;

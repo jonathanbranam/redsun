@@ -1,6 +1,5 @@
 package ruby.internals
 {
-import ruby.RObject;
 
 /**
  * Should be RModule probably.

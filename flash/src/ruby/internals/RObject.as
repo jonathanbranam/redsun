@@ -1,4 +1,4 @@
-package ruby
+package ruby.internals
 {
 import ruby.internals.RBasic;
 import ruby.internals.RClass;

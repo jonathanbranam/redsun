@@ -2,48 +2,57 @@ package
 {
 import flash.display.Sprite;
 
-import ruby.internals.RbControlFrame;
 import ruby.internals.RbISeq;
-import ruby.internals.RbThread;
 import ruby.internals.RbVm;
 import ruby.internals.RubyCore;
-import ruby.internals.Value;
+import ruby.internals.RubyFrame;
 
 public class RubyVMMain extends Sprite
 {
   public function RubyVMMain()
   {
     super();
-    var c:RubyCore = new RubyCore();
+    var rc:RubyCore = new RubyCore();
     // Must do ruby_init to prep for creating iseq.
-    c.ruby_init();
-    c.ruby_run_node(basic_rb(c));
+    rc.ruby_init();
+    rc.ruby_run_node(rc.iseqval_from_func(ruby_func()));
   }
 
-  protected function basic_rb(rc:RubyCore):Value
+  protected function ruby_func():Function
   {
-    var iseq:RbISeq = new RbISeq();
-    iseq.type = RbVm.ISEQ_TYPE_TOP;
-    iseq.iseq_fn = function (rc:RubyCore, th:RbThread, cfp:RbControlFrame):void {
-      // [:putnil]
-      cfp.sp.push(rc.Qnil);
+    return function (f:RubyFrame):void {
+      f.putnil();
+      f.putstring("THIS IS A STRING FROM RUBY!!");
+      f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
-      // [:putstring, "hi"]
-      cfp.sp.push(rc.rb_str_new("THIS IS A STRING FROM RUBY!!"));
+      f.putstring("put this into local var");
+      f.setlocal(2);
 
-      // [:send, :puts, 1, nil, 8, nil]
-      rc.bc_send(th, cfp, rc.parse_y.rb_intern("puts"), 1, rc.Qnil, 8, rc.Qnil);
+      f.putnil();
+      f.getlocal(2);
+      f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
-      // [:putstring, "hi"]
-      cfp.sp.push(rc.rb_str_new("This is another string."));
+      f.putnil();
+      f.putstring("This is another string.");
+      f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
-      // [:send, :puts, 1, nil, 8, nil]
-      rc.bc_send(th, cfp, rc.parse_y.rb_intern("puts"), 1, rc.Qnil, 8, rc.Qnil);
+      f.putspecialobject(2);
+      f.putnil();
+      var class_iseq:RbISeq = new RbISeq();
+      class_iseq.arg_size = 0;
+      class_iseq.local_size = 1;
+      class_iseq.stack_max = 1;
+      class_iseq.type = RbVm.ISEQ_TYPE_CLASS;
+      class_iseq.iseq_fn = function(f:RubyFrame):void {
+        f.putnil();
+        f.leave();
+      }
+
+      f.defineclass("A", class_iseq, 0);
 
       // [:leave]
-      rc.bc_leave(th, cfp);
-    }
-    return rc.Data_Wrap_Struct(rc.iseq_c.rb_cISeq, iseq, null, null);
+      f.leave();
+    };
   }
 
 }

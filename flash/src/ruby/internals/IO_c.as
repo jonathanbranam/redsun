@@ -3,8 +3,12 @@ package ruby.internals
 public class IO_c
 {
   protected var rc:RubyCore;
+
   public var error_c:Error_c;
   public var parse_y:Parse_y;
+  public var object_c:Object_c;
+  public var class_c:Class_c;
+  public var string_c:String_c;
 
   public var rb_cIO:RClass;
 
@@ -21,18 +25,18 @@ public class IO_c
   public function
   Init_IO():void
   {
-    rc.rb_define_global_function("puts", rb_f_puts, -1);
+    class_c.rb_define_global_function("puts", rb_f_puts, -1);
 
-    rb_cIO = rc.rb_define_class("IO", rc.rb_cObject);
+    rb_cIO = class_c.rb_define_class("IO", object_c.rb_cObject);
     // enumerable
 
-    rc.rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
+    class_c.rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
 
-    rc.rb_define_method(rb_cIO, "write", io_write, 1);
+    class_c.rb_define_method(rb_cIO, "write", io_write, 1);
 
     rb_stdout = rc.rb_obj_alloc(rb_cIO);
 
-    rb_default_rs = rc.rb_str_new2("\n");
+    rb_default_rs = string_c.rb_str_new2("\n");
 
     id_write = parse_y.rb_intern("write");
   }
@@ -57,11 +61,14 @@ public class IO_c
       return rc.Qnil;
     }
     for (i=0; i < argc; i++) {
-      line = rc.rb_obj_as_string(argv[i]);
+      line = string_c.rb_obj_as_string(argv[i]);
       rb_io_write(out, line);
-      if (line.string.length == 0 ||
-          line.string.charAt(line.string.length-1) != '\n') {
-        rb_io_write(out, rb_default_rs);
+      // HACK b/c trace spits out newlines all the time.
+      if (out != rb_stdout) {
+        if (line.string.length == 0 ||
+            line.string.charAt(line.string.length-1) != '\n') {
+          rb_io_write(out, rb_default_rs);
+        }
       }
     }
     return rc.Qnil;
@@ -76,7 +83,7 @@ public class IO_c
   protected function
   io_write(io:Value, str:Value):Value
   {
-    str = rc.rb_obj_as_string(str);
+    str = string_c.rb_obj_as_string(str);
     if (io == rb_stdout) {
       trace(RString(str).string);
       return rc.Qtrue;
