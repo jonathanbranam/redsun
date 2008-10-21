@@ -31,6 +31,8 @@ public class RbVm
   public static const VM_FRAME_MAGIC_MASK_BITS:uint = 8;
   public static const VM_FRAME_MAGIC_MASK:uint    = (~(~0<<VM_FRAME_MAGIC_MASK_BITS));
 
+  public static const VM_FRAME_FLAG_PASSED:uint =  0x0100;
+
   public static const ISEQ_TYPE_TOP:uint     = 1;
   public static const ISEQ_TYPE_METHOD:uint  = 2;
   public static const ISEQ_TYPE_BLOCK:uint   = 3;

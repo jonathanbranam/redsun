@@ -1,28 +1,13 @@
-package ruby.internals
-{
-public class Iseq_c
-{
-  protected var rc:RubyCore;
-
-  public var vm_c:Vm_c;
-  public var object_c:Object_c;
-  public var class_c:Class_c;
 
   public var rb_cISeq:RClass;
 
   public var COMPILE_OPTION_DEFAULT:RbCompileOptions;
 
-  public function Iseq_c(rc:RubyCore)
-  {
-    this.rc = rc;
-    COMPILE_OPTION_DEFAULT = new RbCompileOptions();
-  }
-
   protected function iseq_alloc(klass:RClass):Value {
     var obj:Value;
     var iseq:RbISeq;
 
-    obj = rc.Data_Wrap_Struct(klass, new RbISeq(), null/*iseq_mark*/, null/*iseq_free*/);
+    obj = Data_Wrap_Struct(klass, new RbISeq(), null/*iseq_mark*/, null/*iseq_free*/);
     return obj;
   }
 
@@ -31,7 +16,7 @@ public class Iseq_c
   }
 
   public function GetISeqPtr(obj:Value):RbISeq {
-    return rc.GetCoreDataFromValue(obj);
+    return GetCoreDataFromValue(obj);
   }
 
   protected function
@@ -53,9 +38,9 @@ public class Iseq_c
 
     // bunch more code
 
-    iseq.coverage = rc.Qfalse;
+    iseq.coverage = Qfalse;
 
-    return rc.Qtrue;
+    return Qtrue;
   }
 
   public function
@@ -80,7 +65,7 @@ public class Iseq_c
   cleanup_iseq_build(iseq:RbISeq):Value
   {
     // skipping this
-    return rc.Qtrue;
+    return Qtrue;
   }
 
   public function
@@ -93,7 +78,7 @@ public class Iseq_c
       //COMPILE(ret, "nil", node);
       //iseq_set_local_table(iseq, 0);
     } else {
-      rc.rb_bug("should not have a call to compile in Red Sun");
+      rb_bug("should not have a call to compile in Red Sun");
     }
 
     return iseq_setup(iseq, ret);
@@ -113,10 +98,19 @@ public class Iseq_c
 
 
   public function Init_ISeq():void {
-    rb_cISeq = class_c.rb_define_class_under(vm_c.rb_cRubyVM, "InstructionSequence", object_c.rb_cObject);
+    COMPILE_OPTION_DEFAULT = new RbCompileOptions();
 
+    rb_cISeq = rb_define_class_under(rb_cRubyVM, "InstructionSequence", rb_cObject);
+
+    // TODO: @skipped
     // more methods
   }
 
-}
-}
+  // iseq.c:930
+  public function
+  ruby_node_name(type:uint):String
+  {
+    return "Node :" + type;
+  }
+
+

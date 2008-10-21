@@ -1,12 +1,3 @@
-package ruby.internals
-{
-public class Error_c
-{
-  protected var rc:RubyCore;
-
-  public var object_c:Object_c;
-  public var class_c:Class_c;
-
   public var rb_eException:RClass;
 
   public var rb_eSystemExit:RClass;
@@ -39,45 +30,40 @@ public class Error_c
 
   public var rb_eSystemCallError:RClass;
 
-  public function Error_c(rc:RubyCore)
-  {
-    this.rc = rc;
-  }
-
   public function Init_Exception():void {
-    rb_eException = class_c.rb_define_class("Exception", object_c.rb_cObject);
+    rb_eException = rb_define_class("Exception", rb_cObject);
     // exception methods
 
-    rb_eSystemExit = class_c.rb_define_class("SystemExit", rb_eException);
-    rb_eFatal = class_c.rb_define_class("fatal", rb_eException);
-    rb_eSignal = class_c.rb_define_class("SignalException", rb_eException);
-    rb_eInterrupt = class_c.rb_define_class("Interrupt", rb_eSignal);
+    rb_eSystemExit = rb_define_class("SystemExit", rb_eException);
+    rb_eFatal = rb_define_class("fatal", rb_eException);
+    rb_eSignal = rb_define_class("SignalException", rb_eException);
+    rb_eInterrupt = rb_define_class("Interrupt", rb_eSignal);
 
-    rb_eStandardError = class_c.rb_define_class("StandardError", rb_eException);
-    rb_eTypeError = class_c.rb_define_class("TypeError", rb_eStandardError);
-    rb_eArgError = class_c.rb_define_class("ArgumentError", rb_eStandardError);
-    rb_eIndexError = class_c.rb_define_class("IndexError", rb_eStandardError);
-    rb_eKeyError = class_c.rb_define_class("KeyError", rb_eIndexError);
-    rb_eRangeError = class_c.rb_define_class("RangeError", rb_eStandardError);
-    rb_eEncCompatError = class_c.rb_define_class("EncodingCompatibilityError", rb_eStandardError);
+    rb_eStandardError = rb_define_class("StandardError", rb_eException);
+    rb_eTypeError = rb_define_class("TypeError", rb_eStandardError);
+    rb_eArgError = rb_define_class("ArgumentError", rb_eStandardError);
+    rb_eIndexError = rb_define_class("IndexError", rb_eStandardError);
+    rb_eKeyError = rb_define_class("KeyError", rb_eIndexError);
+    rb_eRangeError = rb_define_class("RangeError", rb_eStandardError);
+    rb_eEncCompatError = rb_define_class("EncodingCompatibilityError", rb_eStandardError);
 
-    rb_eScriptError = class_c.rb_define_class("ScriptError", rb_eException);
-    rb_eSyntaxError = class_c.rb_define_class("SyntaxError", rb_eScriptError);
-    rb_eLoadError = class_c.rb_define_class("LoadError", rb_eScriptError);
-    rb_eNotImpError = class_c.rb_define_class("NotImplementedError", rb_eScriptError);
+    rb_eScriptError = rb_define_class("ScriptError", rb_eException);
+    rb_eSyntaxError = rb_define_class("SyntaxError", rb_eScriptError);
+    rb_eLoadError = rb_define_class("LoadError", rb_eScriptError);
+    rb_eNotImpError = rb_define_class("NotImplementedError", rb_eScriptError);
 
-    rb_eNameError = class_c.rb_define_class("NameError", rb_eStandardError);
-    rb_cNameErrorMesg = class_c.rb_define_class_under(rb_eNameError, "message", object_c.rb_cData);
+    rb_eNameError = rb_define_class("NameError", rb_eStandardError);
+    rb_cNameErrorMesg = rb_define_class_under(rb_eNameError, "message", rb_cData);
 
-    rb_eNoMethodError = class_c.rb_define_class("NoMethodError", rb_eNameError);
+    rb_eNoMethodError = rb_define_class("NoMethodError", rb_eNameError);
 
-    rb_eRuntimeError = class_c.rb_define_class("RuntimeError", rb_eStandardError);
-    rb_eSecurityError = class_c.rb_define_class("SecurityError", rb_eException);
-    rb_eNoMemError = class_c.rb_define_class("NoMemoryError", rb_eException);
+    rb_eRuntimeError = rb_define_class("RuntimeError", rb_eStandardError);
+    rb_eSecurityError = rb_define_class("SecurityError", rb_eException);
+    rb_eNoMemError = rb_define_class("NoMemoryError", rb_eException);
 
-    rb_eSystemCallError = class_c.rb_define_class("SystemCallError", rb_eStandardError);
+    rb_eSystemCallError = rb_define_class("SystemCallError", rb_eStandardError);
 
-    class_c.rb_define_global_function("warn", rb_warn_m, 1);
+    rb_define_global_function("warn", rb_warn_m, 1);
 
   }
 
@@ -85,11 +71,11 @@ public class Error_c
   protected function
   rb_warn_m(self:Value, mesg:Value):Value
   {
-    // if (!NIL_P(rc.ruby_verbose)) {
+    // if (!NIL_P(ruby_verbose)) {
       trace(mesg);
       //trace(rb_default_rs);
     // }
-    return rc.Qnil;
+    return Qnil;
   }
 
   public function
@@ -125,5 +111,3 @@ public class Error_c
   }
 
 
-}
-}

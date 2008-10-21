@@ -161,6 +161,7 @@ public class Node extends Value
   public function set nd_noex(v:int):void { u3 = v; }
 
   public function get nd_clss():RClass { return u1; }
+  public function set nd_clss(v:RClass):void { u1 = v; }
 
   public function get nd_head():Node { return u1; }
   public function get nd_alen():int  { return u2; }

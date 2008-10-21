@@ -1,6 +1,5 @@
 package ruby.internals
 {
-import ruby.RObject;
 
 public class RString extends RBasic
 {

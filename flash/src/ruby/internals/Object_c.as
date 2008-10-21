@@ -1,13 +1,3 @@
-package ruby.internals
-{
-public class Object_c
-{
-  protected var rc:RubyCore;
-
-  public var variable_c:Variable_c;
-  public var class_c:Class_c;
-  public var parse_y:Parse_y;
-
   public var rb_cBasicObject:RClass;
   public var rb_mKernel:RClass
   public var rb_cObject:RClass;
@@ -23,19 +13,14 @@ public class Object_c
   public var id_eq:int, id_eql:int, id_match:int, id_inspect:int, id_init_copy:int;
 
 
-  public function Object_c(rc:RubyCore)
-  {
-    this.rc = rc;
-  }
-
   protected function
   boot_defclass(name:String, super_class:RClass):RClass
   {
-    var obj:RClass = class_c.rb_class_boot(super_class);
-    var id:int = parse_y.rb_intern(name);
-    variable_c.rb_name_class(obj, id);
-    variable_c.rb_class_tbl[id] = obj;
-    variable_c.rb_const_set((rb_cObject ? rb_cObject : obj), id, obj);
+    var obj:RClass = rb_class_boot(super_class);
+    var id:int = rb_intern(name);
+    rb_name_class(obj, id);
+    rb_class_tbl[id] = obj;
+    rb_const_set((rb_cObject ? rb_cObject : obj), id, obj);
     return obj;
   }
 
@@ -62,10 +47,10 @@ public class Object_c
     rb_cClass = boot_defclass("Class", rb_cModule);
 
     var metaclass:RClass;
-    metaclass = class_c.rb_make_metaclass(rb_cBasicObject, rb_cClass);
-    metaclass = class_c.rb_make_metaclass(rb_cObject, metaclass);
-    metaclass = class_c.rb_make_metaclass(rb_cModule, metaclass);
-    metaclass = class_c.rb_make_metaclass(rb_cClass, metaclass);
+    metaclass = rb_make_metaclass(rb_cBasicObject, rb_cClass);
+    metaclass = rb_make_metaclass(rb_cObject, metaclass);
+    metaclass = rb_make_metaclass(rb_cModule, metaclass);
+    metaclass = rb_make_metaclass(rb_cClass, metaclass);
 
     rb_define_private_method(rb_cBasicObject, "initialize", rb_obj_dummy, 0);
     rb_define_alloc_func(rb_cBasicObject, rb_class_allocate_instance);
@@ -88,7 +73,7 @@ public class Object_c
 
     // Lots of kernel methods
 
-    rb_cNilClass = class_c.rb_define_class("NilClass", rb_cObject);
+    rb_cNilClass = rb_define_class("NilClass", rb_cObject);
     // nilclass methods
     rb_define_global_const("NIL", Qnil);
 
@@ -105,33 +90,167 @@ public class Object_c
     // setup falseclass
     rb_define_global_const("FALSE", Qtrue);
 
-    id_eq = parse_y.rb_intern("==");
-    id_eql = parse_y.rb_intern("eql?");
-    id_match = parse_y.rb_intern("=~");
-    id_inspect = parse_y.rb_intern("inspect");
-    id_init_copy = parse_y.rb_intern("initialize_copy");
+    id_eq = rb_intern("==");
+    id_eql = rb_intern("eql?");
+    id_match = rb_intern("=~");
+    id_inspect = rb_intern("inspect");
+    id_init_copy = rb_intern("initialize_copy");
 
-    id_to_s = parse_y.rb_intern("to_s");
+    id_to_s = rb_intern("to_s");
 
   }
 
   public function rb_obj_class(obj:Value):RClass {
-    return rb_class_real(rc.CLASS_OF(obj));
+    return rb_class_real(CLASS_OF(obj));
   }
 
   // object.c:299
   public function
   rb_any_to_s(obj:Value):RString
   {
-    var cname:String = variable_c.rb_obj_classname(obj);
+    var cname:String = rb_obj_classname(obj);
     var str:RString;
 
-    str = string_c.rb_str_new2("#<"+cname+":"+obj+">");
+    str = rb_str_new2("#<"+cname+":"+obj+">");
     // OBJ_INFECT(str, obj);
 
     return str;
   }
 
+  // object.c
+  public function
+  rb_inspect(val:Value):RString
+  {
+    var str:RString = new RString(rb_cString);
+    str.string = "rb_inspect results for "+val;
+    return str;
+  }
 
-}
-}
+  protected function
+  rb_obj_dummy(...argv):Value
+  {
+    return Qnil;
+  }
+
+  // object.c
+  public function
+  rb_class_new(super_class:RClass):RClass
+  {
+    // Check_Type(super_class, T_CLASS);
+    // rb_check_inheritable(super_class);
+    if (super_class == rb_cClass) {
+      rb_raise(rb_eTypeError, "can't make subclass of Class");
+    }
+    return rb_class_boot(super_class);
+  }
+
+  // object.c:1477
+  public function
+  rb_class_new_instance(argc:int, argv:Array, klass:RClass):Value
+  {
+    var obj:Value;
+
+    obj = rb_obj_alloc(klass);
+    rb_obj_call_init(obj, argc, argv);
+
+    return obj;
+  }
+
+  public function rb_obj_equal(obj1:Value, obj2:Value):Value {
+    if (obj1 == obj2) {
+      return Qtrue;
+    } else {
+      return Qfalse;
+    }
+  }
+
+  public function rb_obj_not(obj:Value):Value {
+    return RTEST(obj) ? Qfalse : Qtrue;
+  }
+
+  public function rb_obj_alloc(klass:RClass):Value {
+    var obj:Value;
+
+    if (klass.super_class == null && klass != rb_cBasicObject) {
+      rb_raise(rb_eTypeError, "can't instantiate uninitialized class");
+    }
+    if (klass.is_singleton()) {
+      rb_raise(rb_eTypeError, "can't create instance of singleton class");
+    }
+    obj = rb_funcall(klass, ID_ALLOCATOR, 0, null);
+    if (rb_obj_class(obj) != rb_class_real(klass)) {
+      rb_raise(rb_eTypeError, "wrong instance allocation");
+    }
+
+    return obj;
+  }
+
+
+  // object.c:1964
+  public function
+  convert_type(val:Value, tname:String, method:String, raise:Boolean):Value
+  {
+    var m:int;
+
+    m = rb_intern(method);
+    if (!rb_respond_to(val, m)) {
+      if (raise) {
+        rb_raise(rb_eTypeError, "can't convert "+
+                  (NIL_P(val) ? "nil " : val == Qtrue ? "true" : val == Qfalse ? "false" : rb_obj_classname(val)) +
+                  " into " + tname);
+      } else {
+        return Qnil;
+      }
+    }
+    return rb_funcall(val, m, 0);
+  }
+
+  // object.c:1986
+  public function
+  rb_convert_type(val:Value, type:int, tname:String, method:String):Value
+  {
+    var v:Value;
+
+    if (val.get_type() == type) {
+      return val;
+    }
+    v = convert_type(val, tname, method, true);
+    if (v.get_type() != type) {
+      var cname:String = rb_obj_classname(val);
+      rb_raise(rb_eTypeError, "can't convert "+cname+" to "+tname+" ("+cname+"#"+method+" gives "+
+               rb_obj_classname(v));
+    }
+    return v;
+  }
+
+  // object.c:2001
+  public function
+  rb_check_convert_type(val:Value, type:int, tname:String, method:String):Value
+  {
+    var v:Value;
+
+    if (val.get_type() == type && type != Value.T_DATA) {
+      return val;
+    }
+    v = convert_type(val, tname, method, false);
+    if (NIL_P(v)) {
+      return Qnil;
+    }
+    if (v.get_type() != type) {
+      var cname:String = rb_obj_classname(val);
+      rb_raise(rb_eTypeError, "can't convert "+cname+" to "+tname+" ("+cname+"#"+method+" gives "+
+               rb_obj_classname(v));
+    }
+    return v;
+  }
+
+  // object.c:1457
+  public function
+  rb_class_allocate_instance(klass:RClass):RObject
+  {
+    var obj:RObject = new RObject(klass);
+    obj.flags = Value.T_OBJECT;
+    return obj;
+  }
+
+

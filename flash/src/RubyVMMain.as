@@ -14,8 +14,7 @@ public class RubyVMMain extends Sprite
     super();
     var rc:RubyCore = new RubyCore();
     // Must do ruby_init to prep for creating iseq.
-    rc.ruby_init();
-    rc.ruby_run_node(rc.iseqval_from_func(ruby_func()));
+    rc.run(this, ruby_func());
   }
 
   protected function ruby_func():Function
@@ -36,6 +35,7 @@ public class RubyVMMain extends Sprite
       f.putstring("This is another string.");
       f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
+      /*
       f.putspecialobject(2);
       f.putnil();
       var class_iseq:RbISeq = new RbISeq();
@@ -49,6 +49,7 @@ public class RubyVMMain extends Sprite
       }
 
       f.defineclass("A", class_iseq, 0);
+      */
 
       // [:leave]
       f.leave();

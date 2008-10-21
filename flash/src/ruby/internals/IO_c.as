@@ -1,15 +1,3 @@
-package ruby.internals
-{
-public class IO_c
-{
-  protected var rc:RubyCore;
-
-  public var error_c:Error_c;
-  public var parse_y:Parse_y;
-  public var object_c:Object_c;
-  public var class_c:Class_c;
-  public var string_c:String_c;
-
   public var rb_cIO:RClass;
 
   public var rb_stdout:Value;
@@ -17,28 +5,23 @@ public class IO_c
 
   public var id_write:int;
 
-  public function IO_c(rc:RubyCore)
-  {
-    this.rc = rc;
-  }
-
   public function
   Init_IO():void
   {
-    class_c.rb_define_global_function("puts", rb_f_puts, -1);
+    rb_define_global_function("puts", rb_f_puts, -1);
 
-    rb_cIO = class_c.rb_define_class("IO", object_c.rb_cObject);
+    rb_cIO = rb_define_class("IO", rb_cObject);
     // enumerable
 
-    class_c.rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
+    rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
 
-    class_c.rb_define_method(rb_cIO, "write", io_write, 1);
+    rb_define_method(rb_cIO, "write", io_write, 1);
 
-    rb_stdout = rc.rb_obj_alloc(rb_cIO);
+    rb_stdout = rb_obj_alloc(rb_cIO);
 
-    rb_default_rs = string_c.rb_str_new2("\n");
+    rb_default_rs = rb_str_new2("\n");
 
-    id_write = parse_y.rb_intern("write");
+    id_write = rb_intern("write");
   }
 
   protected function
@@ -47,7 +30,7 @@ public class IO_c
     if (recv == rb_stdout) {
       return rb_io_puts(argc, argv, recv);
     }
-    return rc.rb_funcall2(rb_stdout, parse_y.rb_intern("puts"), argc, argv);
+    return rb_funcall2(rb_stdout, rb_intern("puts"), argc, argv);
   }
 
   public function
@@ -58,10 +41,10 @@ public class IO_c
 
     if (argc == 0) {
       rb_io_write(out, rb_default_rs);
-      return rc.Qnil;
+      return Qnil;
     }
     for (i=0; i < argc; i++) {
-      line = string_c.rb_obj_as_string(argv[i]);
+      line = rb_obj_as_string(argv[i]);
       rb_io_write(out, line);
       // HACK b/c trace spits out newlines all the time.
       if (out != rb_stdout) {
@@ -71,26 +54,24 @@ public class IO_c
         }
       }
     }
-    return rc.Qnil;
+    return Qnil;
   }
 
   public function
   rb_io_write(io:Value, str:Value):Value
   {
-    return rc.rb_funcall(io, id_write, 1, str);
+    return rb_funcall(io, id_write, 1, str);
   }
 
   protected function
   io_write(io:Value, str:Value):Value
   {
-    str = string_c.rb_obj_as_string(str);
+    str = rb_obj_as_string(str);
     if (io == rb_stdout) {
       trace(RString(str).string);
-      return rc.Qtrue;
+      return Qtrue;
     }
 
-    return rc.Qfalse;
+    return Qfalse;
   }
 
-}
-}

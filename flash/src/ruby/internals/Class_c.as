@@ -1,25 +1,8 @@
-package ruby.internals
-{
-
-public class Class_c
-{
-  protected var rc:RubyCore;
-
-  public var object_c:Object_c;
-  public var parse_y:Parse_y;
-  public var variable_c:Variable_c;
-  public var error_c:Error_c;
-
-  public function Class_c(rc:RubyCore)
-  {
-    this.rc = rc;
-  }
-
   public function
   rb_singleton_class_attached(klass:RClass, obj:RObject):void
   {
     if (klass.is_singleton()) {
-      var attached:int = parse_y.rb_intern("__attached__");
+      var attached:int = rb_intern("__attached__");
       klass.iv_tbl[attached] = obj;
     }
   }
@@ -27,7 +10,8 @@ public class Class_c
   public function
   rb_class_boot(super_class:RClass):RClass
   {
-    var klass:RClass = new RClass(null, super_class, object_c.rb_cClass);
+    var klass:RClass = new RClass(null, super_class, rb_cClass);
+    // TODO: @skipped
     // OBJ_INFECT(klass, super_class);
     return klass;
   }
@@ -35,7 +19,7 @@ public class Class_c
   public function
   rb_make_metaclass(obj:RObject, super_class:RClass):RClass {
     if (obj.is_class() && RClass(obj).is_singleton()) {
-      return obj.klass = object_c.rb_cClass;
+      return obj.klass = rb_cClass;
     } else {
       var klass:RClass = rb_class_boot(super_class);
       var s:uint = RClass.FL_SINGLETON;
@@ -47,7 +31,7 @@ public class Class_c
       obj.klass = klass;
       rb_singleton_class_attached(klass, obj);
 
-      var metasuper:RClass = object_c.rb_class_real(super_class).klass;
+      var metasuper:RClass = rb_class_real(super_class).klass;
       if (metasuper) {
         klass.klass = metasuper;
       }
@@ -57,34 +41,24 @@ public class Class_c
 
 
   public function
-  rb_singleton_class(obj:Value):RClass {
+  rb_singleton_class(obj:Value):RClass
+  {
+    // TODO: @skipped
     // Special casing skipped
-    trace("Skipping rb_singleton_class special casing");
 
     var klass:RClass;
 
     var oobj:RObject = RObject(obj);
-    if (oobj.klass.is_singleton() && variable_c.rb_iv_get(oobj.klass, "__attached__") == obj) {
+    if (oobj.klass.is_singleton() && rb_iv_get(oobj.klass, "__attached__") == obj) {
       klass = oobj.klass;
     } else {
       klass = rb_make_metaclass(oobj, oobj.klass);
     }
 
+    // TODO: @skipped
     // Taint, trust, frozen checks skipped
-    trace("Skipping rb_singleton_class taint, trust, frozen checks");
 
     return klass;
-  }
-
-  public function
-  rb_class_new(super_class:RClass):RClass
-  {
-    // Check_Type(super_class, T_CLASS);
-    // rb_check_inheritable(super_class);
-    if (super_class == object_c.rb_cClass) {
-      error_c.rb_raise(error_c.rb_eTypeError, "can't make subclass of Class");
-    }
-    return rb_class_boot(super_class);
   }
 
   public function
@@ -93,7 +67,7 @@ public class Class_c
     var klass:RClass;
 
     if (!super_class) {
-      super_class = object_c.rb_cObject;
+      super_class = rb_cObject;
     }
 
     klass = rb_class_new(super_class);
@@ -110,26 +84,26 @@ public class Class_c
     var val:Value;
     var id:int;
 
-    id = parse_y.rb_intern(name);
-    if (variable_c.rb_const_defined(object_c.rb_cObject, id)) {
-      val = variable_c.rb_const_get(object_c.rb_cObject, id);
+    id = rb_intern(name);
+    if (rb_const_defined(rb_cObject, id)) {
+      val = rb_const_get(rb_cObject, id);
       if (val.get_type() != Value.T_CLASS) {
-        error_c.rb_raise(error_c.rb_eTypeError, name+" is not a class");
+        rb_raise(rb_eTypeError, name+" is not a class");
       }
       klass = RClass(val);
       if (rb_class_real(klass.super_class) != super_class) {
-        error_c.rb_name_error(id, name+" is already defined");
+        rb_name_error(id, name+" is already defined");
       }
       return klass;
     }
     if (!super_class) {
-      error_c.rb_warn("no super class for '"+name+"', Object assumed");
+      rb_warn("no super class for '"+name+"', Object assumed");
     }
 
     klass = rb_define_class_id(id, super_class);
-    variable_c.rb_class_tbl[id] = klass;
+    rb_class_tbl[id] = klass;
     rb_name_class(klass, id);
-    rb_const_set(object_c.rb_cObject, id, klass);
+    rb_const_set(rb_cObject, id, klass);
     rb_class_inherited(super_class, klass);
 
     return klass;
@@ -142,11 +116,11 @@ public class Class_c
     var klass:RClass;
     var id:int;
 
-    id = parse_y.rb_intern(name);
-    if (variable_c.rb_const_defined_at(outer, id)) {
-      var val:Value = variable_c.rb_const_get_at(outer, id);
+    id = rb_intern(name);
+    if (rb_const_defined_at(outer, id)) {
+      var val:Value = rb_const_get_at(outer, id);
       if (val.get_type() != Value.T_CLASS) {
-        rb_raise(error_c.rb_eTypeError, name+" is not a class");
+        rb_raise(rb_eTypeError, name+" is not a class");
       }
       klass = RClass(val);
       if (rb_class_real(klass.super_class) != super_class) {
@@ -170,9 +144,9 @@ public class Class_c
   {
     var inherited:int;
     if (!super_class) {
-      super_class = object_c.rb_cObject;
+      super_class = rb_cObject;
     }
-    inherited = parse_y.rb_intern("inherited");
+    inherited = rb_intern("inherited");
     return rb_funcall(super_class, inherited, 1, klass);
   }
 
@@ -195,21 +169,21 @@ public class Class_c
   public function
   rb_define_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rb_add_method(klass, parse_y.rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
+    rb_add_method(klass, rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
   }
 
   // class.c:784
   public function
   rb_define_protected_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rb_add_method(klass, parse_y.rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PROTECTED);
+    rb_add_method(klass, rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PROTECTED);
   }
 
   // class.c:790
   public function
   rb_define_private_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rb_add_method(klass, parse_y.rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PRIVATE);
+    rb_add_method(klass, rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PRIVATE);
   }
 
 
@@ -220,19 +194,22 @@ public class Class_c
     var p:RClass, c:RClass;
     var changed:Boolean = false;
 
+    // TODO: @skipped
     // frozen, untrusted stuff
 
     if (module.get_type() != Value.T_MODULE) {
+    // TODO: @skipped
       // Check_Type(module, T_MODULE);
     }
 
+    // TODO: @skipped
     // OBJ_INFECT(klass, module);
     c = klass;
     while (module) {
       var superclass_seen:Boolean = false;
 
       if (klass.m_tbl == module.m_tbl) {
-        rb_raise(error_c.rb_eArgError, "cyclic include detected");
+        rb_raise(rb_eArgError, "cyclic include detected");
       }
       var skip:Boolean = false;
       // ignore if the module included already in superclasses
@@ -264,6 +241,7 @@ public class Class_c
       module = module.super_class;
     }
     if (changed) {
+      // TODO: @skipped
       // rb_clear_cache();
     }
   }
@@ -290,6 +268,7 @@ public class Class_c
       klass.klass = module;
       klass.name = module.name+"IncludeClass";
     }
+    // TODO: @skipped
     // OBJ_INFECT(klass, module);
     // OBJ_INFECT(klass, module);
 
@@ -304,17 +283,17 @@ public class Class_c
     var id:int;
     var val:Value;
 
-    id = parse_y.rb_intern(name);
-    if (variable_c.rb_const_defined(object_c.rb_cObject, id)) {
-      val = variable_c.rb_const_get(object_c.rb_cObject, id);
+    id = rb_intern(name);
+    if (rb_const_defined(rb_cObject, id)) {
+      val = rb_const_get(rb_cObject, id);
       if (val.get_type() == Value.T_MODULE) {
         return RClass(val);
       }
-      error_c.rb_raise(error_c.rb_eTypeError, variable_c.rb_obj_classname(module)+" is not a module");
+      rb_raise(rb_eTypeError, rb_obj_classname(module)+" is not a module");
     }
     module = rb_define_module_id(id);
-    variable_c.rb_class_tbl[id] = module;
-    variable_c.rb_const_set(object_c.rb_cObject, id, module);
+    rb_class_tbl[id] = module;
+    rb_const_set(rb_cObject, id, module);
 
     return module;
   }
@@ -326,7 +305,7 @@ public class Class_c
     var mdl:RClass;
 
     mdl = rb_module_new();
-    variable_c.rb_name_class(mdl, id);
+    rb_name_class(mdl, id);
 
     return mdl;
   }
@@ -335,7 +314,7 @@ public class Class_c
   public function
   rb_module_new():RClass
   {
-    var mdl:RClass = new RClass(null, null, object_c.rb_cModule);
+    var mdl:RClass = new RClass(null, null, rb_cModule);
     mdl.flags = Value.T_MODULE;
     return mdl;
   }
@@ -345,5 +324,3 @@ public class Class_c
   }
 
 
-}
-}
