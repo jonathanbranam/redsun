@@ -221,5 +221,22 @@ Reassess after this is done, but probably:
 -- ??
 
 Progress:
-local vars
+- local vars
+- class creation
+- (untested) class instantiation
+- (untested) class method creation
+
+10/21/2008
+
+Progress:
+- class instantiation
+- class method creation
+- calling method on object
+
+Finding that much of the functionality internal to Ruby is also implemented
+through the Ruby C API by adding methods to the base Ruby classes such as 
+Object, BasicObject, Class, and Module. This means that I find method_missing
+errors typically indicate I need to revisit the various Init_* functions
+(particularly Init_Object) and fill out some more methods and implement
+their Ruby C versions.
 
