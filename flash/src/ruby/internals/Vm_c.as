@@ -1,6 +1,9 @@
  import flash.utils.Dictionary;
 
+ import ruby.internals.Node;
+ import ruby.internals.RClass;
  import ruby.internals.RbControlFrame;
+ import ruby.internals.RbISeq;
  import ruby.internals.RbThread;
  import ruby.internals.RbVm;
  import ruby.internals.Value;
@@ -22,7 +25,9 @@
     // ::VM::FrozenCore
     fcore = rb_class_new(rb_cBasicObject);
     fcore.flags = Value.T_ICLASS;
+    klass = rb_singleton_class(fcore);
     // define various methods
+    rb_define_method_id(klass, id_core_define_method, m_core_define_method, 3);
     // rb_obj_freeze(fcore);
     rb_mRubyVMFrozenCore = fcore;
 
@@ -384,3 +389,77 @@
     return result;
   }
 
+  // vm.c:100
+  public function
+  vm_get_ruby_level_next_cfp(th:RbThread, cfp:RbControlFrame):RbControlFrame
+  {
+    while (!RUBY_VM_CONTROL_FRAME_STACK_OVERFLOW_P(th, cfp)) {
+      if (RUBY_VM_NORMAL_ISEQ_P(cfp.iseq)) {
+        return cfp;
+      }
+      cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th, cfp);
+    }
+    return null;
+  }
+
+  // vm.c:727
+  public function
+  vm_cref():Node
+  {
+    var th:RbThread = GET_THREAD();
+    var cfp:RbControlFrame = vm_get_ruby_level_next_cfp(th, th.cfp);
+    return vm_get_cref(cfp.iseq, cfp.lfp, cfp.dfp);
+  }
+
+  // vm.c:1686
+  public function
+  m_core_define_method(self:Value, cbase:Value, sym:Value, iseqval:Value):Value
+  {
+    // TODO: @skipped rewind cfp
+    // REWIND_CFP({
+    var th__:RbThread = GET_THREAD();
+    var cur_cfp:RbControlFrame = th__.cfp;
+    var popped_cfp:RbControlFrame = th__.cfp_stack.pop();
+    th__.cfp = popped_cfp;
+      vm_define_method(GET_THREAD(), cbase, SYM2ID(sym), iseqval, false, vm_cref());
+    th__.cfp_stack.push(popped_cfp);
+    th__.cfp = cur_cfp;
+    //});
+    return Qnil;
+  }
+
+  // vm.c:1643
+  public function
+  vm_define_method(th:RbThread, obj:Value, id:int, iseqval:Value,
+                   is_singleton:Boolean, cref:Node):void
+  {
+    var newbody:Node;
+    var klass:RClass = cref.nd_clss;
+    var noex:int = cref.nd_visi;
+    var miseq:RbISeq;
+    miseq = GetISeqPtr(iseqval);
+
+    if (NIL_P(klass)) {
+      rb_raise(rb_eTypeError, "no class/module to add method");
+    }
+
+    if (is_singleton) {
+      // TODO: @skipped test for fixnum and symbol
+      // TODO: @skipped test for frozen
+      klass = rb_singleton_class(obj);
+      noex = Node.NOEX_PUBLIC;
+    }
+
+    // dup
+    COPY_CREF(miseq.cref_stack, cref);
+    miseq.klass = klass;
+    miseq.defined_method_id = id;
+    newbody = NEW_NODE(Node.RUBY_VM_METHOD_NODE, 0, miseq.self, 0);
+    rb_add_method(klass, id, newbody, noex);
+
+    if (!is_singleton && noex == Node.NOEX_MODFUNC) {
+      rb_add_method(rb_singleton_class(klass), id, newbody, Node.NOEX_PUBLIC);
+    }
+    // TODO: @skipped
+    // INC_VM_STATE_VERSION();
+  }

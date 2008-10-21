@@ -3,7 +3,6 @@ package
 import flash.display.Sprite;
 
 import ruby.internals.RbISeq;
-import ruby.internals.RbVm;
 import ruby.internals.RubyCore;
 import ruby.internals.RubyFrame;
 
@@ -37,17 +36,28 @@ public class RubyVMMain extends Sprite
 
       f.putspecialobject(2);
       f.putnil();
-      var class_iseq:RbISeq = f.rc.class_iseq_from_func(0, 1, 1,
+      var class_iseq:RbISeq = f.rc.class_iseq_from_func("A", 0, 1, 1,
       function(f:RubyFrame):void {
-        f.putnil();
-        f.putstring("I am inside a class definition");
-        f.send("puts", 1, f.Qnil, 8, f.Qnil);
+
+        f.putspecialobject(1);
+        f.putspecialobject(2);
+        f.putobject("m");
+
+        var m_iseq:RbISeq = f.rc.method_iseq_from_func("m", 0, 1, 1,
+        function(f:RubyFrame):void {
+          f.putstring("hi");
+          f.leave();
+        });
+
+        f.putiseq(m_iseq);
+        f.send("core#define_method", 3, f.Qnil, 0, f.Qnil);
 
         f.putnil();
         f.leave();
       });
 
       f.defineclass("A", class_iseq, 0);
+      f.pop();
 
       // [:leave]
       f.leave();

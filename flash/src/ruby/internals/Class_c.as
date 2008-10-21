@@ -1,4 +1,6 @@
-  public function
+
+  import ruby.internals.RClass;
+    public function
   rb_singleton_class_attached(klass:RClass, obj:RObject):void
   {
     if (klass.is_singleton()) {
@@ -171,6 +173,14 @@
   {
     rb_add_method(klass, rb_intern(name), NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
   }
+
+  // class.c:772
+  public function
+  rb_define_method_id(klass:RClass, name:int, func:Function, argc:int):void
+  {
+    rb_add_method(klass, name, NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
+  }
+
 
   // class.c:784
   public function

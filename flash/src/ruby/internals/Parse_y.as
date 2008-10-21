@@ -1,8 +1,7 @@
 
   import mx.utils.StringUtil;
 
-  import ruby.internals.Id;
-    public function
+  public function
   rb_intern_str(str:Value):int
   {
     var enc:String;
@@ -20,9 +19,9 @@
     return "ASCII";
   }
 
-  protected var global_symbols__sym_id:Dictionary = new Dictionary();
-  protected var global_symbols__id_str:Dictionary = new Dictionary();
-  protected var global_symbols__last_id:int = Id.tLAST_TOKEN;
+  protected var global_symbols__sym_id:Dictionary;
+  protected var global_symbols__id_str:Dictionary;
+  protected var global_symbols__last_id:int = tLAST_TOKEN;
 
   public function
   rb_intern3(name:String, enc:String):int
@@ -40,16 +39,16 @@
 
     switch (name.charAt()) {
       case "$":
-        id |= Id.ID_GLOBAL;
+        id |= ID_GLOBAL;
         m++;
         // handle special global
         break;
       case "@":
         if (name.charAt(1) == "@") {
-          id |= Id.ID_CLASS;
+          id |= ID_CLASS;
           m++;
         } else {
-          id |= Id.ID_INSTANCE;
+          id |= ID_INSTANCE;
         }
         m++;
         break;
@@ -59,7 +58,7 @@
         if (name.charAt(len-1) == "=") {
           // attribute assignment
           id = rb_intern3(name.substr(0, len-1), enc);
-          if (id > Id.tLAST_TOKEN && !is_attrset_id(id)) {
+          if (id > tLAST_TOKEN && !is_attrset_id(id)) {
             // TODO: @skipped encoding
             //enc = rb_enc_get(rb_id2str(id));
             id = rb_id_attrset(id);
@@ -67,16 +66,16 @@
           }
         }
         else if (rb_enc_isupper(name.charAt(), enc)) {
-          id = Id.ID_CONST;
+          id = ID_CONST;
         }
         else {
-          id = Id.ID_LOCAL;
+          id = ID_LOCAL;
         }
         break;
     }
 
     global_symbols__last_id++;
-    id |= (global_symbols__last_id << Id.ID_SCOPE_SHIFT);
+    id |= (global_symbols__last_id << ID_SCOPE_SHIFT);
 
     return register_symid(id, name, enc);
   }
@@ -93,8 +92,8 @@
   public function
   rb_id_attrset(id:int):int
   {
-    id &= ~Id.ID_SCOPE_MASK;
-    id |= Id.ID_ATTRSET;
+    id &= ~ID_SCOPE_MASK;
+    id |= ID_ATTRSET;
     return id;
   }
 
@@ -147,49 +146,49 @@
   public function
   is_notop_id(id:int):Boolean
   {
-    return id > Id.tLAST_TOKEN;
+    return id > tLAST_TOKEN;
   }
 
   public function
   is_local_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_LOCAL);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_LOCAL);
   }
 
   public function
   is_global_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_GLOBAL);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_GLOBAL);
   }
 
   public function
   is_instance_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_INSTANCE);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_INSTANCE);
   }
 
   public function
   is_attrset_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_ATTRSET);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_ATTRSET);
   }
 
   public function
   is_const_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_CONST);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_CONST);
   }
 
   public function
   is_class_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_CLASS);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_CLASS);
   }
 
   public function
   is_junk_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_JUNK);
+    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_JUNK);
   }
 
   public function
@@ -202,4 +201,12 @@
     }
   }
 
+  public function
+  Init_sym():void
+  {
+    global_symbols__sym_id = new Dictionary();
+    global_symbols__id_str = new Dictionary();
+
+    Init_id();
+  }
 

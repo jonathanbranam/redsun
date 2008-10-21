@@ -1,6 +1,10 @@
 puts("hi")
 class A
+  def m
+    "hi"
+  end
 end
+a = A.new
 =begin
 class A
   class B < A

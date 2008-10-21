@@ -23,11 +23,23 @@ public class RubyFrame
     this.Qundef = rc.Qundef;
   }
 
+  public function pop():void {
+    cfp.sp.pop();
+  }
+
   public function putnil():void {
     cfp.sp.push(Qnil);
   }
 
   public function putstring(str:String):void {
+    cfp.sp.push(rc.rb_str_new(str));
+  }
+
+  public function putiseq(iseq:RbISeq):void {
+    cfp.sp.push(iseq.self);
+  }
+
+  public function putobject(str:String):void {
     cfp.sp.push(rc.rb_str_new(str));
   }
 
@@ -94,6 +106,18 @@ public class RubyFrame
 
   public function getlocal(idx:int):void {
     cfp.sp.push(cfp.lfp[idx]);
+  }
+
+  public function
+  getinlinecache(ic:int, dst:String):void
+  {
+    putnil();
+  }
+
+  public function
+  getconstant(id_str:String):void
+  {
+    //cfp.sp.push(rc.vm_get_ev_const(th, GET_ISEQ(), klass, id, 0);
   }
 
   // insns.def:873

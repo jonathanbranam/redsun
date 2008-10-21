@@ -1,9 +1,5 @@
-package ruby.internals
-{
   import flash.utils.Dictionary;
 
-public class Id
-{
   public static const ID_SCOPE_SHIFT:uint = 3;
   public static const ID_SCOPE_MASK:uint  = 0x07;
   public static const ID_LOCAL:uint       = 0x00;
@@ -34,9 +30,11 @@ public class Id
   public static const tLAST_TOKEN:int = 255;
   public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
 
-  public function Id()
-  {
-  }
+  public var id_core_define_method:int;
 
-}
-}
+  public function
+  Init_id():void
+  {
+    // TODO: @skipped many ids
+    id_core_define_method = rb_intern("core#define_method");
+  }

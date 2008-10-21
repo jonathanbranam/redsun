@@ -26,13 +26,16 @@ public class RubyCore
   include "Error_c.as"
   include "Eval_c.as"
   include "Gc_c.as"
+  include "Id_c.as"
   include "IO_c.as"
   include "Iseq_c.as"
   include "Object_c.as"
   include "Parse_y.as"
   include "String_c.as"
   include "Thread_c.as"
+
   include "Vm_c.as"
+
   include "Vm_eval_c.as"
   include "Vm_evalbody_c.as"
   include "Vm_insnhelper_c.as"
@@ -84,11 +87,11 @@ public class RubyCore
   public function
   rb_call_inits():void
   {
-    ID_ALLOCATOR = rb_intern("allocate");
 
     // TODO: @skipped
     //Init_RandomSeed();
-    //Init_sym();
+    Init_sym();
+    ID_ALLOCATOR = rb_intern("allocate");
     Init_var_tables();
     Init_Object();
     Init_top_self();
@@ -258,7 +261,7 @@ public class RubyCore
   public function
   idInitialize():uint
   {
-    return (Id.tInitialize << Id.ID_SCOPE_SHIFT) | Id.ID_LOCAL;
+    return (tInitialize << ID_SCOPE_SHIFT) | ID_LOCAL;
   }
 
   public function
@@ -290,9 +293,22 @@ public class RubyCore
   }
 
   public function
-  class_iseq_from_func(arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
+  class_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
   {
-    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_CLASS);
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<class:"+name+">"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_CLASS);
+    var class_iseq:RbISeq = GetISeqPtr(iseqval);
+    class_iseq.arg_size = arg_size;
+    class_iseq.local_size = local_size;
+    class_iseq.stack_max = stack_max;
+    class_iseq.iseq_fn = func;
+
+    return class_iseq;
+  }
+
+  public function
+  method_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
+  {
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2(name), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_METHOD);
     var class_iseq:RbISeq = GetISeqPtr(iseqval);
     class_iseq.arg_size = arg_size;
     class_iseq.local_size = local_size;
