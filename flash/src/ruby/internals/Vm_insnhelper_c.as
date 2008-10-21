@@ -1,4 +1,6 @@
-  public function
+
+  import ruby.internals.RbISeq;
+    public function
   GET_PREV_DFP(dfp:Array):Array
   {
     trace("GET_PREV_DFP THIS IS WRONG!");
@@ -6,6 +8,7 @@
     return dfp;
   }
 
+  // vm_insnhelper.c:946
   public function
   vm_get_cref(iseq:RbISeq, lfp:Array, dfp:Array):Node
   {
@@ -13,7 +16,7 @@
 
     while (1) {
       if (lfp == dfp) {
-        cref = iseq.cref_stack
+        cref = iseq.cref_stack;
         break;
       } else if (dfp[dfp.length-1] != Qnil) {
         cref = dfp[dfp.length-1];

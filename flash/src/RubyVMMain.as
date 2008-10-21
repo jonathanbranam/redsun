@@ -35,21 +35,19 @@ public class RubyVMMain extends Sprite
       f.putstring("This is another string.");
       f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
-      /*
       f.putspecialobject(2);
       f.putnil();
-      var class_iseq:RbISeq = new RbISeq();
-      class_iseq.arg_size = 0;
-      class_iseq.local_size = 1;
-      class_iseq.stack_max = 1;
-      class_iseq.type = RbVm.ISEQ_TYPE_CLASS;
-      class_iseq.iseq_fn = function(f:RubyFrame):void {
+      var class_iseq:RbISeq = f.rc.class_iseq_from_func(0, 1, 1,
+      function(f:RubyFrame):void {
+        f.putnil();
+        f.putstring("I am inside a class definition");
+        f.send("puts", 1, f.Qnil, 8, f.Qnil);
+
         f.putnil();
         f.leave();
-      }
+      });
 
       f.defineclass("A", class_iseq, 0);
-      */
 
       // [:leave]
       f.leave();

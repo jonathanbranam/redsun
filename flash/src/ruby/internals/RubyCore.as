@@ -60,7 +60,7 @@ public class RubyCore
   {
     Qnil = new RNil();
     Qtrue = new RTrue();
-    Qfalse = new RFalse();
+    Qfalse = null;
     Qundef = new RUndef();
   }
 
@@ -277,10 +277,29 @@ public class RubyCore
   public function
   iseqval_from_func(func:Function):Value
   {
-    var iseq:RbISeq = new RbISeq();
-    iseq.type = RbVm.ISEQ_TYPE_TOP;
+    // Look at ruby.c:961 process_options() and vm.c Init_VM
+
+    // Pass in null for the node first
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
+
+    // Get the iseq out and assign the function pointer
+    var iseq:RbISeq = GetISeqPtr(iseqval);
     iseq.iseq_fn = func;
-    return Data_Wrap_Struct(rb_cISeq, iseq, null, null);
+
+    return iseqval;
+  }
+
+  public function
+  class_iseq_from_func(arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
+  {
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_CLASS);
+    var class_iseq:RbISeq = GetISeqPtr(iseqval);
+    class_iseq.arg_size = arg_size;
+    class_iseq.local_size = local_size;
+    class_iseq.stack_max = stack_max;
+    class_iseq.iseq_fn = func;
+
+    return class_iseq;
   }
 
   public function

@@ -169,7 +169,7 @@
   }
 
   public function
-  is_attrset_id(id):Boolean
+  is_attrset_id(id:int):Boolean
   {
     return is_notop_id(id) && ((id & Id.ID_SCOPE_MASK) == Id.ID_ATTRSET);
   }

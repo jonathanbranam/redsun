@@ -17,10 +17,10 @@ public class RubyFrame
     this.th = th;
     this.cfp = cfp;
 
-    this.Qnil = Qnil;
-    this.Qfalse = Qfalse;
-    this.Qtrue = Qtrue;
-    this.Qundef = Qundef;
+    this.Qnil = rc.Qnil;
+    this.Qfalse = rc.Qfalse;
+    this.Qtrue = rc.Qtrue;
+    this.Qundef = rc.Qundef;
   }
 
   public function putnil():void {
@@ -100,7 +100,7 @@ public class RubyFrame
   public function defineclass(id_str:String, class_iseq:RbISeq, define_type:uint):void
   {
     var klass:RClass;
-    var super_class:RClass = cfp.sp.pop();
+    var super_class:Value = cfp.sp.pop();
     var cbase:RClass = cfp.sp.pop();
     var tmpValue:Value;
 
@@ -130,10 +130,10 @@ public class RubyFrame
         }
       } else {
         // Create new class
-        klass = rc.rb_define_class_id(id, super_class);
+        klass = rc.rb_define_class_id(id, RClass(super_class));
         rc.rb_set_class_path(klass, cbase, rc.rb_id2name(id));
         rc.rb_const_set(cbase, id, klass);
-        rc.rb_class_inherited(super_class, klass);
+        rc.rb_class_inherited(RClass(super_class), klass);
       }
       break;
     case 1:
@@ -169,6 +169,8 @@ public class RubyFrame
 
     // INC_VM_STATE_VERSION();
     // NEXT_INSN();
+    var new_frame:RubyFrame = new RubyFrame(rc, th, th.cfp);
+    class_iseq.iseq_fn.call(rc, new_frame);
 
   }
 
