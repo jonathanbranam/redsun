@@ -78,6 +78,9 @@
     rb_define_global_const("NIL", Qnil);
 
     // Lots of module methods
+    // Lots of class methods
+    rb_define_method(rb_cClass, "allocate", rb_obj_alloc, 0);
+    rb_define_method(rb_cClass, "new", rb_class_new_instance, -1);
 
     rb_cData = rb_define_class("Data", rb_cObject);
     // undef alloc func

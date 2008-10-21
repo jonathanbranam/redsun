@@ -66,7 +66,9 @@ public class RubyFrame
     // RESTORE_REGS();
   }
 
-  public function send(op_str:String, op_argc:int, blockiseq:Value, op_flag:int, ic:Value):void {
+  public function
+  send(op_str:String, op_argc:int, blockiseq:Value, op_flag:int, ic:Value):void
+  {
     var mn:Node;
     var recv:Value;
     var klass:RClass;
@@ -81,18 +83,25 @@ public class RubyFrame
     var flag:int = op_flag;
     var id:int = op_id;
 
-    recv = (flag & RbVm.VM_CALL_FCALL_BIT) ? cfp.self : rc.TOPN(cfp.sp, num);
+    recv = (flag & RbVm.VM_CALL_FCALL_BIT != 0) ? cfp.self : rc.TOPN(cfp.sp, num);
     klass = rc.CLASS_OF(recv);
     mn = rc.vm_method_search(id, klass, ic);
+    // TODO: @fix method_missing is not being called here.
 
-    // send/funcall optimization
+    // TODO: @skipped send/funcall optimization
+    if (flag & RbVm.VM_CALL_SEND_BIT != 0) {
+      //vm_send_optimize(cfp, &mn, &flag, &num, &id, klass);
+    }
 
     //CALL_METHOD(num, blockptr, flag, id, mn, recv, klass);
     var v:Value = rc.vm_call_method(th, cfp, num, blockptr.v, flag, id, mn, recv, klass);
     if (v == Qundef) {
-      // This is already handled, perhaps, so just continue?
       // RESTORE_REGS();
       // NEXT_INSN();
+      // TODO: @skip vm_call_method returns Qundef
+      // Means that stack is setup to run something else already, but we need a function!
+      var new_frame:RubyFrame = new RubyFrame(rc, th, th.cfp);
+      th.cfp.iseq.iseq_fn.call(rc, new_frame);
     } else {
       val = v;
       cfp.sp.push(val);
@@ -109,15 +118,22 @@ public class RubyFrame
   }
 
   public function
-  getinlinecache(ic:int, dst:String):void
+  getinlinecache(ic:Value, dst:String):void
   {
     putnil();
   }
 
   public function
+  setinlinecache(dst:String):void
+  {
+  }
+
+  public function
   getconstant(id_str:String):void
   {
-    //cfp.sp.push(rc.vm_get_ev_const(th, GET_ISEQ(), klass, id, 0);
+    var klass:Value = cfp.sp.pop();
+    var id:int = rc.rb_intern(id_str);
+    cfp.sp.push(rc.vm_get_ev_const(th, rc.GET_ISEQ(cfp), klass, id, false));
   }
 
   // insns.def:873

@@ -1,11 +1,25 @@
 
+  import ruby.internals.Node;
+  import ruby.internals.RClass;
+  import ruby.internals.RbBlock;
+  import ruby.internals.RbControlFrame;
   import ruby.internals.RbISeq;
-    public function
+  import ruby.internals.RbThread;
+  import ruby.internals.RbVm;
+  import ruby.internals.Value;
+
+  public function
   GET_PREV_DFP(dfp:Array):Array
   {
     trace("GET_PREV_DFP THIS IS WRONG!");
     // ((VALUE *)((dfp)[0] & ~0x03))
     return dfp;
+  }
+
+  public function
+  GET_ISEQ(cfp:RbControlFrame):RbISeq
+  {
+    return cfp.iseq;
   }
 
   // vm_insnhelper.c:946
@@ -121,6 +135,7 @@
     var val:Value = Qundef;
 
     if (mn != null) {
+      // TODO: @skipped handle private and protected methods
       //if (mn.nd_noex() == 0) {
         var node:Node;
 
@@ -134,10 +149,56 @@
         case Node.NODE_CFUNC: {
           val = vm_call_cfunc(th, cfp, num, id, recv, mn.nd_clss, flag, node, blockptr);
         }
+        // TODO: @skipped handle attrset, ivar, bmethod, zsuper
         }
       //}
     }
+    else {
+      // method missing
+      if (id == idMethodMissing) {
+        rb_bug("method missing");
+      }
+      else {
+        var stat:int = 0;
+        if (flag & RbVm.VM_CALL_VCALL_BIT) {
+          stat |= Node.NOEX_VCALL;
+        }
+        if (flag & RbVm.VM_CALL_SUPER_BIT) {
+          stat |= Node.NOEX_SUPER;
+        }
+        val = vm_method_missing(th, id, recv, num, RbBlock(blockptr), stat);
+      }
+    }
 
+    return val;
+  }
+
+  public function
+  STACK_ADDR_FROM_TOP(cfp:RbControlFrame, num:int):Array
+  {
+    return cfp.sp.slice(cfp.sp.length-num);
+  }
+
+  public function
+  POPN(cfp:RbControlFrame, num:int):void
+  {
+    cfp.sp.splice(cfp.sp.length-num,num);
+  }
+
+  // vm_insnhelper.c:409
+  public function
+  vm_method_missing(th:RbThread, id:int, recv:Value, num:int,
+                    blockptr:RbBlock, opt:int):Value
+  {
+    var reg_cfp:RbControlFrame = th.cfp;
+    var argv:Array = STACK_ADDR_FROM_TOP(reg_cfp, num+1);
+    var val:Value;
+    // This does appear to wack the stack at this point, I guess it's appropriate?
+    argv[0] = ID2SYM(id);
+    th.method_missing_reason = opt;
+    th.passed_block = blockptr;
+    val = rb_funcall2(recv, idMethodMissing, num + 1, argv);
+    POPN(reg_cfp, num + 1);
     return val;
   }
 
@@ -233,4 +294,66 @@
     th.cfp = th.cfp_stack.pop();
   }
 
+  // vm_insnhelper.c:983
+  public function
+  vm_get_ev_const(th:RbThread, iseq:RbISeq, orig_klass:Value,
+                  id:int, is_defined:Boolean):Value
+  {
+    var val:Value;
+
+    if (orig_klass == Qnil) {
+      // in current lexical scope
+      var root_cref:Node = vm_get_cref(iseq, th.cfp.lfp, th.cfp.dfp);
+      var cref:Node = root_cref;
+      var klass:Value = orig_klass;
+
+      while (cref && cref.nd_next) {
+        klass = cref.nd_clss;
+        cref = cref.nd_next;
+
+        if (!NIL_P(klass)) {
+          // search_continue:
+          if (RClass(klass).iv_tbl[id] != undefined) {
+            val = RClass(klass).iv_tbl[id];
+            if (val == Qundef) {
+              // TODO: @skipped autoload classes - can't
+              // rb_autoload_load(klass, id);
+              // goto search_continue;
+            }
+            else {
+              if (is_defined) {
+                return Qtrue;
+              }
+              else {
+                return val;
+              }
+            }
+          }
+        }
+      }
+
+      klass = root_cref.nd_clss;
+      if (NIL_P(klass)) {
+        klass = CLASS_OF(th.cfp.self);
+      }
+
+      if (is_defined) {
+        return rb_const_defined(RClass(klass), id) ? Qtrue : Qfalse;
+      }
+      else {
+        return rb_const_get(RClass(klass), id);
+      }
+
+    }
+    else {
+      // TODO: @skipped check if namespace
+      // vm_check_if_namespace(orig_klass);
+      if (is_defined) {
+        return rb_const_defined_from(RClass(orig_klass), id) ? Qtrue : Qfalse;
+      }
+      else {
+        return rb_const_get_from(RClass(orig_klass), id);
+      }
+    }
+  }
 

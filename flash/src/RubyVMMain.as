@@ -45,7 +45,7 @@ public class RubyVMMain extends Sprite
 
         var m_iseq:RbISeq = f.rc.method_iseq_from_func("m", 0, 1, 1,
         function(f:RubyFrame):void {
-          f.putstring("hi");
+          f.putstring("RETURNED from A#m");
           f.leave();
         });
 
@@ -58,6 +58,17 @@ public class RubyVMMain extends Sprite
 
       f.defineclass("A", class_iseq, 0);
       f.pop();
+
+      f.getinlinecache(f.Qnil, "label_31");
+      f.getconstant("A");
+      f.setinlinecache("label_24");
+      f.send("new", 0, f.Qnil, 0, f.Qnil);
+      f.setlocal(2);
+
+      f.putnil();
+      f.getlocal(2);
+      f.send("m", 0, f.Qnil, 0, f.Qnil);
+      f.send("puts", 1, f.Qnil, 8, f.Qnil);
 
       // [:leave]
       f.leave();

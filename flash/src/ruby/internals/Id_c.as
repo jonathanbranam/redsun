@@ -25,7 +25,8 @@
   public static const idNot:int = "!".charCodeAt();
   public static const idBackquote:int = "`".charCodeAt();
 
-  public static const tInitialize:int = 54;
+  public static var idInitialize:int;
+  public static var idMethodMissing:int;
 
   public static const tLAST_TOKEN:int = 255;
   public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
@@ -37,4 +38,8 @@
   {
     // TODO: @skipped many ids
     id_core_define_method = rb_intern("core#define_method");
+
+    // TODO: @fix This is actually defined based on parse.y yacc file
+    idMethodMissing = rb_intern("method_missing");
+    idInitialize = rb_intern("initialize");
   }

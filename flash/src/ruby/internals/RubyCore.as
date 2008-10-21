@@ -225,9 +225,9 @@ public class RubyCore
     return v != null && v != Qnil;
   }
 
-  public function NIL_P(v:Value):Boolean {
-    return v == Qnil;
-  }
+  public function NIL_P(v:Value):Boolean { return v == Qnil; }
+
+  public function SYMBOL_P(v:Value):Boolean { return v is RSymbol; }
 
   public function SYM2ID(sym:Value):int {
     if (sym.get_type() == Value.T_SYMBOL) {
@@ -256,12 +256,6 @@ public class RubyCore
   CLASS_OF(v:Value):RClass
   {
     return rb_class_of(v);
-  }
-
-  public function
-  idInitialize():uint
-  {
-    return (tInitialize << ID_SCOPE_SHIFT) | ID_LOCAL;
   }
 
   public function

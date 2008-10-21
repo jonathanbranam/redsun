@@ -1,4 +1,6 @@
 
+import ruby.internals.RClass;
+
   protected var rb_global_tbl:Object;
   public var rb_class_tbl:Object;
 
@@ -45,7 +47,7 @@
       loop = false;
 
       while (RTEST(tmp)) {
-        if (tmp.iv_tbl && tmp.iv_tbl[id]) {
+        if (tmp.iv_tbl && tmp.iv_tbl[id] != undefined) {
           value = tmp.iv_tbl[id];
           if (value == Qundef) {// && NIL_P(autoload_file(klass, id))) {
             continue;
@@ -239,6 +241,7 @@
     // TODO: @skipped freeze
     // OBJ_FREEZE(str);
     rb_ivar_set(klass, classpath, str);
+    klass.name = name;
   }
 
   public function
@@ -329,4 +332,16 @@
     return Qnil;
   }
 
+  // variable.c:1648
+  public function
+  rb_const_defined_from(klass:RClass, id:int):Boolean
+  {
+    return rb_const_defined_0(klass, id, true, true);
+  }
 
+  // variable.c:1471
+  public function
+  rb_const_get_from(klass:RClass, id:int):Value
+  {
+    return rb_const_get_0(klass, id, true, true);
+  }

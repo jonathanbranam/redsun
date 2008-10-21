@@ -9,7 +9,7 @@ public class RTag extends Error
 
   public function RTag(tag:int, mesg:Value)
   {
-    super();
+    super("Tag: " + tag + " value: " + mesg);
     this.tag = tag;
     this.mesg = mesg;
   }

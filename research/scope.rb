@@ -5,6 +5,7 @@ class A
   end
 end
 a = A.new
+puts a.m
 =begin
 class A
   class B < A

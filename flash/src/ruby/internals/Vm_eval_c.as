@@ -1,4 +1,6 @@
-  public function
+
+  import ruby.internals.Node;
+    public function
   Init_vm_eval():void
   {
     //rb_define_global_function("catch", rb_f_catch, -1);
@@ -94,25 +96,33 @@
     var format:String = null;
     var th:RbThread = GET_THREAD();
     var last_call_status:int = th.method_missing_reason;
-    /*
     if (argc == 0 || !SYMBOL_P(argv[0])) {
       rb_raise(rb_eArgError, "no id given");
     }
-    */
 
+    // TODO: @skip stack_check
     // stack_check();
 
     id = SYM2ID(argv[0]);
 
     if (last_call_status & Node.NOEX_PRIVATE) {
       format = "private method '%s' called for %s";
-    } else if (last_call_status & Node.NOEX_PROTECTED) {
+    }
+    else if (last_call_status & Node.NOEX_PROTECTED) {
       format = "protected method '%s' called for %s";
     }
+    else if (last_call_status & Node.NOEX_VCALL) {
+      format = "undefined local variable or method '%s' for %s";
+      exc = rb_eNameError;
+    }
+    else if (last_call_status & Node.NOEX_SUPER) {
+      format = "super: no superclass method '%s' for %s";
+    }
     if (!format) {
-      format = "undefined method '%s' for %s";
+      format = "undefined method '"+rb_obj_as_string(obj)+"' for "+rb_id2name(id);
     }
 
+    // TODO: @skipped create class instance of message error - needs array support
     /*
     var n:int = 0;
     var args:Array = new Array(3);
@@ -125,7 +135,8 @@
     */
 
     th.cfp = th.cfp_stack.pop();
-    rb_exc_raise(exc);
+    rb_raise(exc, format);
+    //rb_exc_raise(exc);
 
     // will not be reached
     return Qnil;

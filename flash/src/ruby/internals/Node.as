@@ -169,7 +169,8 @@ public class Node extends Value
   public function set nd_next(v:Node):void { u3 = v; }
 
   public function get nd_cond():Node { return u1; }
-  public function get nd_body():Node { return u2; }
+  // NOTE: @changed node.nd_body I had returning a Node type, but let it be anything
+  public function get nd_body():* { return u2; }
   public function get nd_else():Node { return u3; }
 
   public function get nd_orig():Value { return u3; }

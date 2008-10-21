@@ -8,8 +8,9 @@
   public function
   rb_obj_call_init(obj:Value, argc:int, argv:Array):void
   {
+    // TODO: @skipped pass passed block
     // PASS_PASSED_BLOCK();
-    rb_funcall2(obj, idInitialize(), argc, argv);
+    rb_funcall2(obj, idInitialize, argc, argv);
   }
 
   // eval.c:48
