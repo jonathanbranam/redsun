@@ -19,6 +19,35 @@ public class RubyVMMain extends Sprite
   protected function ruby_func():Function
   {
     return function (f:RubyFrame):void {
+      f.putstring("hi");
+      f.setlocal(2);
+
+      f.getlocal(2);
+      if (f.branchif()) {
+        f.putnil();
+        f.putstring("FAIL");
+        f.send("puts", 1, f.Qnil, 8, f.Qnil);
+        f.pop();
+      }
+      f.getlocal(2);
+      if (f.branchunless()) {
+        f.putnil();
+        f.putstring("SUCCESS");
+        f.send("puts", 1, f.Qnil, 8, f.Qnil);
+        f.leave();
+        return;
+        f.pop();
+      }
+
+      f.putnil();
+      f.leave();
+      return;
+    }
+  }
+
+  protected function ruby_func2():Function
+  {
+    return function (f:RubyFrame):void {
       f.putnil();
       f.putstring("THIS IS A STRING FROM RUBY!!");
       f.send("puts", 1, f.Qnil, 8, f.Qnil);

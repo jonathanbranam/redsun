@@ -109,6 +109,14 @@ public class RubyFrame
 
   }
 
+  public function branchif():Boolean {
+    return !rc.RTEST(cfp.sp.pop());
+  }
+
+  public function branchunless():Boolean {
+    return rc.RTEST(cfp.sp.pop());
+  }
+
   public function setlocal(idx:int):void {
     cfp.lfp[idx] = cfp.sp.pop();
   }

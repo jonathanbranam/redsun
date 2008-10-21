@@ -1,12 +1,26 @@
+v = "hi"
+puts "FAIL" unless v
+puts "SUCCESS" if v
+=begin
+v = nil
+puts "FAIL" if v
+
 puts("hi")
 class A
   def m
     "hi"
   end
+  def dumb_string
+    m=="hi"
+  end
 end
 a = A.new
 puts a.m
-=begin
+def test res
+  puts "FAIL!" if not desc
+end
+test a.dumb_string
+ = begin
 class A
   class B < A
   end
