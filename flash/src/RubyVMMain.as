@@ -13,7 +13,7 @@ public class RubyVMMain extends Sprite
     super();
     var rc:RubyCore = new RubyCore();
     // Must do ruby_init to prep for creating iseq.
-    rc.run(this, ruby_func());
+    rc.run(this, 2, 2, ruby_func());
   }
 
   protected function ruby_func():Function

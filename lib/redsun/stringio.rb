@@ -142,7 +142,7 @@ module RedSun
     def write_fixed8 v
       write_mode_guard
       clear_bit_pos
-      ui16 = (v[:whole]<<8) | (v[:fraction]&0xFF)
+      ui16 = (v[:whole] << 8) | (v[:fraction]&0xFF)
       write_ui16 ui16
     end
     def read_fixed8
@@ -302,6 +302,12 @@ module RedSun
         shift += 7
         bits -= 7
       end
+    end
+    def write_d64(v)
+      lower = v & 0xFFFFFFFF;
+      upper = v >> 32;
+      write_ui32 upper
+      write_ui32 lower
     end
     def read_d64
       upper = read_ui32

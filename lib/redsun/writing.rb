@@ -10,7 +10,7 @@ module RedSun
 
     def write
       contents = write_to_string
-      new_file = ABCFile.new(@filename+".swf","w")
+      new_file = File.new(@filename+".swf","w")
       new_file.binmode
       new_file.write(contents)
       new_file.close

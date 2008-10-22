@@ -44,10 +44,10 @@ public class RubyCore
 
   public var rb_cFlashClass:RClass;
 
-  public function run(docClass:DisplayObject, block:Function):void  {
+  public function run(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
     rb_define_global_const("Document", Data_Wrap_Struct(rb_cFlashClass, docClass, null, null));
-    ruby_run_node(iseqval_from_func(block));
+    ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
   public function
@@ -272,7 +272,7 @@ public class RubyCore
 
 
   public function
-  iseqval_from_func(func:Function):Value
+  iseqval_from_func(local_size:int, stack_max:int, func:Function):Value
   {
     // Look at ruby.c:961 process_options() and vm.c Init_VM
 
@@ -281,6 +281,9 @@ public class RubyCore
 
     // Get the iseq out and assign the function pointer
     var iseq:RbISeq = GetISeqPtr(iseqval);
+    iseq.arg_size = 0;
+    iseq.local_size = local_size;
+    iseq.stack_max = stack_max;
     iseq.iseq_fn = func;
 
     return iseqval;

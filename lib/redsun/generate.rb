@@ -6,6 +6,117 @@ require 'redsun/tags'
 
 module RedSun
 
+  class Translate
+    def vm_swf()
+      swf = nil
+      Dir.chdir(File.dirname(__FILE__)) do
+        Dir['RubyVMMain.swf'].each do |fname|
+          puts "got name - #{fname}"
+          swf = Swf.new fname
+        end
+      end
+      return swf
+    end
+
+    def self.translate(filename, ruby_code)
+      t = Translate.new(ruby_code)
+      t.write(filename)
+    end
+
+    def write(filename)
+      @swf.filename = filename
+      @swf.write
+    end
+
+    def initialize(ruby_code)
+      @swf = vm_swf()
+      vm = RubyVM::InstructionSequence.compile(ruby_code).to_a
+      @abc = @swf.tags[8].abc_file
+      @f_ns = 1
+      @qnil = @abc.add_multiname(:Qnil, @f_ns)
+      load_ruby_vm(vm)
+    end
+
+    def load_ruby_vm(vm)
+      @doc_class = @abc.instances[0]
+      @iinit = @doc_class.iinit
+      setup_doc_constructor(vm, @iinit)
+      ruby_func = @abc.abc_methods[2]
+      translate_top(vm, ruby_func.body)
+    end
+
+    def translate_top(vm, body)
+      # loop over opcodes
+      # need a new function for iseqs, blocks, procs, lambda, classes
+      translated_scope(vm, body)
+    end
+
+    def mn(sym)
+      @abc.add_multiname(sym, @f_ns)
+    end
+
+    def translate_scope(vm, body)
+      iseq = vm[11]
+      labels = []
+      loc = 0
+      codes = []
+      iseq.each do |insn|
+        case insn.class.name
+        when :Integer
+          # debug line
+        when :Symbol
+          # label
+          labels[insn] = loc
+        when :Array
+          codes << ABC::GetLocal1.new(@abc)
+          push_insn_ops(codes, insn)
+          codes << ABC::CallPropVoid.new(@abc, mn(insn[0]), insn.length-1)
+        end
+        loc = loc+1
+          
+      end
+    end
+
+    def push_insn_ops(codes, insn)
+      1.upto(insn.length-1) do |i|
+        case insn[i].class.name
+        when :Symbol
+          codes << ABC::PushString(@abc,@abc.add_string(insn[1]))
+        when :String
+          codes << ABC::PushString(@abc,@abc.add_string(insn[1].to_sym))
+        when :NilClass
+          codes << ABC::GetLocal1.new(@abc)
+          codes << ABC::GetProperty.new(@abc, @qnil)
+        end
+      end
+    end
+
+    def push_sym(codes, sym)
+      codes << ABC::PushString(@abc, @abc.add_string(sym))
+    end
+    def push_string(codes, str)
+      codes << ABC::PushString(@abc, @abc.add_string(str.to_sym))
+    end
+    def push_nil(codes)
+    end
+      
+
+    def setup_doc_constructor(vm)
+      code = iinit.body.code
+      code.codes[16] = ABC::PushByte.new(@abc, vm[4][:local_size])
+      code.codes[17] = ABC::PushByte.new(@abc, vm[4][:stack_max])
+      if nil
+        code.codes = []
+        code << ABC::GetLocal0.new(@abc)
+        code << ABC::PushScope.new(@abc)
+        code << ABC::GetLocal0.new(@abc)
+        code << ABC::ConstructSuper.new(@abc, 0)
+        code << ABC::FindPropStrict.new()
+      end
+                                     
+    end
+  end
+
   class Swf
 
     def create_stub_swf(doc_class_name="EmptySwf", ruby_code=nil)

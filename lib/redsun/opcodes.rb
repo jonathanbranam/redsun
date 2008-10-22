@@ -382,9 +382,10 @@ module RedSun
         io.write_ui8 Opcode
         io.write_u30 @arg_count
       end
-      def initialize(abc_file)
+      def initialize(abc_file, arg_count=nil)
         super(abc_file)
         @opname = "construct_super"
+        @arg_count = arg_count
       end
       def pretty_print(show_debug=false)
         yield "#{pretty_print_opname} #{@arg_count}"

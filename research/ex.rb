@@ -55,3 +55,5 @@ c=RubyVM::InstructionSequence.compile(IO.read('rf.rb'))
 
 @sc=RubyVM::InstructionSequence.compile(IO.read('research/scope.rb')).to_a
 # RedSun::ABC::ABCFile.pp_yarv(@sc)
+
+# RedSun::Translate.translate("r.swf", IO.read('research/scope.rb'))
