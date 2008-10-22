@@ -240,3 +240,22 @@ errors typically indicate I need to revisit the various Init_* functions
 (particularly Init_Object) and fill out some more methods and implement
 their Ruby C versions.
 
+Spent time working on the Ruby bytecode -> AS3 bytecode translation part.
+Current solution simply opens a precompiled SWF with the Ruby VM already
+inside and then rewrite the methods that are called in the client code that
+return the Ruby VM Function. This is certainly the fastest path given the
+state of the Ruby SWF lib, but loading the code from a SWC would make more
+sense.
+
+Currently putting some fragile code in that remembers the opcodes and
+internal ids of various multinames. This should be fixed to lookup the
+proper info from the SWF itself.
+
+10/22/2008
+
+Goal: Ruby bytcoode compiling generically to AS3 bytecode, calling methods
+on RubyFrame with same name as bytecode.
+
+2ndary: Special case instructions such as branching to generate branching AS3
+code.
+
