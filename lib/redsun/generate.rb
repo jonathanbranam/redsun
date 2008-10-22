@@ -11,7 +11,7 @@ module RedSun
       swf = nil
       Dir.chdir(File.dirname(__FILE__)) do
         Dir['RubyVMMain.swf'].each do |fname|
-          puts "got name - #{fname}"
+          #puts "got name - #{fname}"
           swf = Swf.new fname
         end
       end
@@ -28,12 +28,18 @@ module RedSun
       @swf.write
     end
 
-    def initialize(ruby_code)
+    def initialize(ruby_code=nil)
       @swf = vm_swf()
+      @abc = @swf.tag_select(Tags::DoABC)[0].abc_file
+      @cp = @abc.constant_pool
+      @f_ns = @abc.get_ns(ABC::Namespace::PackageNamespace, :"")
+                                                                   
+      @qnil = @abc.get_qname(:Qnil, @f_ns)
+      translate_code(ruby_code) if ruby_code
+    end
+    
+    def translate_code(ruby_code)
       vm = RubyVM::InstructionSequence.compile(ruby_code).to_a
-      @abc = @swf.tags[8].abc_file
-      @f_ns = 1
-      @qnil = @abc.add_multiname(:Qnil, @f_ns)
       load_ruby_vm(vm)
     end
 
@@ -48,60 +54,67 @@ module RedSun
     def translate_top(vm, body)
       # loop over opcodes
       # need a new function for iseqs, blocks, procs, lambda, classes
-      translated_scope(vm, body)
+      translate_scope(vm, body)
     end
 
     def mn(sym)
-      @abc.add_multiname(sym, @f_ns)
+      @abc.get_qname(sym, @f_ns)
     end
 
+    # Translate the given iseq Array into the body of the given method
     def translate_scope(vm, body)
       iseq = vm[11]
-      labels = []
-      loc = 0
+      labels = {}
       codes = []
+      # Need to track max_stack and scope_depth
       iseq.each do |insn|
-        case insn.class.name
-        when :Integer
-          # debug line
-        when :Symbol
-          # label
-          labels[insn] = loc
-        when :Array
-          codes << ABC::GetLocal1.new(@abc)
-          push_insn_ops(codes, insn)
-          codes << ABC::CallPropVoid.new(@abc, mn(insn[0]), insn.length-1)
-        end
-        loc = loc+1
-          
+        push_insn(codes, insn, labels)
       end
+      body.code.codes = codes
+    end
+
+    def push_insn(codes, insn, labels)
+      case insn.class.name
+      when "Fixnum"
+        # debug line
+      when "Symbol"
+        # label
+        labels[insn] = codes.length
+      when "Array"
+        codes << ABC::GetLocal1.new(@abc)
+        push_insn_ops(codes, insn)
+        codes << ABC::CallPropVoid.new(@abc, mn(insn[0]), insn.length-1)
+      end
+      codes
     end
 
     def push_insn_ops(codes, insn)
       1.upto(insn.length-1) do |i|
         case insn[i].class.name
-        when :Symbol
-          codes << ABC::PushString(@abc,@abc.add_string(insn[1]))
-        when :String
-          codes << ABC::PushString(@abc,@abc.add_string(insn[1].to_sym))
-        when :NilClass
-          codes << ABC::GetLocal1.new(@abc)
-          codes << ABC::GetProperty.new(@abc, @qnil)
+        when "Symbol"
+          push_string(codes, insn[i])
+        when "String"
+          push_string(codes, insn[i])
+        when "Fixnum"
+          codes << ABC::PushByte.new(@abc,insn[i])
+        when "NilClass"
+          push_nil(codes)
         end
       end
+      codes
     end
 
-    def push_sym(codes, sym)
-      codes << ABC::PushString(@abc, @abc.add_string(sym))
-    end
     def push_string(codes, str)
-      codes << ABC::PushString(@abc, @abc.add_string(str.to_sym))
+      str = str.to_sym if not str.is_a? Symbol
+      codes << ABC::PushString.new(@abc, @cp.add_string(str))
     end
     def push_nil(codes)
+      codes << ABC::GetLocal1.new(@abc)
+      codes << ABC::GetProperty.new(@abc, @qnil)
     end
       
 
-    def setup_doc_constructor(vm)
+    def setup_doc_constructor(vm, iinit)
       code = iinit.body.code
       code.codes[16] = ABC::PushByte.new(@abc, vm[4][:local_size])
       code.codes[17] = ABC::PushByte.new(@abc, vm[4][:stack_max])
@@ -377,7 +390,7 @@ HERE
           gl = GetLex.new(self)
           match = clz_sym.to_s.match(/^(?:([\w.]+):)?(\w+)$/)
           package, name = match[1] || "", match[2]
-          gl.index = get_qname(name, Namespace::PackageNamespace, package)
+          gl.index = get_qname(name, package, Namespace::PackageNamespace)
           codes << gl
           codes << PushScope.new(self)
         end
@@ -386,7 +399,7 @@ HERE
         clz_sym = hierarchy.last
         match = clz_sym.to_s.match(/^(?:([\w.]+):)?(\w+)$/)
         package, name = match[1] || "", match[2]
-        gl.index = get_qname(name, Namespace::PackageNamespace, package)
+        gl.index = get_qname(name, package, Namespace::PackageNamespace)
         codes << gl
 
         nc = NewClass.new(self)
@@ -500,12 +513,12 @@ HERE
         codes << GetLocal0.new(self)
         codes << PushScope.new(self)
 
-        prot_mn = get_multiname(:prototype, class_ns_set) if not methods.empty?
+        prot_mn = get_mn_nsset(:prototype, class_ns_set) if not methods.empty?
         # JPB
         methods.each do |index|
           name = @abc_methods[index].name.to_s
           name.match(/^(?:\w+\/)?(\w+)$/)
-          mn = get_multiname($1, class_ns_set)
+          mn = get_mn_nsset($1, class_ns_set)
           codes << GetLex.new(self, prot_mn)
           codes << NewFunction.new(self, index)
           codes << SetProperty.new(self, mn)
@@ -580,7 +593,7 @@ HERE
               inc_stack.call
               codes << PushString.new(self, @constant_pool.add_string(line[1].to_sym))
             when :getconstant
-              mn = get_multiname(line[1], class_ns_set)
+              mn = get_mn_nsset(line[1], class_ns_set)
               codes << FindPropStrict.new(self, mn)
             when :getlocal
               case line[1]
@@ -655,7 +668,7 @@ HERE
                   ind << get_ns(Namespace::PackageNamespace, package_name)
                   new_set = NsSet.new(ind, @constant_pool)
                   new_set_index = @constant_pool.add_ns_set(new_set)
-                  mn = get_multiname(class_name, new_set_index)
+                  mn = get_mn_nsset(class_name, new_set_index)
                   codes << FindPropStrict.new(self, mn)
                   codes << ConstructProp.new(self, mn, params)
                   codes << CoerceA.new(self)
@@ -669,7 +682,7 @@ HERE
                 # (actually, this needs to delegate to the send() method, but
                 # this should work for now)
                 obj = codes[-params-1]
-                mn = get_multiname(line[1], class_ns_set)
+                mn = get_mn_nsset(line[1], class_ns_set)
                 if obj.opcode == PushNull::Opcode
                   if doing_get
                     fps = GetLex.new(self, mn)
@@ -744,8 +757,8 @@ HERE
         # Issue Flash::Display::Sprite
         # translate to flash.display.Sprite and know what that means
 
-        inst.name_index = get_qname(name, Namespace::PackageNamespace, package)
-        inst.super_name_index = get_qname(super_name, Namespace::PackageNamespace, super_package)
+        inst.name_index = get_qname(name, package, Namespace::PackageNamespace)
+        inst.super_name_index = get_qname(super_name, super_package, Namespace::PackageNamespace)
         inst.flags = Instance::ProtectedNamespace
 
         inst.protected_namespace_index = get_ns(Namespace::ProtectedNamespace, protected_namespace_name(name, package))
@@ -761,17 +774,27 @@ HERE
         @constant_pool.add_namespace(Namespace.new(kind, name_index, @constant_pool))
       end
 
-      def get_qname(name, ns_kind, namespace)
+      def get_qname(name, namespace, ns_kind=nil)
         name = name.to_sym if not name.is_a? Symbol
-        ns_index = get_ns(ns_kind, namespace)
+        if (namespace.is_a? Integer)
+          ns_index = namespace
+        else
+          ns_index = get_ns(ns_kind, namespace)
+        end
         name_index = @constant_pool.add_string(name)
         mn_index = @constant_pool.add_multiname(Multiname.new(Multiname::MultinameQName, name_index, ns_index, nil, @constant_pool))
       end
 
-      def get_multiname(name, ns_set_index)
+      def get_mn_nsset(name, ns_set_index)
         name = name.to_sym if not name.is_a? Symbol
         name_index = @constant_pool.add_string(name)
         mn_index = @constant_pool.add_multiname(Multiname.new(Multiname::MultinameC, name_index, nil, ns_set_index, @constant_pool))
+      end
+
+      def get_mn_ns(name, ns_index)
+        name = name.to_sym if not name.is_a? Symbol
+        name_index = @constant_pool.add_string(name)
+        mn_index = @constant_pool.add_multiname(Multiname.new(Multiname::MultinameC, name_index, ns_index, nil, @constant_pool))
       end
 
       def set_constructor(constr)

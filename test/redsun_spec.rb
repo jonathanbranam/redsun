@@ -3,6 +3,67 @@
 require 'redsun'
 require 'load_files'
 
+describe "new generation" do
+  before :each do
+    @tx = RedSun::Translate.new()
+  end
+  def frame_get_prop_op(op, sym)
+    op.class.should == RedSun::ABC::GetProperty
+    op.index.nil?.should == false
+    op.property.nil?.should == false
+    op.property.name.should == sym
+    op.property.ns.name.should == :""
+  end
+  def frame_call_prop_op(op, sym)
+    op.class.should == RedSun::ABC::CallPropVoid
+    op.index.nil?.should == false
+    op.property.nil?.should == false
+    op.property.kind.should == RedSun::ABC::Multiname::MultinameQName
+    op.property.name.should == sym
+    op.property.ns.name.should == :""
+  end
+  it "should tx putnil to RubyFrame call" do
+    r = @tx.push_insn([], [:putnil], [])
+    r[0].class.should == RedSun::ABC::GetLocal1
+    frame_call_prop_op(r[1], :putnil)
+    r.length.should == 2
+  end
+  it "should tx no instruction operands" do
+    r = @tx.push_insn_ops([], [:putnil])
+    r.length.should == 0
+  end
+  it "should tx send instruction operands" do
+    r = @tx.push_insn_ops([], [:send, :puts, 1, nil, 8, nil])
+    r[0].class.should == RedSun::ABC::PushString
+    r[0].string.should == :puts
+    r[1].class.should == RedSun::ABC::PushByte
+    r[1].value.should == 1
+    r[2].class.should == RedSun::ABC::GetLocal1
+    frame_get_prop_op(r[3], :Qnil)
+    r[4].class.should == RedSun::ABC::PushByte
+    r[4].value.should == 8
+    r[5].class.should == RedSun::ABC::GetLocal1
+    frame_get_prop_op(r[6], :Qnil)
+    r.length.should == 7
+  end
+  it "should tx send to RubyFrame call with operands" do
+    r = @tx.push_insn([], [:send, :puts, 1, nil, 8, nil], [])
+    r[0].class.should == RedSun::ABC::GetLocal1
+    r[1].class.should == RedSun::ABC::PushString
+    r[1].string.should == :puts
+    r[2].class.should == RedSun::ABC::PushByte
+    r[2].value.should == 1
+    r[3].class.should == RedSun::ABC::GetLocal1
+    frame_get_prop_op(r[4], :Qnil)
+    r[5].class.should == RedSun::ABC::PushByte
+    r[5].value.should == 8
+    r[6].class.should == RedSun::ABC::GetLocal1
+    frame_get_prop_op(r[7], :Qnil)
+    frame_call_prop_op(r[8], :send)
+    r.length.should == 9
+  end
+end
+
 describe RedSun::ABC::ABCFile do
   before(:each) do
     @empty_data = "10002e000000000d0011456d7074795377662f456d70747953776608456d7074795377660d666c6173682e646973706c6179065370726974653d473a5c776f726b5c65636c697073655c61727469636c65735c44796e616d6963416374696f6e5363726970745c7372633b3b456d7074795377662e6173064f626a6563740c666c6173682e6576656e74730f4576656e74446973706174636865720d446973706c61794f626a65637411496e7465726163746976654f626a65637416446973706c61794f626a656374436f6e7461696e6572051601160418031608000807010307020507010707040907020a07020b07020c0300000100000002000000010000010102090300010000000102010104010003000101080903d030470000010101090a0ef106f007d030f008d04900f00947000002020101082bd030f106f0056500600330600430600530600630600730600230600258001d1d1d1d1d1d6801f106f003470000".pack_as_hex

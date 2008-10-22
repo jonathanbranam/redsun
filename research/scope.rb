@@ -1,6 +1,7 @@
-v = "hi"
-puts "FAIL" unless v
-puts "SUCCESS" if v
+#v = "hi"
+puts "test"
+#puts "FAIL" unless v
+#puts "SUCCESS" if v
 =begin
 v = nil
 puts "FAIL" if v
