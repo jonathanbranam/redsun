@@ -66,6 +66,7 @@ module RedSun
     end
 
     def instance(name, ns=nil)
+      name = name.to_sym if not name.is_a? Symbol
       res = instances.select do |i|
         i.name.name == name and (not ns or i.name.ns.name == ns)
       end.flatten
@@ -80,6 +81,7 @@ module RedSun
     end
 
     def abc_method(name)
+      name = name.to_sym if not name.is_a? Symbol
       res = abc_methods.select { |m| m.name == name }.flatten
 
       if res.length == 0

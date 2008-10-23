@@ -30,6 +30,7 @@ module RedSun
 
     def initialize(ruby_code=nil)
       @swf = vm_swf()
+      # first DoABC tag in the file
       @abc = @swf.tag_select(Tags::DoABC)[0].abc_file
       @cp = @abc.constant_pool
       @f_ns = @abc.get_ns(ABC::Namespace::PackageNamespace, :"")
@@ -44,10 +45,14 @@ module RedSun
     end
 
     def load_ruby_vm(vm)
-      @doc_class = @abc.instances[0]
+      @doc_class = @swf.instance(:RubyVMMain)
       @iinit = @doc_class.iinit
       setup_doc_constructor(vm, @iinit)
-      ruby_func = @abc.abc_methods[2]
+      new_func = @swf.abc_method(:"RubyVMMain/protected:ruby_func").body.code.codes.select { |c| c.class == ABC::NewFunction }[0]
+      @ruby_func_index = new_func.index
+      # this is a temp catcher b/c if it isn't 2 I want to know
+      raise "WHOOPS #{@ruby_func_index}." if @ruby_func_index != 2
+      ruby_func = @abc.abc_methods[@ruby_func_index]
       translate_top(vm, ruby_func.body)
     end
 
@@ -81,6 +86,7 @@ module RedSun
         # label
         labels[insn] = codes.length
       when "Array"
+        return if insn[0] == :trace
         codes << ABC::GetLocal1.new(@abc)
         push_insn_ops(codes, insn)
         codes << ABC::CallPropVoid.new(@abc, mn(insn[0]), insn.length-1)
