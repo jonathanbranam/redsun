@@ -1,5 +1,6 @@
-#v = "hi"
-puts "test"
+v = "hi"
+Document.graphics.lineStyle(1,1,1)
+Document.graphics.drawRec(5,5,105,105)
 #puts "FAIL" unless v
 #puts "SUCCESS" if v
 =begin

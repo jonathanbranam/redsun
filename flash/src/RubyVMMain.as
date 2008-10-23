@@ -22,6 +22,27 @@ public class RubyVMMain extends Sprite
       f.putstring("hi");
       f.setlocal(2);
 
+      f.getinlinecache(f.Qnil, "label_15");
+      f.getconstant("Document");
+      f.setinlinecache("label_8");
+      f.send("graphics", 0, f.Qnil, 0, f.Qnil);
+      f.putobject(1);
+      f.putobject(1);
+      f.putobject(1);
+      f.send("lineStyle", 3, f.Qnil, 0, f.Qnil);
+      f.pop();
+
+      f.getinlinecache(f.Qnil, "label_43");
+      f.getconstant("Document");
+      f.setinlinecache("label_36");
+      f.send("graphics", 0, f.Qnil, 0, f.Qnil);
+      f.putobject(5);
+      f.putobject(5);
+      f.putobject(105);
+      f.putobject(105);
+      f.send("drawRect", 4, f.Qnil, 0, f.Qnil);
+      f.pop();
+
       f.getlocal(2);
       if (f.branchif()) {
         f.putnil();

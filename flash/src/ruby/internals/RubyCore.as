@@ -46,8 +46,14 @@ public class RubyCore
 
   public function run(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
-    rb_define_global_const("Document", Data_Wrap_Struct(rb_cFlashClass, docClass, null, null));
+    rb_define_global_const("Document", wrap_flash_obj(docClass));
     ruby_run_node(iseqval_from_func(local_size, stack_max, block));
+  }
+
+  public function
+  wrap_flash_obj(obj:Object):RData
+  {
+    return Data_Wrap_Struct(rb_cFlashClass, obj, null, null);
   }
 
   public function
@@ -155,7 +161,7 @@ public class RubyCore
 
   // ruby.h:672
   public function
-  Data_Wrap_Struct(klass:RClass, obj:*, mark:Function, free:Function):Value
+  Data_Wrap_Struct(klass:RClass, obj:*, mark:Function, free:Function):RData
   {
     return rb_data_object_alloc(klass, obj, mark, free);
   }
@@ -177,7 +183,7 @@ public class RubyCore
   fc_method_missing(argc:int, argv:Array, recv:Value):Value
   {
     var fc:Object = GetCoreDataFromValue(recv);
-    var val:* = fc[argv[0]];
+    var val:* = fc[rb_id2name(RSymbol(argv[0]).id)];
     if (val is Function) {
       var retval:*;
       if (argv.length > 1) {
@@ -186,6 +192,8 @@ public class RubyCore
         retval = Function(val).call(fc);
       }
       return convert_to_ruby_value(retval);
+    } else {
+      return wrap_flash_obj(val);
     }
 
     return Qnil;

@@ -1,4 +1,6 @@
   // gc.c:985
+  import ruby.internals.RData;
+
   public function
   rb_node_newnode(type:uint, a0:*, a1:*, a2:*):Node
   {
@@ -16,7 +18,7 @@
 
   // gc.c:1000
   public function
-  rb_data_object_alloc(klass:RClass, datap:*, dmark:Function, dfree:Function):Value
+  rb_data_object_alloc(klass:RClass, datap:*, dmark:Function, dfree:Function):RData
   {
     var data:RData = new RData(klass);
 

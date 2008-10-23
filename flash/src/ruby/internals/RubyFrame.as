@@ -39,8 +39,12 @@ public class RubyFrame
     cfp.sp.push(iseq.self);
   }
 
-  public function putobject(str:String):void {
-    cfp.sp.push(rc.rb_str_new(str));
+  public function putobject(val:*):void {
+    if (val is String) {
+      cfp.sp.push(rc.rb_str_new(val));
+    } else if (val is Number) {
+      cfp.sp.push(
+    }
   }
 
   public function putspecialobject(value_type:int):void {
@@ -226,3 +230,4 @@ public class RubyFrame
 
 }
 }
+
