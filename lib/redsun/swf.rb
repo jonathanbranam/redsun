@@ -50,7 +50,7 @@ module RedSun
     end
 
     def abc_files
-      @tags.select { |t| t.class == DoABC }.map { |t| t.abc_file }
+      @tags.select { |t| t.class == Tags::DoABC }.map { |t| t.abc_file }
     end
 
     def scripts

@@ -238,7 +238,7 @@ module RedSun
         abc_data = io.read
         @abc_file = ABC::ABCFile.new
         @abc_file.read_from_str(abc_data)
-        @contents = nil
+        # @contents = nil
       end
 
       def update_contents

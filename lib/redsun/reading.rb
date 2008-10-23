@@ -79,7 +79,10 @@ module RedSun
       read_header
 
       @body_io.rewind
-      "F"+file_contents[1..7] + @body_io.read
+      # unpack -> pack to work around encoding errors
+      "F" +
+        file_contents[1..7].unpack_as_hex.pack_as_hex + 
+        @body_io.read.unpack_as_hex.pack_as_hex
 
     end
 
@@ -91,7 +94,9 @@ module RedSun
 
     class ABCFile
 
+      attr_accessor :contents
       def read_from_str str
+        @contents = str
         read_from_io(StringSwfIO.new(str))
       end
 
@@ -104,27 +109,19 @@ module RedSun
         @constant_pool.read_from_io(io)
 
         method_count = io.read_u30
-        #puts("Reading #{method_count} methods.")
         1.upto(method_count) do
-          method = Method.new_from_io(io, self)
-          @abc_methods << method
+          @abc_methods << Method.new_from_io(io, self)
         end
 
         metadata_count = io.read_u30
-        #puts("Reading #{metadata_count} metadatas.")
         1.upto(metadata_count) do
-          metadata = Metadata.new(io, self)
-          @metadatas << metadata
+          @metadatas << Metadata.new(io, self)
         end
 
         class_count = io.read_u30
-        #puts("Reading #{class_count} instances.")
         1.upto(class_count) do |i|
-          #puts("Reading instance #{i}.")
-          inst = Instance.new_from_io(io, self)
-          @instances << inst
+          @instances << Instance.new_from_io(io, self)
         end
-        #puts("Reading #{class_count} classes.")
         1.upto(class_count) do |i|
           c = Class.new_from_io(io, self)
           @classes << c
@@ -132,17 +129,13 @@ module RedSun
         end
 
         script_count = io.read_u30
-        #puts("Reading #{script_count} script.")
         1.upto(script_count) do
-          script = Script.new_from_io(io, self)
-          @scripts << script
+          @scripts << Script.new_from_io(io, self)
         end
 
         method_body_count = io.read_u30
-        #puts("Reading #{method_body_count} method_body.")
         1.upto(method_body_count) do
-          method_body = MethodBody.new_from_io(io, self)
-          @method_bodies << method_body
+          @method_bodies << MethodBody.new_from_io(io, self)
         end
 
       end

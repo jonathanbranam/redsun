@@ -164,7 +164,65 @@ module RedSun
         @constant_pool.multinames
       end
 
+      def find_read_write_error(in_io)
+        read_from_io(in_io)
+        in_io.rewind
 
+        out_io = StringSwfIO.new
+        out_io.write_ui16 @minor_version
+        out_io.write_ui16 @major_version
+
+        out_io.flush
+        raise "versions" if out_io.source != in_io.read(out_io.source.length)
+
+        out_io.rewind
+        @constant_pool.write_to_io(out_io)
+
+        out_io.flush
+        raise "constant_pool" if out_io.source != in_io.read(out_io.source.length)
+
+        out_io.rewind
+        out_io.write_u30 @abc_methods.length
+        out_io.flush
+        raise "abc_methods.length" if out_io.source != in_io.read(out_io.source.length)
+        out_io.rewind
+        @abc_methods.each do |v|
+          #puts "method #{v.name} #{v.inspect}"
+          v.write_to_io(out_io)
+          out_io.flush
+          io_s = in_io.read(out_io.source.length)
+          #puts io_s.unpack_as_hex
+          #puts out_io.source.unpack_as_hex
+          raise "abc_method #{v.name}" if out_io.source != io_s
+          out_io.rewind
+        end
+
+        out_io.rewind
+        out_io.write_u30 @metadatas.length
+        @metadatas.each { |v| v.write_to_io(out_io) }
+        out_io.flush
+        raise "metadatas" if out_io.source != in_io.read(out_io.source.length)
+
+        out_io.rewind
+        out_io.write_u30 @classes.length
+        @instances.each { |v| v.write_to_io(out_io) }
+        @classes.each { |v| v.write_to_io(out_io) }
+        out_io.flush
+        raise "instances or classes" if out_io.source != in_io.read(out_io.source.length)
+
+        out_io.rewind
+        out_io.write_u30 @scripts.length
+        @scripts.each { |v| v.write_to_io(out_io) }
+        out_io.flush
+        raise "scripts" if out_io.source != in_io.read(out_io.source.length)
+
+        out_io.rewind
+        out_io.write_u30 @method_bodies.length
+        @method_bodies.each { |v| v.write_to_io(out_io) }
+        out_io.flush
+        raise "method_bodies" if out_io.source != in_io.read(out_io.source.length)
+        
+      end
     end
 
     class Method
@@ -274,6 +332,10 @@ module RedSun
         if @has_optional
           io.write_u30 @options.length
           @options.each { |o| o.write_to_io(io) }
+        end
+
+        if @has_param_names
+          @param_names.each { |n| io.write_u32 n }
         end
 
         self
