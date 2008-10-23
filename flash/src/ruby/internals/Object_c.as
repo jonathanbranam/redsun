@@ -103,7 +103,9 @@
 
   }
 
-  public function rb_obj_class(obj:Value):RClass {
+  public function
+  rb_obj_class(obj:Value):RClass
+  {
     return rb_class_real(CLASS_OF(obj));
   }
 
@@ -159,7 +161,9 @@
     return obj;
   }
 
-  public function rb_obj_equal(obj1:Value, obj2:Value):Value {
+  public function
+  rb_obj_equal(obj1:Value, obj2:Value):Value
+  {
     if (obj1 == obj2) {
       return Qtrue;
     } else {
@@ -167,11 +171,15 @@
     }
   }
 
-  public function rb_obj_not(obj:Value):Value {
+  public function
+  rb_obj_not(obj:Value):Value
+  {
     return RTEST(obj) ? Qfalse : Qtrue;
   }
 
-  public function rb_obj_alloc(klass:RClass):Value {
+  public function
+  rb_obj_alloc(klass:RClass):Value
+  {
     var obj:Value;
 
     if (klass.super_class == null && klass != rb_cBasicObject) {

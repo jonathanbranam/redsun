@@ -1,6 +1,7 @@
 
   import ruby.internals.Node;
-    public function
+
+  public function
   Init_vm_eval():void
   {
     //rb_define_global_function("catch", rb_f_catch, -1);
@@ -24,7 +25,9 @@
   }
 
   // vm_eval.c:354
-  public function method_missing(obj:Value, id:int, argc:int, argv:Array, call_status:int):Value {
+  public function
+  method_missing(obj:Value, id:int, argc:int, argv:Array, call_status:int):Value
+  {
     var nargv:Array;
 
     GET_THREAD().method_missing_reason = call_status;
@@ -45,12 +48,17 @@
   }
 
   // vm_eval.c:410
-  public function rb_funcall2(recv:Value, mid:int, argc:int, argv:Array):Value {
+  public function
+  rb_funcall2(recv:Value, mid:int, argc:int, argv:Array):Value
+  {
     return rb_call(CLASS_OF(recv), recv, mid, argc, argv, Node.CALL_PUBLIC);
   }
 
   // vm_eval.c:190
-  public function rb_call0(klass:RClass, recv:Value, mid:int, argc:int, argv:Array, scope:int, self:Value):Value {
+  public function
+  rb_call0(klass:RClass, recv:Value, mid:int, argc:int,
+           argv:Array, scope:int, self:Value):Value
+  {
     var body:Node;
     var method:Node;
     var noex:int;
@@ -79,11 +87,15 @@
     return vm_call0(th, klass, recv, mid, id, argc, argv, body, noex & Node.NOEX_NOSUPER);
   }
 
-  public function rb_call(klass:RClass, recv:Value, mid:int, argc:int, argv:Array, scope:int):Value {
+  public function
+  rb_call(klass:RClass, recv:Value, mid:int, argc:int, argv:Array, scope:int):Value
+  {
     return rb_call0(klass, recv, mid, argc, argv, scope, Qundef);
   }
 
-  public function rb_funcall(recv:Value, mid:int, n:int, ...argv):Value {
+  public function
+  rb_funcall(recv:Value, mid:int, n:int, ...argv):Value
+  {
     return rb_call(CLASS_OF(recv), recv, mid, n, argv, Node.CALL_FCALL);
   }
 

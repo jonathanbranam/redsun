@@ -170,6 +170,82 @@ public class RubyCore
   init_flash_classes():void
   {
     rb_cFlashClass = rb_define_class("FlashClass", rb_cObject);
+    rb_define_method(rb_cFlashClass, "method_missing", fc_method_missing, -1);
+  }
+
+  public function
+  fc_method_missing(argc:int, argv:Array, recv:Value):Value
+  {
+    var fc:Object = GetCoreDataFromValue(recv);
+    var val:* = fc[argv[0]];
+    if (val is Function) {
+      var retval:*;
+      if (argv.length > 1) {
+        retval = Function(val).apply(fc, convert_array_to_as3(argv.slice(1)));
+      } else {
+        retval = Function(val).call(fc);
+      }
+      return convert_to_ruby_value(retval);
+    }
+
+    return Qnil;
+  }
+
+  public function
+  convert_array_to_as3(argv:Array):Array
+  {
+    var new_args:Array = new Array();
+    for each (var arg:* in argv) {
+      new_args.push(convert_to_as3(arg));
+    }
+    return new_args;
+  }
+
+  public function
+  convert_to_as3(val:*):*
+  {
+    if (val == Qundef) {
+      return undefined;
+    } else if (val == Qnil) {
+      return null;
+    } else if (val == Qtrue) {
+      return true;
+    } else if (val == Qfalse) {
+      return false;
+    } else if (val is Value) {
+      var v:Value = Value(val);
+      var type:uint = v.get_type();
+      switch (type) {
+        case Value.T_STRING:
+          return RSTRING_PTR(v);
+        default:
+          return v;
+      }
+    }
+  }
+
+  public function
+  convert_array_to_ruby_value(argv:Array):Array
+  {
+    var new_args:Array = new Array();
+    for each (var arg:* in argv) {
+      new_args.push(convert_to_ruby_value(arg));
+    }
+    return new_args;
+  }
+
+  public function
+  convert_to_ruby_value(val:*):*
+  {
+    if (val == undefined || val == null) {
+      return Qnil;
+    } else if (val is RProxy) {
+      return val.ruby_value;
+    } else if (val == true) {
+      return Qtrue;
+    } else if (val == false) {
+      return Qfalse;
+    }
   }
 
   public function
