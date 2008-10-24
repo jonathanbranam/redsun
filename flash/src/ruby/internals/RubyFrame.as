@@ -43,7 +43,8 @@ public class RubyFrame
     if (val is String) {
       cfp.sp.push(rc.rb_str_new(val));
     } else if (val is Number) {
-      cfp.sp.push(
+      cfp.sp.push(rc.NUM2NUM(val));
+      //cfp.sp.push(rc.INT2FIX(val));
     }
   }
 

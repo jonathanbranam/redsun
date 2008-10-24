@@ -29,6 +29,7 @@ public class RubyCore
   include "Id_c.as"
   include "IO_c.as"
   include "Iseq_c.as"
+  include "Numeric_c.as"
   include "Object_c.as"
   include "Parse_y.as"
   include "String_c.as"
