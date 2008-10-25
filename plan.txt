@@ -259,3 +259,22 @@ on RubyFrame with same name as bytecode.
 2ndary: Special case instructions such as branching to generate branching AS3
 code.
 
+10/24/2008
+
+Stupid research goal of the morning: stackless VM in 3 hours?
+
+Stackless VM began working quickly, but exposed lots of other problems with
+stack handling. This led to rewriting the stack and related pointers to use
+a new class StackPointer that keeps the Array and top index separate. This
+class enables the stack Array to be shared across the app instead of making
+copies everywhere.
+
+The stack and argument handling was adjusted all over to exactly mimic the
+Ruby C VM behavior which resulted in correct behavior eventually.
+
+10/25/2008
+
+Finally found remaining bug in implementation of leave opcode. Didn't realize
+that the return value from the called function is popped off the stack and
+re-added at the new stack level after the vm_pop_frame() completes.
+

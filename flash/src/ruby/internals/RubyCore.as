@@ -11,6 +11,7 @@ public class RubyCore
   public var Qundef:Value;
   public var Qfalse:Value;
   public var Qtrue:Value;
+  public var Qpause:Value;
 
 
   public var ID_ALLOCATOR:int;
@@ -45,10 +46,16 @@ public class RubyCore
 
   public var rb_cFlashClass:RClass;
 
-  public function run(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
+  public function run_func(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
     rb_define_global_const("Document", wrap_flash_obj(docClass));
     ruby_run_node(iseqval_from_func(local_size, stack_max, block));
+  }
+
+  public function run(docClass:DisplayObject, iseq:Array):void  {
+    init();
+    rb_define_global_const("Document", wrap_flash_obj(docClass));
+    ruby_run_node(iseqval_from_array(iseq));
   }
 
   public function
@@ -72,6 +79,7 @@ public class RubyCore
     Qtrue = new RTrue();
     Qfalse = null;
     Qundef = new RUndef();
+    Qpause = new Value(); // new RPause(); ???
   }
 
   public function GET_THREAD():RbThread {
@@ -110,7 +118,7 @@ public class RubyCore
     Init_Exception();
     Init_eval();
     //Init_jump();
-    //Init_Numeric();
+    Init_Numeric();
     //Init_Bignum();
     //Init_syserr();
     //Init_Array();
@@ -181,16 +189,18 @@ public class RubyCore
   }
 
   public function
-  fc_method_missing(argc:int, argv:Array, recv:Value):Value
+  fc_method_missing(argc:int, argv:StackPointer, recv:Value):Value
   {
     var fc:Object = GetCoreDataFromValue(recv);
-    var val:* = fc[rb_id2name(RSymbol(argv[0]).id)];
+    var val:* = fc[rb_id2name(RSymbol(argv.get_at(0)).id)];
     if (val is Function) {
       var retval:*;
-      if (argv.length > 1) {
-        retval = Function(val).apply(fc, convert_array_to_as3(argv.slice(1)));
+      //var func:Function = Function(val);
+      if (argc > 1) {
+        var as3_args:Array = convert_array_to_as3(argc-1, argv.clone_down_stack(1));
+        retval = val.apply(fc, as3_args);
       } else {
-        retval = Function(val).call(fc);
+        retval = val.call(fc);
       }
       return convert_to_ruby_value(retval);
     } else {
@@ -201,11 +211,11 @@ public class RubyCore
   }
 
   public function
-  convert_array_to_as3(argv:Array):Array
+  convert_array_to_as3(argc:int, argv:StackPointer):Array
   {
     var new_args:Array = new Array();
-    for each (var arg:* in argv) {
-      new_args.push(convert_to_as3(arg));
+    for (var i:int = 0; i < argc; i++) {
+      new_args.push(convert_to_as3(argv.get_at(i)));
     }
     return new_args;
   }
@@ -221,6 +231,8 @@ public class RubyCore
       return true;
     } else if (val == Qfalse) {
       return false;
+    } else if (val is RInt) {
+      return RInt(val).value;
     } else if (val is Value) {
       var v:Value = Value(val);
       var type:uint = v.get_type();
@@ -325,15 +337,28 @@ public class RubyCore
     }
   }
 
+  public function
+  FIXNUM_P(v:Value):Boolean
+  {
+    return v.get_type() == Value.T_FIXNUM;
+  }
+
   // ruby.h:1048
   public function
   rb_class_of(obj:Value):RClass
   {
     // TODO: @skipped
     // Test for immediate objects and special values
+
+    // false test first b/c Qfalse == null
+    if (obj == Qfalse) return rb_cFalseClass;
+
+    if (FIXNUM_P(obj)) {
+      return rb_cFixnum;
+    }
+
     if (obj == Qnil)   return rb_cNilClass;
     if (obj == Qtrue)  return rb_cTrueClass;
-    if (obj == Qfalse) return rb_cFalseClass;
     return RBasic(obj).klass;
   }
 
@@ -350,9 +375,10 @@ public class RubyCore
   }
 
   public function
-  TOPN(sp:Array, n:int):Value
+  TOPN(sp:StackPointer, n:int):Value
   {
-    return sp[sp.length-n-1];
+    return sp.topn(n);
+    //return sp[sp.length-n-1];
   }
 
 
@@ -372,6 +398,128 @@ public class RubyCore
     iseq.iseq_fn = func;
 
     return iseqval;
+  }
+
+  public function
+  yarv_stack_obj(iseq_array:Array):Object
+  {
+    return iseq_array[4];
+  }
+
+  public function
+  yarv_arg_simple(iseq_array:Array):int
+  {
+    if (iseq_array[9] is Array) {
+      return iseq_array[9][0];
+    } else {
+      return iseq_array[9];
+    }
+  }
+
+  public function
+  yarv_arg_array(iseq_array:Array):Array
+  {
+    return iseq_array[9] as Array;
+  }
+
+  public function
+  get_index_or_default(array:Array, index:int, default_value:int):int
+  {
+    if (array) {
+      return array[index];
+    } else {
+      return default_value;
+    }
+  }
+
+  public function
+  yarv_arg_size(iseq_array:Array):int
+  {
+    return yarv_stack_obj(iseq_array).arg_size;
+  }
+
+  public function
+  yarv_local_size(iseq_array:Array):int
+  {
+    return yarv_stack_obj(iseq_array).local_size;
+  }
+
+  public function
+  yarv_stack_max(iseq_array:Array):int
+  {
+    return yarv_stack_obj(iseq_array).stack_max;
+  }
+
+  public function
+  yarv_iseq(iseq_array:Array):Array
+  {
+    return iseq_array[11];
+  }
+
+  public function
+  iseqval_from_array(iseq_array:Array):Value
+  {
+    // Look at ruby.c:961 process_options() and vm.c Init_VM
+
+    // Pass in null for the node first
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
+
+    // Get the iseq out and assign the function pointer
+    var iseq:RbISeq = GetISeqPtr(iseqval);
+    iseq.arg_size = yarv_arg_size(iseq_array);
+    iseq.local_size = yarv_local_size(iseq_array);
+    iseq.stack_max = yarv_stack_max(iseq_array);
+
+    var arg_array:Array = yarv_arg_array(iseq_array);
+    iseq.arg_rest = yarv_arg_rest(arg_array);
+    iseq.arg_block = yarv_arg_block(arg_array);
+    iseq.arg_post_len = yarv_arg_post_len(arg_array);
+    iseq.arg_post_start = yarv_arg_post_start(arg_array);
+    iseq.arg_opt_table = yarv_arg_opt_table(arg_array);
+    iseq.arg_opts = yarv_arg_opts(iseq);
+
+    iseq.argc = yarv_arg_simple(iseq_array);
+    if (iseq.argc == iseq.arg_size) {
+      iseq.arg_simple = 1;
+    } else {
+      iseq.arg_simple = 0;
+    }
+    if (iseq.arg_opts != 0 || iseq.arg_post_len != 0 ||
+        iseq.arg_rest != -1 || iseq.arg_block != -1) {
+      if (iseq.arg_simple != 0) {
+        trace("WHAT!?! HOW DID ARG_SIMPLE GET SET TO 1??");
+      }
+      iseq.arg_simple = 0;
+    }
+
+    iseq.iseq = yarv_iseq(iseq_array);
+
+    return iseqval;
+  }
+
+
+  public function yarv_arg_rest(a:Array):int       { return get_index_or_default(a, 4, -1); }
+  public function yarv_arg_block(a:Array):int      { return get_index_or_default(a, 5, -1); }
+  public function yarv_arg_post_len(a:Array):int   { return get_index_or_default(a, 2, 0); }
+  public function yarv_arg_post_start(a:Array):int { return get_index_or_default(a, 3, 0); }
+
+  public function yarv_arg_opts(iseq:RbISeq):int
+  {
+    if (iseq.arg_opt_table && iseq.arg_opt_table.length > 1) {
+      return iseq.arg_opt_table.length-1;
+    } else {
+      return 0;
+    }
+  }
+
+  public function
+  yarv_arg_opt_table(a:Array):Array
+  {
+    if (!a) {
+      return null;
+    } else {
+      return a[1] as Array;
+    }
   }
 
   public function

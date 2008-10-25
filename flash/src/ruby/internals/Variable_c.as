@@ -1,5 +1,5 @@
 
-import ruby.internals.RClass;
+  import ruby.internals.RClass;
 
   protected var rb_global_tbl:Object;
   public var rb_class_tbl:Object;

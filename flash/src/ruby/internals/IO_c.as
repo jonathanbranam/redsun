@@ -25,7 +25,7 @@
   }
 
   protected function
-  rb_f_puts(argc:int, argv:Array, recv:Value):Value
+  rb_f_puts(argc:int, argv:StackPointer, recv:Value):Value
   {
     if (recv == rb_stdout) {
       return rb_io_puts(argc, argv, recv);
@@ -34,7 +34,7 @@
   }
 
   public function
-  rb_io_puts(argc:int, argv:Array, out:Value):Value
+  rb_io_puts(argc:int, argv:StackPointer, out:Value):Value
   {
     var i:int;
     var line:RString;
@@ -44,7 +44,7 @@
       return Qnil;
     }
     for (i=0; i < argc; i++) {
-      line = rb_obj_as_string(argv[i]);
+      line = rb_obj_as_string(argv.get_at(i));
       rb_io_write(out, line);
       // HACK b/c trace spits out newlines all the time.
       if (out != rb_stdout) {

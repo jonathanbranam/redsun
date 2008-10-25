@@ -7,6 +7,7 @@ public class RInt extends Value
   public function RInt(value:int=0)
   {
     super();
+    this.flags = Value.T_FIXNUM;
     this.value = value;
   }
 

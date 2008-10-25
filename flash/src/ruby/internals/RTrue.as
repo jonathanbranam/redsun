@@ -1,11 +1,11 @@
 package ruby.internals
 {
 
-public class RTrue extends RObject
+public class RTrue extends Value
 {
-  public function RTrue(klass:RClass=null)
+  public function RTrue()
   {
-    super(klass);
+    super();
   }
 
 }

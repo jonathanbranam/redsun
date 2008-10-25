@@ -1,4 +1,6 @@
   // vm_method.c:12
+  import ruby.internals.StackPointer;
+
   public var __send__:int, object_id:int;
   public var removed:int, singleton_removed:int, undefined_:int, singleton_undefined:int;
   public var eqq:int, each_:int, aref:int, aset:int, match:int, missing:int;
@@ -124,7 +126,7 @@
     return rb_obj_respond_to(obj, id, false);
   }
 
-  public function obj_respond_to(argc:int, argv:Array, obj:Value):Value {
+  public function obj_respond_to(argc:int, argv:StackPointer, obj:Value):Value {
     return Qtrue;
     // TODO: @skipped
     /*

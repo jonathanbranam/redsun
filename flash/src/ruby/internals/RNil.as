@@ -1,11 +1,11 @@
 package ruby.internals
 {
 
-public class RNil extends RObject
+public class RNil extends Value
 {
-  public function RNil(klass:RClass=null)
+  public function RNil()
   {
-    super(klass);
+    super();
   }
 
 }

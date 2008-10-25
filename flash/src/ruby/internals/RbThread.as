@@ -13,7 +13,7 @@ public class RbThread extends Value
 
   public var vm:RbVm;
 
-  public var stack:Array;
+  public var stack:StackPointer;
 
   public var stack_size:uint;
 

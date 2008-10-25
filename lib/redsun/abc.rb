@@ -26,7 +26,11 @@ module RedSun
       Null               = 0x0C
       Undefined          = 0x00
 
-      def self.pp_yarv(vm, indent="")
+      def self.yarv_to_as3(vm)
+        pp_yarv(vm, "", true)
+      end
+
+      def self.pp_yarv(vm, indent="", as3=false)
         intro_step = 0
         puts("#{indent}[")
         o_indent = indent
@@ -35,67 +39,119 @@ module RedSun
           if intro_step <= 10
             case intro_step
             when 0,5
-              print("#{indent}#{i.inspect}, ")
+              print("#{indent}#{pp_value(i,as3)}, ")
             when 1..2
-              print("#{i.inspect}, ")
+              print("#{pp_value(i,as3)}, ")
             when 4,7..9
-              puts("#{indent}#{i.inspect},")
+              puts("#{indent}#{pp_value(i,as3)},")
             when 3..4,6
-              puts("#{i.inspect},")
+              puts("#{pp_value(i,as3)},")
             when 10
               if i and i.length > 0
                 puts "#{indent}["
                 i.each do |label|
-                  puts "#{indent}  #{label.inspect},"
+                  puts "#{indent}  #{pp_value(label,as3)},"
                 end
                 puts "#{indent}]"
               else
-                puts "#{indent}#{i.inspect},"
+                puts "#{indent}#{pp_value(i,as3)},"
               end
             end
             intro_step = intro_step+1
           else
-            pp_yarv_ops(i, indent)
+            pp_yarv_ops(i, indent, as3)
           end
         end
         puts("#{o_indent}]")
       end
+      
+      class NoQuoteInspect
+        def initialize(str)
+          @str = str
+        end
+        def inspect
+          @str
+        end
+      end
 
-      def self.pp_yarv_ops(vm, indent="")
+      def self.pp_ary_tx(val, as3=false)
+        if not as3
+          val
+        else
+          if val.is_a? Symbol
+            val.to_s
+          elsif val.nil?
+            NoQuoteInspect.new("rc.Qnil")
+          else
+            val
+          end
+        end
+      end
+      def self.pp_hash_tx(h, as3=false)
+        if not as3
+          h
+        else
+          NoQuoteInspect.new("#{h[0]}:#{pp_value(h[1],as3)}")
+        end
+      end
+          
+
+      def self.pp_value(val, as3=false)
+        if as3
+          if val.is_a? Symbol
+            val.to_s.inspect
+          elsif val.is_a? Array
+            val.map{|v| pp_ary_tx(v,as3)}.inspect
+          elsif val.is_a? Hash
+            ary_hash = val.map{|h| pp_hash_tx(h,as3)}.inspect
+            "{"+ary_hash[1..-2]+"}"
+          elsif val.nil?
+            "rc.Qnil"
+          else
+            val.inspect
+          end
+        else
+          val.inspect
+        end
+      end
+
+      def self.pp_yarv_ops(vm, indent="", as3=false)
         puts("#{indent}[")
         o_indent = indent
         indent = indent + "  "
         vm.each do |i|
           case i.class.name
           when "Fixnum"
-            puts("#{indent}#{i.inspect},")
+            puts("#{indent}#{pp_value(i,as3)},") if not as3
           when "Array"
             case i[0]
+            when :trace
+              puts("#{indent}#{pp_value(i,as3)},") if not as3
             when :defineclass
-              puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},")
-              pp_yarv(i[2],indent+"  ")
-              puts("#{indent}  , #{i[3]}]")
+              puts("#{indent}[#{pp_value(i[0],as3)}, #{pp_value(i[1],as3)},")
+              pp_yarv(i[2], indent+"  ", as3)
+              puts("#{indent}  , #{pp_value(i[3],as3)}]")
             when :definemethod
-              puts("#{indent}[#{i[0].inspect}, #{i[1].inspect},")
-              pp_yarv(i[2],indent+"  ")
+              puts("#{indent}[#{pp_value(i[0],as3)}, #{pp_value(i[1],as3)},")
+              pp_yarv(i[2], indent+"  ", as3)
               puts("#{indent}]")
             when :putiseq
-              puts("#{indent}[#{i[0].inspect},")
-              pp_yarv(i[1], indent+"  ")
+              puts("#{indent}[#{pp_value(i[0],as3)},")
+              pp_yarv(i[1], indent+"  ", as3)
               puts("#{indent}],")
             when :send
               if i[3]
-                puts("#{indent}[#{i[0].inspect}, #{i[1].inspect}, #{i[2].inspect},")
-                pp_yarv(i[3],indent+"  ")
-                puts("#{indent}#{i[4].inspect}, #{i[5].inspect}]")
+                puts("#{indent}[#{pp_value(i[0],as3)}, #{pp_value(i[1],as3)}, #{pp_value(i[2],as3)},")
+                pp_yarv(i[3],indent+"  ", as3)
+                puts("#{indent}#{pp_value(i[4],as3)}, #{pp_value(i[5],as3)}]")
               else
-                puts("#{indent}#{i.inspect},")
+                puts("#{indent}#{pp_value(i,as3)},")
               end
             else
-              puts("#{indent}#{i.inspect},")
+              puts("#{indent}#{pp_value(i,as3)},")
             end
           else
-            puts("#{indent}#{i.inspect},")
+            puts("#{indent}#{pp_value(i,as3)},")
           end
         end
         puts("#{o_indent}]")

@@ -2,9 +2,12 @@ package ruby.internals
 {
 public class RbControlFrame extends RbBlock
 {
-  public var pc:Function;
-  public var sp:Array;
-  public var bp:Array;
+  public var pc_fn:Function;
+  public var pc_ary:Array;
+  public var pc_index:int;
+
+  public var sp:StackPointer;
+  public var bp:StackPointer;
 
   public var iseq:RbISeq;
   public var flag:uint;

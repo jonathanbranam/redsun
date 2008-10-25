@@ -6,11 +6,15 @@
  import ruby.internals.RbISeq;
  import ruby.internals.RbThread;
  import ruby.internals.RbVm;
+ import ruby.internals.StackPointer;
  import ruby.internals.Value;
 
   public var rb_cRubyVM:RClass;
   public var rb_cThread:RClass;
   public var rb_mRubyVMFrozenCore:Value;
+
+  protected var ruby_vm_global_state_version:int = 1;
+
 
   public function Init_VM():void
   {
@@ -25,7 +29,9 @@
     // ::VM::FrozenCore
     fcore = rb_class_new(rb_cBasicObject);
     fcore.flags = Value.T_ICLASS;
+    fcore.name = "FrozenCore"
     klass = rb_singleton_class(fcore);
+    klass.name = "FrozenCoreSingleton";
     // define various methods
     rb_define_method_id(klass, id_core_define_method, m_core_define_method, 3);
     // rb_obj_freeze(fcore);
@@ -61,7 +67,9 @@
       //rb_register_mark_object(iseqval);
       iseq = GetISeqPtr(iseqval);
       th.cfp.iseq = iseq;
-      th.cfp.pc = iseq.iseq_fn;
+      th.cfp.pc_fn = iseq.iseq_fn;
+      th.cfp.pc_ary = iseq.iseq;
+      th.cfp.pc_index = 0;
 
     }
     vm_init_redefined_flag();
@@ -78,7 +86,7 @@
   }
 
   public function
-  vm_get_cbase(iseq:RbISeq, lfp:Array, dfp:Array):Value
+  vm_get_cbase(iseq:RbISeq, lfp:StackPointer, dfp:StackPointer):Value
   {
     var cref:Node = vm_get_cref(iseq, lfp, dfp);
     var klass:Value = Qundef;
@@ -211,9 +219,9 @@
 
   // vm.c:1431
   public function
-  thread_recycle_stack(size:int):Array
+  thread_recycle_stack(size:int):StackPointer
   {
-    return new Array();
+    return new StackPointer(new Array(size));
   }
 
 
@@ -229,7 +237,8 @@
     th.cfp_stack = new Array();
     //th.cfp = new RbControlFrame();
 
-    vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_TOP, Qnil, null, null, th.stack, null, 1);
+    vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_TOP, Qnil, null,
+                  null, null, 0, th.stack, null, 1);
 
     th.status = RbThread.THREAD_RUNNABLE;
     th.errinfo = Qnil;
@@ -313,14 +322,20 @@
     ruby_thread_init_stack(th);
   }
 
-  public var finish_insn_seq:Function = function (th:RbThread, cfp:RbControlFrame):Value { this.finish(); return this.Qnil; };
+  public var finish_insn_seq:Function =
+    function (th:RbThread, cfp:RbControlFrame):Value {
+      this.finish();
+      return this.Qnil;
+    };
 
   // vm.c:54
   public function
   rb_vm_set_finish_env(th:RbThread):Value
   {
-    vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_FINISH, Qnil, th.cfp.lfp[0], null, th.cfp.sp, null, 1);
-    th.cfp.pc = finish_insn_seq;
+    vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_FINISH, Qnil,
+                  th.cfp.lfp.get_at(0), null, null, 0,
+                  th.cfp.sp.clone(), null, 1);
+    th.cfp.pc_fn = finish_insn_seq;
     return Qtrue;
   }
 
@@ -340,7 +355,7 @@
     rb_vm_set_finish_env(th);
 
     vm_push_frame(th, iseq, RbVm.VM_FRAME_MAGIC_TOP, th.top_self, null, iseq.iseq_fn,
-                  th.cfp.sp, null, iseq.local_size);
+                  iseq.iseq, 0, th.cfp.sp.clone(), null, iseq.local_size);
   }
 
   // vm.c:1256
@@ -375,7 +390,7 @@
       // etc.
 
       th.cfp = th.cfp_stack.pop();
-      if (th.cfp.pc != finish_insn_seq) {
+      if (th.cfp.pc_fn != finish_insn_seq) {
         trace("goto exception_handler");
         // goto exception_handler;
       } else {
@@ -460,6 +475,21 @@
     if (!is_singleton && noex == Node.NOEX_MODFUNC) {
       rb_add_method(rb_singleton_class(klass), id, newbody, Node.NOEX_PUBLIC);
     }
-    // TODO: @skipped
-    // INC_VM_STATE_VERSION();
+    INC_VM_STATE_VERSION();
   }
+
+  // vm.h:237
+  public function
+  INC_VM_STATE_VERSION():void
+  {
+    ruby_vm_global_state_version = (ruby_vm_global_state_version+1) & 0x8fffffff;
+  }
+
+  // vm.h:236
+  public function
+  GET_VM_STATE_VERSION():int
+  {
+    return ruby_vm_global_state_version;
+  }
+
+

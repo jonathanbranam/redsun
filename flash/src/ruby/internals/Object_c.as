@@ -151,7 +151,7 @@
 
   // object.c:1477
   public function
-  rb_class_new_instance(argc:int, argv:Array, klass:RClass):Value
+  rb_class_new_instance(argc:int, argv:StackPointer, klass:RClass):Value
   {
     var obj:Value;
 

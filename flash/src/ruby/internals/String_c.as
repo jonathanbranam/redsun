@@ -35,7 +35,7 @@
   {
     var val:Value;
 
-    if (obj.get_type() == Value.T_STRING) {
+    if (obj && obj.get_type() == Value.T_STRING) {
       return RString(obj);
     }
     val = rb_funcall(obj, id_to_s, 0);

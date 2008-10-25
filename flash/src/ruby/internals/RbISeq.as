@@ -28,11 +28,11 @@ public class RbISeq extends Node
   public var arg_post_len:int;
   public var arg_post_start:int;
   public var arg_size:int;
-  public var arg_opt_table:*;
+  public var arg_opt_table:Array;
 
   public var stack_max:int;
 
-  public var catch_table:*;
+  public var catch_table:Array;
   public var catch_table_size:int;
 
   public var parent_iseq:RbISeq;

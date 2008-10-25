@@ -29,6 +29,8 @@
       klass.flags = klass.flags | s;
       if (obj.get_type() == Value.T_CLASS) {
         klass.name = RClass(obj).name+"Singleton";
+      } else {
+        klass.name = "objectSingleton";
       }
       obj.klass = klass;
       rb_singleton_class_attached(klass, obj);

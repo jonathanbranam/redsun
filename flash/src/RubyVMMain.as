@@ -5,6 +5,7 @@ import flash.display.Sprite;
 import ruby.internals.RbISeq;
 import ruby.internals.RubyCore;
 import ruby.internals.RubyFrame;
+import ruby.internals.Value;
 
 public class RubyVMMain extends Sprite
 {
@@ -13,7 +14,130 @@ public class RubyVMMain extends Sprite
     super();
     var rc:RubyCore = new RubyCore();
     // Must do ruby_init to prep for creating iseq.
-    rc.run(this, 2, 2, ruby_func());
+    rc.run(this, ruby_iseq(rc));
+  }
+
+  protected function ruby_iseq(rc:RubyCore):Array
+  {
+    return [
+  "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+  {arg_size:0, local_size:2, stack_max:5},
+  "<compiled>", "<compiled>",
+  "top",
+  ["v"],
+  0,
+  [],
+  [
+    ["putstring", "hi"],
+    ["setlocal", 2],
+    ["putspecialobject", 1],
+    ["putspecialobject", 2],
+    ["putobject", "mimic"],
+    ["putiseq",
+      [
+        "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+        {arg_size:1, local_size:2, stack_max:1},
+        "mimic", "<compiled>",
+        "method",
+        ["a"],
+        1,
+        [],
+        [
+          ["getlocal", 2],
+          ["leave"],
+        ]
+      ]
+    ],
+    ["send", "core#define_method", 3, rc.Qnil, 0, rc.Qnil],
+    ["pop"],
+    ["putspecialobject", 1],
+    ["putspecialobject", 2],
+    ["putobject", "wait"],
+    ["putiseq",
+      [
+        "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+        {arg_size:0, local_size:1, stack_max:1},
+        "wait", "<compiled>",
+        "method",
+        [],
+        0,
+        [],
+        [
+          ["putstring", "done waiting"],
+          ["leave"],
+        ]
+      ]
+    ],
+    ["send", "core#define_method", 3, rc.Qnil, 0, rc.Qnil],
+    ["pop"],
+    ["putnil"],
+    ["putnil"],
+    ["putstring", "wait 5"],
+    ["send", "mimic", 1, rc.Qnil, 8, rc.Qnil],
+    ["send", "puts", 1, rc.Qnil, 8, rc.Qnil],
+    ["pop"],
+    ["putnil"],
+    ["putnil"],
+    ["send", "wait", 0, rc.Qnil, 8, rc.Qnil],
+    ["send", "puts", 1, rc.Qnil, 8, rc.Qnil],
+    ["pop"],
+    ["putspecialobject", 1],
+    ["putspecialobject", 2],
+    ["putobject", "col"],
+    ["putiseq",
+      [
+        "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+        {arg_size:0, local_size:1, stack_max:1},
+        "col", "<compiled>",
+        "method",
+        [],
+        0,
+        [],
+        [
+          ["putobject", 65280],
+          ["leave"],
+        ]
+      ]
+    ],
+    ["send", "core#define_method", 3, rc.Qnil, 0, rc.Qnil],
+    ["pop"],
+    "label_95",
+    ["getinlinecache", rc.Qnil, "label_102"],
+    ["getconstant", "Document"],
+    ["setinlinecache", "label_95"],
+    "label_102",
+    ["send", "graphics", 0, rc.Qnil, 0, rc.Qnil],
+    ["putobject", 1],
+    ["putobject", 1],
+    ["putobject", 1],
+    ["send", "lineStyle", 3, rc.Qnil, 0, rc.Qnil],
+    ["pop"],
+    "label_123",
+    ["getinlinecache", rc.Qnil, "label_130"],
+    ["getconstant", "Document"],
+    ["setinlinecache", "label_123"],
+    "label_130",
+    ["send", "graphics", 0, rc.Qnil, 0, rc.Qnil],
+    ["putnil"],
+    ["send", "col", 0, rc.Qnil, 24, rc.Qnil],
+    ["send", "beginFill", 1, rc.Qnil, 0, rc.Qnil],
+    ["pop"],
+    "label_152",
+    ["getinlinecache", rc.Qnil, "label_159"],
+    ["getconstant", "Document"],
+    ["setinlinecache", "label_152"],
+    "label_159",
+    ["send", "graphics", 0, rc.Qnil, 0, rc.Qnil],
+    ["putobject", 5],
+    ["putobject", 5],
+    ["putobject", 105],
+    ["putobject", 105],
+    ["send", "drawRect", 4, rc.Qnil, 0, rc.Qnil],
+    ["leave"],
+  ]
+];
+
+
   }
 
   protected function ruby_func():Function

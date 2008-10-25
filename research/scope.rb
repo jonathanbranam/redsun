@@ -1,8 +1,35 @@
 v = "hi"
+def pt(a,b,c)
+  a+b+c
+end
+def mimic(a)
+  a
+end
+def wait()
+  "done waiting"
+end
+puts mimic("wait 5")
+puts wait()
+def col()
+  0x00FF00
+end
 Document.graphics.lineStyle(1,1,1)
-Document.graphics.drawRec(5,5,105,105)
+Document.graphics.beginFill(col)
+Document.graphics.drawRect(5,5,105,105)
 #puts "FAIL" unless v
 #puts "SUCCESS" if v
+=begin
+def a(); end
+def b(a); end
+def c(a,b); end
+def d(a,b,*c); end 
+def e(a,b,c=nil); end
+def f(a,b,c=nil,d=nil); end
+def g(a,b,*c,d); end
+def h(a,b,&c); end
+def i(a,b=nil,*c,d); end
+def j(a,b,c=nil,*d,e,f,&g); end
+=end
 =begin
 v = nil
 puts "FAIL" if v

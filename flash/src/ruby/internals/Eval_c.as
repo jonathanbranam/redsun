@@ -1,3 +1,6 @@
+
+  import ruby.internals.StackPointer;
+
   public function Init_eval():void {
     Init_vm_eval();
     Init_eval_method();
@@ -6,7 +9,7 @@
 
   // eval.c:856
   public function
-  rb_obj_call_init(obj:Value, argc:int, argv:Array):void
+  rb_obj_call_init(obj:Value, argc:int, argv:StackPointer):void
   {
     // TODO: @skipped pass passed block
     // PASS_PASSED_BLOCK();

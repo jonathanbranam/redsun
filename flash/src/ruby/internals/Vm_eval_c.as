@@ -1,5 +1,6 @@
 
   import ruby.internals.Node;
+  import ruby.internals.StackPointer;
 
   public function
   Init_vm_eval():void
@@ -26,9 +27,9 @@
 
   // vm_eval.c:354
   public function
-  method_missing(obj:Value, id:int, argc:int, argv:Array, call_status:int):Value
+  method_missing(obj:Value, id:int, argc:int, argv:StackPointer, call_status:int):Value
   {
-    var nargv:Array;
+    var nargv:StackPointer;
 
     GET_THREAD().method_missing_reason = call_status;
 
@@ -38,10 +39,10 @@
       rb_raise(rb_eTypeError, "allocator undefined for "+rb_class2name(RClass(obj)));
     }
 
-    nargv = new Array(argc+1);
-    nargv[0] = ID2SYM(id);
-    for (var i:int = 0; i < argv.length; i++) {
-      nargv[i+1] = argv[i];
+    nargv = new StackPointer(new Array(argc+1));
+    nargv.set_at(0, ID2SYM(id));
+    for (var i:int = 0; i < argc; i++) {
+      nargv.set_at(i+1, argv.get_at(i));
     }
 
     return rb_funcall2(obj, missing, argc + 1, nargv);
@@ -49,7 +50,7 @@
 
   // vm_eval.c:410
   public function
-  rb_funcall2(recv:Value, mid:int, argc:int, argv:Array):Value
+  rb_funcall2(recv:Value, mid:int, argc:int, argv:StackPointer):Value
   {
     return rb_call(CLASS_OF(recv), recv, mid, argc, argv, Node.CALL_PUBLIC);
   }
@@ -57,7 +58,7 @@
   // vm_eval.c:190
   public function
   rb_call0(klass:RClass, recv:Value, mid:int, argc:int,
-           argv:Array, scope:int, self:Value):Value
+           argv:StackPointer, scope:int, self:Value):Value
   {
     var body:Node;
     var method:Node;
@@ -88,34 +89,35 @@
   }
 
   public function
-  rb_call(klass:RClass, recv:Value, mid:int, argc:int, argv:Array, scope:int):Value
+  rb_call(klass:RClass, recv:Value, mid:int, argc:int, argv:StackPointer, scope:int):Value
   {
     return rb_call0(klass, recv, mid, argc, argv, scope, Qundef);
   }
 
   public function
-  rb_funcall(recv:Value, mid:int, n:int, ...argv):Value
+  rb_funcall(recv:Value, mid:int, n:int, ...args):Value
   {
+    var argv:StackPointer = new StackPointer(args, 0);
     return rb_call(CLASS_OF(recv), recv, mid, n, argv, Node.CALL_FCALL);
   }
 
   // vm_eval.c:303
   public function
-  rb_method_missing(argc:int, argv:Array, obj:Value):Value
+  rb_method_missing(argc:int, argv:StackPointer, obj:Value):Value
   {
     var id:int;
     var exc:RClass = rb_eNoMethodError;
     var format:String = null;
     var th:RbThread = GET_THREAD();
     var last_call_status:int = th.method_missing_reason;
-    if (argc == 0 || !SYMBOL_P(argv[0])) {
+    if (argc == 0 || !SYMBOL_P(argv.get_at(0))) {
       rb_raise(rb_eArgError, "no id given");
     }
 
     // TODO: @skip stack_check
     // stack_check();
 
-    id = SYM2ID(argv[0]);
+    id = SYM2ID(argv.get_at(0));
 
     if (last_call_status & Node.NOEX_PRIVATE) {
       format = "private method '%s' called for %s";
@@ -156,7 +158,7 @@
 
   // vm_eval.c
   public function
-  send_internal(argc:int, argv:Array, recv:Value, scope:int):Value
+  send_internal(argc:int, argv:StackPointer, recv:Value, scope:int):Value
   {
     var vid:Value;
     var self:Value = RUBY_VM_PREVIOUS_CONTROL_FRAME(GET_THREAD(), GET_THREAD().cfp).self;
@@ -172,13 +174,13 @@
   }
 
   public function
-  rb_f_send(argc:int, argv:Array, recv:Value):Value
+  rb_f_send(argc:int, argv:StackPointer, recv:Value):Value
   {
     return send_internal(argc, argv, recv, Node.NOEX_NOSUPER | Node.NOEX_PRIVATE);
   }
 
   public function
-  rb_f_public_send(argc:int, argv:Array, recv:Value):Value
+  rb_f_public_send(argc:int, argv:StackPointer, recv:Value):Value
   {
     return send_internal(argc, argv, recv, Node.NOEX_PUBLIC);
   }
@@ -186,7 +188,7 @@
   // vm_eval.c:30
   public function
   vm_call0(th:RbThread, klass:RClass, recv:Value, id:int, oid:int,
-           argc:int, argv:Array, body:Node, nosuper:int):Value
+           argc:int, argv:StackPointer, body:Node, nosuper:int):Value
   {
     var val:Value = Qnil;
     var blockptr:RbBlock;
@@ -208,6 +210,7 @@
 
       rb_vm_set_finish_env(th);
       reg_cfp = th.cfp;
+      throw new Error("This is wrong.");
 
       // TODO: @skipped stack check, copying args onto stack");
       /*
@@ -229,7 +232,8 @@
       {
         reg_cfp = th.cfp;
         var cfp:RbControlFrame = vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_CFUNC,
-                                               recv, blockptr, null, reg_cfp.sp, null, 1);
+                                               recv, blockptr, null, null, 0,
+                                               reg_cfp.sp.clone(), null, 1);
         cfp.method_id = id;
         cfp.method_class = klass;
 
