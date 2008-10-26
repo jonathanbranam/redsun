@@ -63,6 +63,9 @@
       }
       if (insn is Array) {
         instruction = insn[0];
+        if (instruction == "trace") {
+          continue;
+        }
 
         //trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
 

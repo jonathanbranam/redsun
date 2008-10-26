@@ -11,7 +11,7 @@ end
 puts mimic("wait 5")
 puts wait()
 def col()
-  0x00FF00
+  0x0000FF
 end
 Document.graphics.lineStyle(1,1,1)
 Document.graphics.beginFill(col)

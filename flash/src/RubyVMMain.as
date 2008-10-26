@@ -1,11 +1,12 @@
 package
 {
+import com.adobe.serialization.json.JSONDecoder;
+
 import flash.display.Sprite;
 
 import ruby.internals.RbISeq;
 import ruby.internals.RubyCore;
 import ruby.internals.RubyFrame;
-import ruby.internals.Value;
 
 public class RubyVMMain extends Sprite
 {
@@ -14,10 +15,22 @@ public class RubyVMMain extends Sprite
     super();
     var rc:RubyCore = new RubyCore();
     // Must do ruby_init to prep for creating iseq.
-    rc.run(this, ruby_iseq(rc));
+    rc.run(this, get_iseq(rc));
   }
 
-  protected function ruby_iseq(rc:RubyCore):Array
+  protected function get_iseq(rc:RubyCore):Array
+  {
+    var s:String =
+    //"[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":2,\"stack_max\":5},\"<compiled>\",\"<compiled>\",\"top\",[\"v\"],0,[],[1,[\"trace\",1],[\"putstring\",\"hi\"],[\"setlocal\",2],2,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"pt\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":3,\"local_size\":4,\"stack_max\":2},\"pt\",\"<compiled>\",\"method\",[\"a\",\"b\",\"c\"],3,[],[4,[\"trace\",8],3,[\"trace\",1],[\"getlocal\",4],[\"getlocal\",3],[\"opt_plus\"],[\"getlocal\",2],[\"opt_plus\"],4,[\"trace\",16],3,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],5,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"mimic\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":1,\"local_size\":2,\"stack_max\":1},\"mimic\",\"<compiled>\",\"method\",[\"a\"],1,[],[7,[\"trace\",8],6,[\"trace\",1],[\"getlocal\",2],7,[\"trace\",16],6,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],8,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"wait\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"wait\",\"<compiled>\",\"method\",[],0,[],[10,[\"trace\",8],9,[\"trace\",1],[\"putstring\",\"done waiting\"],10,[\"trace\",16],9,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],11,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"putstring\",\"wait 5\"],[\"send\",\"mimic\",1,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],12,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"send\",\"wait\",0,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],13,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"col\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"col\",\"<compiled>\",\"method\",[],0,[],[15,[\"trace\",8],14,[\"trace\",1],[\"putobject\",65280],15,[\"trace\",16],14,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],16,[\"trace\",1],\"label_112\",[\"getinlinecache\",null,\"label_119\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_112\"],\"label_119\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",1],[\"putobject\",1],[\"putobject\",1],[\"send\",\"lineStyle\",3,null,0,null],[\"pop\"],17,[\"trace\",1],\"label_140\",[\"getinlinecache\",null,\"label_147\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_140\"],\"label_147\",[\"send\",\"graphics\",0,null,0,null],[\"putnil\"],[\"send\",\"col\",0,null,24,null],[\"send\",\"beginFill\",1,null,0,null],[\"pop\"],18,[\"trace\",1],\"label_169\",[\"getinlinecache\",null,\"label_176\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_169\"],\"label_176\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",5],[\"putobject\",5],[\"putobject\",105],[\"putobject\",105],[\"send\",\"drawRect\",4,null,0,null],[\"leave\"]]]";
+    "[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":2,\"stack_max\":5},\"<compiled>\",\"<compiled>\",\"top\",[\"v\"],0,[],[1,[\"trace\",1],[\"putstring\",\"hi\"],[\"setlocal\",2],2,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"pt\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":3,\"local_size\":4,\"stack_max\":2},\"pt\",\"<compiled>\",\"method\",[\"a\",\"b\",\"c\"],3,[],[4,[\"trace\",8],3,[\"trace\",1],[\"getlocal\",4],[\"getlocal\",3],[\"opt_plus\"],[\"getlocal\",2],[\"opt_plus\"],4,[\"trace\",16],3,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],5,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"mimic\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":1,\"local_size\":2,\"stack_max\":1},\"mimic\",\"<compiled>\",\"method\",[\"a\"],1,[],[7,[\"trace\",8],6,[\"trace\",1],[\"getlocal\",2],7,[\"trace\",16],6,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],8,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"wait\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"wait\",\"<compiled>\",\"method\",[],0,[],[10,[\"trace\",8],9,[\"trace\",1],[\"putstring\",\"done waiting\"],10,[\"trace\",16],9,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],11,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"putstring\",\"wait 5\"],[\"send\",\"mimic\",1,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],12,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"send\",\"wait\",0,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],13,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"col\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"col\",\"<compiled>\",\"method\",[],0,[],[15,[\"trace\",8],14,[\"trace\",1],[\"putobject\",255],15,[\"trace\",16],14,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],16,[\"trace\",1],\"label_112\",[\"getinlinecache\",null,\"label_119\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_112\"],\"label_119\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",1],[\"putobject\",1],[\"putobject\",1],[\"send\",\"lineStyle\",3,null,0,null],[\"pop\"],17,[\"trace\",1],\"label_140\",[\"getinlinecache\",null,\"label_147\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_140\"],\"label_147\",[\"send\",\"graphics\",0,null,0,null],[\"putnil\"],[\"send\",\"col\",0,null,24,null],[\"send\",\"beginFill\",1,null,0,null],[\"pop\"],18,[\"trace\",1],\"label_169\",[\"getinlinecache\",null,\"label_176\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_169\"],\"label_176\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",5],[\"putobject\",5],[\"putobject\",105],[\"putobject\",105],[\"send\",\"drawRect\",4,null,0,null],[\"leave\"]]]";
+
+    var decoder:JSONDecoder = new JSONDecoder( s, rc )
+    return decoder.getValue();
+
+    //return JSON.decode(s);
+  }
+
+  protected function ruby_iseq2(rc:RubyCore):Array
   {
     return [
   "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
