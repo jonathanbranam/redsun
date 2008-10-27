@@ -1,5 +1,7 @@
 package ruby.internals
 {
+import com.adobe.serialization.json.JSONDecoder;
+
 import flash.display.DisplayObject;
 
 /**
@@ -18,6 +20,7 @@ public class RubyCore
 
   public var ruby_current_thread:RbThread;
   public var ruby_current_vm:RbVm;
+  public var ruby_initialized:Boolean = false;
 
   // Modules
   public function RubyCore()  {
@@ -52,10 +55,20 @@ public class RubyCore
     ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
-  public function run(docClass:DisplayObject, iseq:Array):void  {
+  public function run(bytecode:String, doc_class:DisplayObject=null):void  {
+    var decoder:JSONDecoder = new JSONDecoder( bytecode, this )
+    run_array(decoder.getValue(), doc_class);
+  }
+
+  public function run_array(iseq_array:Array, doc_class:DisplayObject=null):void {
     init();
-    rb_define_global_const("Document", wrap_flash_obj(docClass));
-    ruby_run_node(iseqval_from_array(iseq));
+    run_iseqval(iseqval_from_array(iseq_array), doc_class);
+  }
+
+  public function run_iseqval(iseqval:Value, doc_class:DisplayObject):void {
+    init();
+    rb_define_global_const("Document", wrap_flash_obj(doc_class));
+    ruby_run_node(iseqval);
   }
 
   public function
@@ -67,9 +80,12 @@ public class RubyCore
   public function
   init():void
   {
-    init_modules();
-    ruby_init();
-    init_flash_classes();
+    if (!ruby_initialized) {
+      ruby_initialized = true;
+      init_modules();
+      ruby_init();
+      init_flash_classes();
+    }
   }
 
   protected function

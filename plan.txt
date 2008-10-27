@@ -278,3 +278,16 @@ Finally found remaining bug in implementation of leave opcode. Didn't realize
 that the return value from the called function is popped off the stack and
 re-added at the new stack level after the vm_pop_frame() completes.
 
+10/27/2008
+
+Revisiting the 'compilation' of Ruby bytecode which is now mostly translating
+it into a string (with the require calls already handled). Don't really need
+to modify the .swf anymore to achieve the functionality, but it might be
+nice to bake the Ruby into the SWF just for convenience sake.
+
+Todo:
+- check class code and update it for the new stackless, bytecode VM
+- ensure modules work
+- implement operators
+- work on Asterism rendering
+
