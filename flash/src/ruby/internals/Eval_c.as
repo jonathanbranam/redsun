@@ -3,6 +3,9 @@
   import ruby.internals.StackPointer;
   import ruby.internals.Value;
 
+
+  public var rb_eLocalJumpError:Value;
+
   public function
   Init_eval():void
   {
@@ -28,11 +31,11 @@
       rb_raise(rb_eArgError, "wrong number of arguments (0 for 1)");
     }
     for (i = 0; i < argc; i++) {
-      Check_Type(argv.get_at(-i), Value.T_MODULE);
+      Check_Type(argv.get_at(i), Value.T_MODULE);
     }
     while (argc--) {
-      rb_funcall(argv.get_at(-argc), rb_intern("extend_object"), 1, obj);
-      rb_funcall(argv.get_at(-argc), rb_intern("extended"), 1, obj);
+      rb_funcall(argv.get_at(argc), rb_intern("extend_object"), 1, obj);
+      rb_funcall(argv.get_at(argc), rb_intern("extended"), 1, obj);
     }
     return obj;
   }
@@ -76,12 +79,12 @@
     var i:int;
 
     for (i = 0; i < argc; i++) {
-      Check_Type(argv.get_at(-i), Value.T_MODULE);
+      Check_Type(argv.get_at(i), Value.T_MODULE);
     }
 
     while (argc--) {
-      rb_funcall(argv.get_at(-argc), rb_intern("append_features"), 1, module);
-      rb_funcall(argv.get_at(-argc), rb_intern("included"), 1, module);
+      rb_funcall(argv.get_at(argc), rb_intern("append_features"), 1, module);
+      rb_funcall(argv.get_at(argc), rb_intern("included"), 1, module);
     }
 
     return module;

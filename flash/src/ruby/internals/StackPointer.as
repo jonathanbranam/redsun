@@ -1,6 +1,6 @@
 package ruby.internals
 {
-public class StackPointer
+public class StackPointer extends Value
 {
   public var stack:Array;
   public var index:int;

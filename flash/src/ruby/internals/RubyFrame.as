@@ -103,8 +103,21 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1036
   public function
-  send(op_str:String, op_argc:int, blockiseq:Value, op_flag:int, ic:Value):void
+  invokeblock(num:int, flag:int):void
+  {
+    var val:Value = rc.vm_invoke_block(th, reg_cfp, num, flag);
+    if (val == Qundef) {
+      RESTORE_REGS();
+      // NEXT_INSN();
+      return;
+    }
+    reg_cfp.sp.push(val);
+  }
+
+  public function
+  send(op_str:String, op_argc:int, blockiseq_data:*, op_flag:int, ic:Value):void
   {
     var mn:Node;
     var recv:Value;
@@ -115,6 +128,13 @@ public class RubyFrame
 
     var op_id:int = rc.rb_intern(op_str)
 
+    var blockiseq:RbISeq;
+    if (blockiseq_data is Array) {
+      // Guessing at this, but it seems to be needed to pass in parent for a block
+      var blockiseqval:Value = rc.iseqval_from_array(blockiseq_data, reg_cfp.iseq.self);
+      blockiseq = rc.GetISeqPtr(blockiseqval);
+    }
+
     var num:int = rc.caller_setup_args(th, reg_cfp, op_flag, op_argc, blockiseq, blockptr);
 
     var flag:int = op_flag;
@@ -124,11 +144,12 @@ public class RubyFrame
     klass = rc.CLASS_OF(recv);
 
     /*
-    trace("send "+op_str+" to " + klass.name + " with " + op_argc+ " ops");
+    trace("send "+op_str+" to " + (klass ? klass.name : "?") + " with " + op_argc+ " ops");
     for (var o:int = op_argc-1; o >= 0; o--) {
       trace("       op "+(op_argc-o)+": " + reg_sp.topn(o));
     }
     */
+
 
     mn = rc.vm_method_search(id, klass, ic);
     // TODO: @fix method_missing is not being called here.

@@ -2,8 +2,11 @@
 
  import ruby.internals.Node;
  import ruby.internals.RClass;
+ import ruby.internals.RObject;
+ import ruby.internals.RTag;
  import ruby.internals.RbControlFrame;
  import ruby.internals.RbISeq;
+ import ruby.internals.RbProc;
  import ruby.internals.RbThread;
  import ruby.internals.RbVm;
  import ruby.internals.StackPointer;
@@ -492,4 +495,50 @@
     return ruby_vm_global_state_version;
   }
 
+  // vm.c:821
+  public function
+  vm_localjump_error(mesg:String, value:Value, reason:int):void
+  {
+    var exc:Value = make_localjump_error(mesg, value, reason);
+    rb_exc_raise(exc);
+  }
 
+  // vm.c:789
+  public function
+  make_localjump_error(mesg:String, value:Value, reason:int):Value
+  {
+    var exc:RObject = rb_exc_new2(rb_eLocalJumpError, mesg);
+    var id:int;
+
+    switch (reason) {
+      case RTag.TAG_BREAK:
+        id = CONST_ID("break");
+        break;
+      case RTag.TAG_REDO:
+        id = CONST_ID("redo");
+        break;
+      case RTag.TAG_RETRY:
+        id = CONST_ID("retry");
+        break;
+      case RTag.TAG_NEXT:
+        id = CONST_ID("next");
+        break;
+      case RTag.TAG_RETURN:
+        id = CONST_ID("return");
+        break;
+      default:
+        id = CONST_ID("noreason");
+        break;
+    }
+    rb_iv_set(exc, "@exit_value", value);
+    rb_iv_set(exc, "@reason", ID2SYM(id));
+    return exc;
+
+  }
+
+  // vm_core.h:526
+  public function
+  GetProcPtr(obj:Value):RbProc
+  {
+    return GetCoreDataFromValue(obj);
+  }

@@ -197,5 +197,7 @@ public class Node extends Value
   public function get nd_visi():int { return u2; }
   public function set nd_visi(v:int):void { u2 = v; }
 
+  public function get nd_tval():Value { return u2; }
+
 }
 }

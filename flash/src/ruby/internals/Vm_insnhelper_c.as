@@ -5,17 +5,18 @@
   import ruby.internals.RbBlock;
   import ruby.internals.RbControlFrame;
   import ruby.internals.RbISeq;
+  import ruby.internals.RbProc;
   import ruby.internals.RbThread;
   import ruby.internals.RbVm;
   import ruby.internals.StackPointer;
   import ruby.internals.Value;
 
   public function
-  GET_PREV_DFP(dfp:StackPointer):StackPointer
+  GET_PREV_DFP(dfp:StackPointer):Value
   {
-    trace("GET_PREV_DFP THIS IS WRONG!");
+    // The boolean operation below simply removes the GC_GUARD.
     // ((VALUE *)((dfp)[0] & ~0x03))
-    return dfp;
+    return dfp.get_at(0);
   }
 
   public function
@@ -34,11 +35,11 @@
       if (lfp.equals(dfp)) {
         cref = iseq.cref_stack;
         break;
-      } else if (dfp.topn(1) != Qnil) {
-        cref = dfp.topn(1);
+      } else if (dfp.get_at(-1) != Qnil) {
+        cref = dfp.get_at(-1);
         break;
       }
-      dfp = GET_PREV_DFP(dfp);
+      dfp = StackPointer(GET_PREV_DFP(dfp));
     }
 
     if (cref == null) {
@@ -68,6 +69,7 @@
       // sp++;
     }
 
+    // This might be an RbBlock.
     // *sp = GC_GUARDED_PTR(specval);
     sp.set_top(specval);
 
@@ -147,8 +149,8 @@
 
     iseq = GetISeqPtr(iseqval);
 
-    var opt_pc_byref:ByRef = new ByRef();
-    var block:ByRef = new ByRef();
+    var opt_pc_byref:ByRef = new ByRef(opt_pc);
+    var block:ByRef = new ByRef(blockptr);
     // TODO: @skipped Check all these for byref
     VM_CALLEE_SETUP_ARG(opt_pc_byref, th, iseq, argc, rsp, block);
     opt_pc = opt_pc_byref.v;
@@ -337,14 +339,13 @@
   // vm_insnhelper.c:209
   public function
   caller_setup_args(th:RbThread, cfp:RbControlFrame, flag:uint, argc:int,
-                    blockiseq:Value, block:ByRef):int
+                    blockiseq:RbISeq, block:ByRef):int
   {
     var blockptr:RbBlock;
 
     if (block) {
-      if (false) { //flag & RbVm.VM_CALL_ARGS_BLOCKARG_BIT) {
+      if (flag & RbVm.VM_CALL_ARGS_BLOCKARG_BIT) {
         // Handle dispatching to a proc
-        /*
         var po:RbProc;
         var proc:Value;
 
@@ -352,10 +353,20 @@
 
         if (proc != Qnil) {
           if (!rb_obj_is_proc(proc)) {
+            var b:Value = rb_check_convert_type(proc, Value.T_DATA, "Proc", "to_proc");
+            if (NIL_P(b) || !rb_obj_is_proc(b)) {
+              rb_raise(rb_eTypeError,
+                       "wrong argument type " + rb_obj_classname(proc) +
+                       " (expected Proc)");
+            }
+            proc = b;
 
           }
+          po = GetProcPtr(proc);
+          blockptr = po.block;
+          RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp).proc = proc;
+          block.v = blockptr;
         }
-        */
       } else if (blockiseq) {
         blockptr = RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp);
         blockptr.block_iseq = blockiseq;
@@ -456,5 +467,182 @@
         return rb_const_get_from(RClass(orig_klass), id);
       }
     }
+  }
+
+  // inshelper.h:126
+  public function
+  GET_BLOCK_PTR(cfp:RbControlFrame):RbBlock
+  {
+    return cfp.lfp.get_at(0);
+  }
+
+  // vm_insnhelper.c:632
+  public function
+  block_proc_is_lambda(procval:Value):Boolean
+  {
+    var proc:RbProc;
+
+    if (procval) {
+      proc = GetProcPtr(procval);
+      return proc.is_lambda;
+    }
+    else {
+      return false;
+    }
+  }
+
+  // vm_insnhelper.c:803
+  public function
+  vm_invoke_block(th:RbThread, reg_cfp:RbControlFrame, num:int, flag:int):Value
+  {
+    var block:RbBlock = GET_BLOCK_PTR(reg_cfp);
+    var iseq:RbISeq;
+    var argc:int = num;
+
+    if (GET_ISEQ(reg_cfp).local_iseq.type != RbVm.ISEQ_TYPE_METHOD || block == null) {
+      vm_localjump_error("no block given (yield)", Qnil, 0);
+    }
+
+    iseq = RbISeq(block.block_iseq);
+
+    argc = caller_setup_args(th, reg_cfp, flag, argc, null, null);
+
+    if (iseq.BUILTIN_TYPE() != Value.T_NODE) {
+      var opt_pc:int;
+      var arg_size:int = iseq.arg_size;
+      var rsp:StackPointer = reg_cfp.sp.clone_from_top(argc);
+      reg_cfp.sp = rsp;
+
+      // TODO: @skipped
+      // CHECK_STACK_OVERFLOW(GET_CFP(), iseq->stack_max);
+      opt_pc = vm_yield_setup_args(th, iseq, argc, rsp, null,
+                                   block_proc_is_lambda(block.proc));
+
+      vm_push_frame(th, iseq, RbVm.VM_FRAME_MAGIC_BLOCK, block.self, block.dfp,
+                    iseq.iseq_fn, iseq.iseq, opt_pc, rsp.clone_from_top(arg_size),
+                    block.lfp, iseq.local_size - arg_size);
+
+      return Qundef;
+    }
+    else {
+      var val:Value = vm_yield_with_cfunc(th, block, block.self, argc,
+                                          STACK_ADDR_FROM_TOP(reg_cfp, argc), null);
+      POPN(reg_cfp, argc);
+      return val;
+    }
+  }
+
+  // vm_insnhelper.c:682
+  public function
+  vm_yield_setup_args(th:RbThread, iseq:RbISeq, orig_argc:int, argv:StackPointer,
+                      blockptr:RbBlock, lambda:Boolean):int
+  {
+    if (lambda) {
+      // call as method
+      var opt_pc:int;
+      var blockref:ByRef = new ByRef(opt_pc);
+      var opt_pc_ref:ByRef = new ByRef(blockptr);
+      VM_CALLEE_SETUP_ARG(opt_pc_ref, th, iseq, orig_argc, argv, blockref);
+      opt_pc = opt_pc_ref.v;
+      blockptr = blockref.v;
+      return opt_pc;
+    }
+    else {
+      var i:int;
+      var argc:int = orig_argc;
+      var m:int = iseq.argc;
+
+      th.mark_stack_len = argc;
+
+      if (!(iseq.arg_simple & 0x02) &&
+          (m + iseq.arg_post_len) > 0 &&
+          argc == 1 && TYPE(argv.get_at(0)) == Value.T_ARRAY) {
+
+          rb_bug("unimplemented vm_yield_setup_args");
+          /*
+          var ary:Value = argv.get_at(0);
+          th.mark_stack_len = argc = RARRAY_LEN(ary);
+
+          CHECK_STACK_OVERFLOW(th.cfp, argc);
+
+          MEMCPY(argc, RARRAY_PTR(ary), VALUE, argc);
+          */
+      }
+
+      for (i = argc; i < m; i++) {
+        argv.set_at(-i, Qnil);
+      }
+
+      if (iseq.arg_rest == -1) {
+        if (m < argc) {
+          // yield 1, 2
+          // => {|a| # truncate
+          th.mark_stack_len = argc = m;
+        }
+      }
+      else {
+        rb_bug("don't support rest arguments yet");
+        // TODO: @skipped
+      }
+
+      // {|&n|}
+      if (iseq.arg_block != -1) {
+        var procval:Value = Qnil;
+
+        if (blockptr) {
+          procval = blockptr.proc;
+        }
+
+        argv.set_at(-iseq.arg_block, procval);
+      }
+
+      th.mark_stack_len = 0;
+      return 0;
+
+
+
+    }
+  }
+
+
+  // vm_insnhelper.c:662
+  public function
+  vm_yield_with_cfunc(th:RbThread, block:RbBlock,
+                      self:Value, argc:int, argv:StackPointer,
+                      blockptr:RbBlock):Value
+  {
+    var ifunc:Node = Node(block.block_iseq);
+    var val:Value, arg:Value, blockarg:Value;
+    var lambda:Boolean = block_proc_is_lambda(block.proc);
+
+    if (lambda) {
+      rb_bug("Requires array support.");
+      //arg = rb_ary_new4(argc, argv);
+    }
+    else if (argc == 0) {
+      arg = Qnil;
+    }
+    else {
+      arg = argv.get_at(0);
+    }
+
+    if (blockptr) {
+      rb_bug("Requires vm_make_proc");
+      //blockarg = vm_make_proc(th, th.cfp, blockptr, rb_cProc);
+    }
+    else {
+      blockarg = Qnil;
+    }
+
+    vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_IFUNC,
+                  self, block.dfp.clone(),
+                  null, null, 0, th.cfp.sp.clone(),
+                  block.lfp.clone(), 1);
+
+    val = ifunc.nd_cfnc.call(this, ifunc.nd_tval, argc, argv, blockarg);
+
+    th.cfp = th.cfp_stack.pop();
+
+    return val;
   }
 

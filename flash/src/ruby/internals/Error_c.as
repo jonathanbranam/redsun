@@ -1,6 +1,8 @@
 
+  import ruby.internals.RObject;
   import ruby.internals.Value;
-    public var rb_eException:RClass;
+
+  public var rb_eException:RClass;
 
   public var rb_eSystemExit:RClass;
 
@@ -177,4 +179,18 @@
     }
   }
 
+  // error.c:342
+  public function
+  rb_exc_new(etype:Value, ptr:String):RObject
+  {
+    return RObject(rb_funcall(etype, rb_intern("new"), 1, rb_str_new(ptr)));
+  }
+
+
+  // error.c:348
+  public function
+  rb_exc_new2(etype:Value, s:String):RObject
+  {
+    return rb_exc_new(etype, s);
+  }
 

@@ -36,6 +36,7 @@ public class RubyCore
   include "Numeric_c.as"
   include "Object_c.as"
   include "Parse_y.as"
+  include "Proc_c.as"
   include "String_c.as"
   include "Thread_c.as"
 
@@ -475,12 +476,32 @@ public class RubyCore
   }
 
   public function
-  iseqval_from_array(iseq_array:Array):Value
+  iseqval_from_array(iseq_array:Array, parent:Value=null):Value
   {
     // Look at ruby.c:961 process_options() and vm.c Init_VM
 
+    var type:int;
+    var type_str:String = iseq_array[7];
+    if (type_str == "top") {
+      type = RbVm.ISEQ_TYPE_TOP;
+    } else if (type_str == "block") {
+      type = RbVm.ISEQ_TYPE_BLOCK;
+    } else if (type_str == "method") {
+      type = RbVm.ISEQ_TYPE_METHOD;
+    } else if (type_str == "class") {
+      type = RbVm.ISEQ_TYPE_CLASS;
+    } else if (type_str == "ensure") {
+      type = RbVm.ISEQ_TYPE_ENSURE;
+    } else if (type_str == "rescue") {
+      type = RbVm.ISEQ_TYPE_RESCUE;
+    } else {
+      rb_bug("unknown iseq type: " + type_str);
+    }
+
+    parent = parent ? parent : Qfalse;
+
     // Pass in null for the node first
-    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
+    var iseqval:Value = rb_iseq_new(null, rb_str_new2("<main>"), rb_str_new2("filename.rb"), parent, type);
 
     // Get the iseq out and assign the function pointer
     var iseq:RbISeq = GetISeqPtr(iseqval);
@@ -631,6 +652,13 @@ public class RubyCore
   {
     if (SPECIAL_CONST_P(obj)) return true;
     return false;
+  }
+
+  // ruby.h:872
+  public function
+  CONST_ID(str:String):int
+  {
+    return rb_intern2(str);
   }
 
 }

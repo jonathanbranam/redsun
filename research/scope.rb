@@ -1,22 +1,63 @@
 module B
   def col
-    0x6633AA
+    0x66AA33
   end
 end
 class A
   def a
-    Document.graphics.lineStyle(1,1,1)
-    Document.graphics.beginFill(col)
-    Document.graphics.drawRect(5,5,105,105)
+    yield
   end
 end
 a = A.new
 a.extend B
-a.a
+a.a do
+  Document.graphics.lineStyle(1,1,1)
+  Document.graphics.beginFill(0x33AAEE)
+  Document.graphics.drawRect(5,5,105,105)
+end
+=begin
+module Draggable
+  on :mouse_down do
+    @dragging = true
+    on :mouse_move do
+      @x = e.x
+      @y = e.y
+    end
+  end
+end
+module Selectable; end
+module Resizable; end
+module Rotateable; end
+
+
+
+class Square
+  include Draggable, Selectable, Resizable, Rotateable
+end
+
+class Circle
+  include Selectable
+end
+
+module Bindable
+  def self.attr_bindable(*sym)
+    self.define_method do
+    end
+  end
+end
+
+class Whatever
+  include Bindable
+  attr_accessor :x, :y
+  attr_bindable :width, :height
+end
+
+
+
 
 #puts "FAIL" unless v
 #puts "SUCCESS" if v
-=begin
+# = begin
 def a(); end
 def b(a); end
 def c(a,b); end

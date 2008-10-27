@@ -72,6 +72,8 @@ public class RbThread extends Value
   public var first_proc:Value;
   public var first_args:Value;
 
+  public var mark_stack_len:int;
+
   public var stat_insn_usage:Value;
 
   public var event_hook:*;
