@@ -121,7 +121,7 @@ package com.adobe.serialization.json {
 
           if ( possibleTrue == "true" ) {
             token.type = JSONTokenType.TRUE;
-            token.value = true;
+            token.value = rc.Qtrue;
             nextChar();
           } else {
             parseError( "Expecting 'true' but found " + possibleTrue );
@@ -134,7 +134,7 @@ package com.adobe.serialization.json {
 
           if ( possibleFalse == "false" ) {
             token.type = JSONTokenType.FALSE;
-            token.value = false;
+            token.value = rc.Qfalse;
             nextChar();
           } else {
             parseError( "Expecting 'false' but found " + possibleFalse );
