@@ -1,10 +1,69 @@
 
+  import ruby.internals.RClass;
   import ruby.internals.StackPointer;
+  import ruby.internals.Value;
 
-  public function Init_eval():void {
+  public function
+  Init_eval():void
+  {
+
+    rb_define_private_method(rb_cModule, "append_features", rb_mod_append_features, 1);
+    rb_define_private_method(rb_cModule, "extend_object", rb_mod_extend_object, 1);
+    rb_define_private_method(rb_cModule, "include", rb_mod_include, -1);
+
     Init_vm_eval();
     Init_eval_method();
 
+  }
+
+  // eval.c:819
+  public function
+  rb_mod_append_features(module:RClass, include_:Value):Value
+  {
+    switch (TYPE(include_)) {
+      case Value.T_CLASS:
+      case Value.T_MODULE:
+        break;
+      default:
+        Check_Type(include_, Value.T_CLASS);
+        break;
+    }
+    rb_include_module(RClass(include_), module);
+
+    return module;
+  }
+
+  // eval.c:863
+  public function
+  rb_extend_object(obj:Value, module:Value):void
+  {
+    rb_include_module(rb_singleton_class(obj), module);
+  }
+
+  // eval.c:896
+  public function
+  rb_mod_extend_object(mod:Value, obj:Value):Value
+  {
+    rb_extend_object(obj, mod);
+    return obj;
+  }
+
+  // eval.c:842
+  public function
+  rb_mod_include(argc:int, argv:StackPointer, module:RClass):Value
+  {
+    var i:int;
+
+    for (i = 0; i < argc; i++) {
+      Check_Type(argv.get_at(-i), Value.T_MODULE);
+    }
+
+    while (argc--) {
+      rb_funcall(argv.get_at(-argc), rb_intern("append_features"), 1, module);
+      rb_funcall(argv.get_at(-argc), rb_intern("included"), 1, module);
+    }
+
+    return module;
   }
 
   // eval.c:856

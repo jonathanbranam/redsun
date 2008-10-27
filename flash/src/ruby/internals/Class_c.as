@@ -201,7 +201,7 @@
 
   // class.c:380
   public function
-  rb_include_module(klass:RClass, module:RClass):void
+  rb_include_module(klass:RClass, module_val:Value):void
   {
     var p:RClass, c:RClass;
     var changed:Boolean = false;
@@ -209,10 +209,10 @@
     // TODO: @skipped
     // frozen, untrusted stuff
 
-    if (module.get_type() != Value.T_MODULE) {
-    // TODO: @skipped
-      // Check_Type(module, T_MODULE);
+    if (TYPE(module_val) != Value.T_MODULE) {
+      Check_Type(module_val, Value.T_MODULE);
     }
+    var module:RClass = RClass(module_val);
 
     // TODO: @skipped
     // OBJ_INFECT(klass, module);

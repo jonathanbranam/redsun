@@ -1,21 +1,19 @@
-v = "hi"
-def pt(a,b,c)
-  a+b+c
+module B
+  def col
+    0x663322
+  end
 end
-def mimic(a)
-  a
+class A
+  include B
+  def a
+    Document.graphics.lineStyle(1,1,1)
+    Document.graphics.beginFill(col)
+    Document.graphics.drawRect(5,5,105,105)
+  end
 end
-def wait()
-  "done waiting"
-end
-puts mimic("wait 5")
-puts wait()
-def col()
-  0x0000FF
-end
-Document.graphics.lineStyle(1,1,1)
-Document.graphics.beginFill(col)
-Document.graphics.drawRect(5,5,105,105)
+a = A.new
+a.a
+
 #puts "FAIL" unless v
 #puts "SUCCESS" if v
 =begin

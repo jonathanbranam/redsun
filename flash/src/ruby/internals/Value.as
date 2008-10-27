@@ -60,7 +60,7 @@ public class Value
   public static const T_MASK:uint =    RUBY_T_MASK;
 
 
-  public function BUILTIN_TYPE():uint {
+  public function BUILTIN_TYPE():int {
     return flags & T_MASK;
   }
 

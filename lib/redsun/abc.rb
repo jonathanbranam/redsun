@@ -2,6 +2,7 @@
 
 require 'redsun/stringio'
 require 'redsun/opcodes'
+require 'json'
 
 module RedSun
 
@@ -25,6 +26,10 @@ module RedSun
       False              = 0x0A
       Null               = 0x0C
       Undefined          = 0x00
+
+      def self.yarv_to_string(vm)
+        JSON.generate(vm)
+      end
 
       def self.yarv_to_as3(vm)
         pp_yarv(vm, "", true)

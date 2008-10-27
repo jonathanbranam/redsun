@@ -205,7 +205,7 @@ public class RubyFrame
 
   // insns.def:873
   public function
-  defineclass(id_str:String, class_iseq:RbISeq, define_type:uint):void
+  defineclass(id_str:String, class_iseq_data:*, define_type:uint):void
   {
     var klass:RClass;
     var super_class:Value = reg_sp.pop();
@@ -213,6 +213,14 @@ public class RubyFrame
     var tmpValue:Value;
 
     var id:int = rc.rb_intern(id_str);
+
+    var class_iseq:RbISeq;
+    if (class_iseq_data is RbISeq) {
+      class_iseq = class_iseq_data;
+    } else if (class_iseq_data is Array) {
+      var iseqval:Value = rc.iseqval_from_array(class_iseq_data);
+      class_iseq = rc.GetISeqPtr(iseqval);
+    }
 
     switch (define_type) {
     case 0:

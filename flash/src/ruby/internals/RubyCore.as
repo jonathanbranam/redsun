@@ -65,9 +65,11 @@ public class RubyCore
     run_iseqval(iseqval_from_array(iseq_array), doc_class);
   }
 
-  public function run_iseqval(iseqval:Value, doc_class:DisplayObject):void {
+  public function run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void {
     init();
-    rb_define_global_const("Document", wrap_flash_obj(doc_class));
+    if (doc_class) {
+      rb_define_global_const("Document", wrap_flash_obj(doc_class));
+    }
     ruby_run_node(iseqval);
   }
 
@@ -570,6 +572,65 @@ public class RubyCore
     c1.nd_clss = c2.nd_clss;
     c1.nd_visi = c2.nd_visi;
     c1.nd_next = c2.nd_next;
+  }
+
+  public function
+  Check_Type(v:Value, t:int):void
+  {
+    rb_check_type(v, t);
+  }
+
+  // ruby.h
+  public function
+  TYPE(x:Value):int
+  {
+    return rb_type(x);
+  }
+
+  // ruby.h:1063
+  public function
+  rb_type(obj:Value):int
+  {
+    // Must check false first since it is a null pointer
+    if (obj == Qfalse) return Value.T_FALSE;
+    if (obj == Qtrue) return Value.T_TRUE;
+    if (SYMBOL_P(obj)) return Value.T_SYMBOL;
+    if (obj == Qundef) return Value.T_UNDEF;
+
+    if (!RTEST(obj)) {
+      if (obj == Qnil) return Value.T_NIL;
+      // false already handled
+      //if (obj == Qfalse) return Value.T_FALSE;
+    }
+    return obj.BUILTIN_TYPE();
+  }
+
+  // ruby.h:262
+  public function
+  IMMEDIATE_P(x:Value):Boolean
+  {
+    if (x == Qfalse) return true;
+    if (FIXNUM_P(x)) return true;
+    if (x == Qtrue) return true;
+    if (SYMBOL_P(x)) return true;
+    if (x == Qundef) return true;
+
+    return false;
+  }
+
+  // ruby.h:792
+  public function
+  SPECIAL_CONST_P(x:Value):Boolean
+  {
+    return IMMEDIATE_P(x) || !RTEST(x);
+  }
+
+  // ruby.h:1079
+  public function
+  rb_special_const_p(obj:Value):Boolean
+  {
+    if (SPECIAL_CONST_P(obj)) return true;
+    return false;
   }
 
 }
