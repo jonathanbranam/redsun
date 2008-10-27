@@ -14,6 +14,27 @@
     Init_vm_eval();
     Init_eval_method();
 
+    rb_define_method(rb_mKernel, "extend", rb_obj_extend, -1);
+
+  }
+
+  // eval.c:928
+  public function
+  rb_obj_extend(argc:int, argv:StackPointer, obj:Value):Value
+  {
+    var i:int;
+
+    if (argc == 0) {
+      rb_raise(rb_eArgError, "wrong number of arguments (0 for 1)");
+    }
+    for (i = 0; i < argc; i++) {
+      Check_Type(argv.get_at(-i), Value.T_MODULE);
+    }
+    while (argc--) {
+      rb_funcall(argv.get_at(-argc), rb_intern("extend_object"), 1, obj);
+      rb_funcall(argv.get_at(-argc), rb_intern("extended"), 1, obj);
+    }
+    return obj;
   }
 
   // eval.c:819

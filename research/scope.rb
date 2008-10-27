@@ -1,10 +1,9 @@
 module B
   def col
-    0x663322
+    0x6633AA
   end
 end
 class A
-  include B
   def a
     Document.graphics.lineStyle(1,1,1)
     Document.graphics.beginFill(col)
@@ -12,6 +11,7 @@ class A
   end
 end
 a = A.new
+a.extend B
 a.a
 
 #puts "FAIL" unless v
