@@ -19,7 +19,7 @@ public class Vm_insnhelper_c
   import ruby.internals.Value;
 
   public function
-  GET_PREV_DFP(dfp:StackPointer):Value
+  GET_PREV_DFP(dfp:StackPointer):StackPointer
   {
     // The boolean operation below simply removes the GC_GUARD.
     // ((VALUE *)((dfp)[0] & ~0x03))
@@ -525,9 +525,9 @@ public class Vm_insnhelper_c
       opt_pc = vm_yield_setup_args(th, iseq, argc, rsp, null,
                                    block_proc_is_lambda(block.proc));
 
-      vm_push_frame(th, iseq, RbVm.VM_FRAME_MAGIC_BLOCK, block.self, block.dfp,
-                    iseq.iseq_fn, iseq.iseq, opt_pc, rsp.clone_from_top(arg_size),
-                    block.lfp, iseq.local_size - arg_size);
+      vm_push_frame(th, iseq, RbVm.VM_FRAME_MAGIC_BLOCK, block.self, block.dfp.clone(),
+                    iseq.iseq_fn, iseq.iseq, opt_pc, rsp.clone_down_stack(arg_size),
+                    block.lfp.clone(), iseq.local_size - arg_size);
 
       return rc.Qundef;
     }
@@ -577,7 +577,7 @@ public class Vm_insnhelper_c
       }
 
       for (i = argc; i < m; i++) {
-        argv.set_at(-i, rc.Qnil);
+        argv.set_at(i, rc.Qnil);
       }
 
       if (iseq.arg_rest == -1) {
@@ -592,7 +592,7 @@ public class Vm_insnhelper_c
         // TODO: @skipped
       }
 
-      // {|&n|}
+      // {|&b|}
       if (iseq.arg_block != -1) {
         var procval:Value = rc.Qnil;
 
@@ -600,7 +600,7 @@ public class Vm_insnhelper_c
           procval = blockptr.proc;
         }
 
-        argv.set_at(-iseq.arg_block, procval);
+        argv.set_at(iseq.arg_block, procval);
       }
 
       th.mark_stack_len = 0;

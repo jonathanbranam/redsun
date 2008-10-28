@@ -5,15 +5,17 @@ module B
 end
 class A
   def a
-    yield
+    sp = Flash::Display::Sprite.new
+    yield sp
   end
 end
 a = A.new
 a.extend B
-a.a do
-  Document.graphics.lineStyle(1,1,1)
-  Document.graphics.beginFill(0x33AAEE)
-  Document.graphics.drawRect(5,5,105,105)
+a.a do |s|
+  Document.addChild(s)
+  s.graphics.lineStyle(1,1,1)
+  s.graphics.beginFill(0x33AAEE)
+  s.graphics.drawRect(5,5,105,105)
 end
 =begin
 module Draggable

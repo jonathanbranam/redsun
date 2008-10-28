@@ -318,6 +318,31 @@ public class Class_c
     return module;
   }
 
+  // class.c:333
+  public function
+  rb_define_module_under(outer:RClass, name:String):RClass
+  {
+    var module:RClass;
+    var id:int;
+
+    id = rc.parse_y.rb_intern(name);
+    if (rc.variable_c.rb_const_defined_at(outer, id)) {
+      var val:Value = rc.variable_c.rb_const_get_at(outer, id);
+      if (rc.TYPE(val) == Value.T_MODULE) {
+        return RClass(val);
+      }
+      rc.error_c.rb_raise(rc.error_c.rb_eTypeError, ""+
+                          rc.variable_c.rb_class2name(outer)+"::"+
+                          rc.variable_c.rb_obj_classname(val)+
+                          " is not module");
+    }
+    module = rb_define_module_id(id);
+    rc.variable_c.rb_const_set(outer, id, module);
+    rc.variable_c.rb_set_class_path(module, outer, name);
+
+    return module;
+  }
+
   // class.c:302
   public function
   rb_define_module_id(id:int):RClass

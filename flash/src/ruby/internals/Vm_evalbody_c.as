@@ -9,6 +9,8 @@ public class Vm_evalbody_c
   import ruby.internals.RubyFrame;
   import ruby.internals.Value;
 
+  protected var inner_loop_depth:int = 0;
+
   // vm_evalbody.c:30
   public function
   vm_eval(th:RbThread, initial:Value):Value
@@ -53,6 +55,11 @@ public class Vm_evalbody_c
     var prev_cfp:RbControlFrame = th.cfp;
     var prev_stack_index:int = th.cfp.sp.index;
 
+    inner_loop_depth++;
+    if (inner_loop_depth > 1) {
+      rc.error_c.rb_bug("vm_eval_array inner_loop_depth "+inner_loop_depth);
+    }
+
     while (th.cfp.pc_ary && th.cfp.pc_index < th.cfp.pc_ary.length) {
 
       if (th.cfp != prev_cfp) {
@@ -90,6 +97,9 @@ public class Vm_evalbody_c
         // ?
       }
     }
+
+
+    inner_loop_depth--;
 
   }
 

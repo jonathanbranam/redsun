@@ -3,6 +3,7 @@ package ruby.internals
 import com.adobe.serialization.json.JSONDecoder;
 
 import flash.display.DisplayObject;
+import flash.display.Sprite;
 
 /**
  * Class for core ruby methods.
@@ -89,11 +90,12 @@ public class RubyCore
 
   }
 
+  public var rb_cFlashObject:RClass;
   public var rb_cFlashClass:RClass;
 
-  public function run_func(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
+  public function run_func(doc_class:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
-    variable_c.rb_define_global_const("Document", wrap_flash_obj(docClass));
+    variable_c.rb_define_global_const("Document", wrap_flash_obj(doc_class));
     eval_c.ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
@@ -118,7 +120,13 @@ public class RubyCore
   public function
   wrap_flash_obj(obj:Object):RData
   {
-    return Data_Wrap_Struct(rb_cFlashClass, obj, null, null);
+    return Data_Wrap_Struct(rb_cFlashObject, obj, null, null);
+  }
+
+  public function
+  wrap_flash_class(klass:Class):RData
+  {
+    return Data_Wrap_Struct(rb_cFlashClass, klass, null, null);
   }
 
   public function
@@ -241,30 +249,83 @@ public class RubyCore
   {
   }
 
+  public var rb_mFlash:RClass;
+  public var rb_mFlashDisplay:RClass;
+
   public function
   init_flash_classes():void
   {
+    rb_cFlashObject = class_c.rb_define_class("FlashObject", object_c.rb_cObject);
+    class_c.rb_define_method(rb_cFlashObject, "method_missing", fo_method_missing, -1);
+
     rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
-    class_c.rb_define_method(rb_cFlashClass, "method_missing", fc_method_missing, -1);
+    class_c.rb_define_method(rb_cFlashClass, "new", fc_new_obj, -1);
+
+    rb_mFlash = class_c.rb_define_module("Flash");
+    rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");
+    variable_c.rb_const_set(rb_mFlashDisplay, parse_y.rb_intern("Sprite"), wrap_flash_class(Sprite));
   }
 
   public function
-  fc_method_missing(argc:int, argv:StackPointer, recv:Value):Value
+  fc_new_obj(argc:int, argv:StackPointer, recv:Value):Value
   {
-    var fc:Object = vm_c.GetCoreDataFromValue(recv);
-    var val:* = fc[parse_y.rb_id2name(RSymbol(argv.get_at(0)).id)];
+    var flash_class:Class = vm_c.GetCoreDataFromValue(recv);
+    var retval:*;
+    if (argc > 1) {
+      var as3_args:Array = convert_array_to_as3(argc-1, argv.clone_down_stack(1));
+      switch (as3_args.length) {
+        case 1:
+          retval = new flash_class(as3_args[0]);
+          break;
+        case 2:
+          retval = new flash_class(as3_args[0], as3_args[1]);
+          break;
+        case 3:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2]);
+          break;
+        case 4:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2], as3_args[3]);
+          break;
+        case 5:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2], as3_args[3], as3_args[4]);
+          break;
+        case 6:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2], as3_args[3], as3_args[4], as3_args[5]);
+          break;
+        case 7:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2], as3_args[3], as3_args[4], as3_args[5], as3_args[6]);
+          break;
+        case 8:
+          retval = new flash_class(as3_args[0], as3_args[1], as3_args[2], as3_args[3], as3_args[4], as3_args[5], as3_args[6], as3_args[7]);
+          break;
+        default:
+          error_c.rb_bug("too many arguments to Flash Class constructor");
+          break;
+      }
+      retval = new flash_class(as3_args);
+    } else {
+      retval = new flash_class();
+    }
+    return convert_to_ruby_value(retval);
+  }
+
+  public function
+  fo_method_missing(argc:int, argv:StackPointer, recv:Value):Value
+  {
+    var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
+    var val:* = flash_obj[parse_y.rb_id2name(RSymbol(argv.get_at(0)).id)];
     if (val is Function) {
       var retval:*;
       //var func:Function = Function(val);
       if (argc > 1) {
         var as3_args:Array = convert_array_to_as3(argc-1, argv.clone_down_stack(1));
-        retval = val.apply(fc, as3_args);
+        retval = val.apply(flash_obj, as3_args);
       } else {
-        retval = val.call(fc);
+        retval = val.call(flash_obj);
       }
       return convert_to_ruby_value(retval);
     } else {
-      return wrap_flash_obj(val);
+      return convert_to_ruby_value(val);
     }
 
     return Qnil;
@@ -299,6 +360,8 @@ public class RubyCore
       switch (type) {
         case Value.T_STRING:
           return RSTRING_PTR(v);
+        case Value.T_DATA:
+          return RData(v).data;
         default:
           return v;
       }
@@ -326,6 +389,16 @@ public class RubyCore
       return Qtrue;
     } else if (val == false) {
       return Qfalse;
+    } else if (val is String) {
+      var str:RString = new RString(string_c.rb_cString);
+      str.string = val;
+      return str;
+    } else if (val is int) {
+      return new RInt(val);
+    } else if (val is Number) {
+      return new RNumber(val);
+    } else {
+      return wrap_flash_obj(val);
     }
   }
 

@@ -200,6 +200,31 @@ public class RubyFrame
   }
 
   public function
+  setdynamic(idx:int, level:int):void
+  {
+    var val:Value = reg_cfp.sp.pop();
+    var i:int;
+    var dfp2:StackPointer = reg_cfp.dfp;
+    for (i = 0; i < level; i++) {
+      dfp2 = rc.vm_insnhelper_c.GET_PREV_DFP(dfp2);
+    }
+    dfp2.set_at(-idx, val);
+  }
+
+  public function
+  getdynamic(idx:int, level:int):void
+  {
+    var i:int;
+    var dfp2:StackPointer = reg_cfp.dfp;
+    for (i = 0; i < level; i++) {
+      dfp2 = rc.vm_insnhelper_c.GET_PREV_DFP(dfp2);
+    }
+    var val:Value = dfp2.get_at(-idx);
+
+    reg_cfp.sp.push(val);
+  }
+
+  public function
   getinlinecache(ic:Value, dst:String):void
   {
     putnil();
