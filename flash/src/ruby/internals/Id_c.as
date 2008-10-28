@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class Id_c
+{
+  public var rc:RubyCore;
+
   import flash.utils.Dictionary;
 
   public static const ID_SCOPE_SHIFT:uint = 3;
@@ -25,8 +31,8 @@
   public static const idNot:int = "!".charCodeAt();
   public static const idBackquote:int = "`".charCodeAt();
 
-  public static var idInitialize:int;
-  public static var idMethodMissing:int;
+  public var idInitialize:int;
+  public var idMethodMissing:int;
 
   public static const tLAST_TOKEN:int = 255;
   public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
@@ -37,9 +43,12 @@
   Init_id():void
   {
     // TODO: @skipped many ids
-    id_core_define_method = rb_intern("core#define_method");
+    id_core_define_method = rc.rc.parse_y.rb_intern("core#define_method");
 
     // TODO: @fix This is actually defined based on parse.y yacc file
-    idMethodMissing = rb_intern("method_missing");
-    idInitialize = rb_intern("initialize");
+    idMethodMissing = rc.rc.parse_y.rb_intern("method_missing");
+    idInitialize = rc.rc.parse_y.rb_intern("initialize");
   }
+
+}
+}

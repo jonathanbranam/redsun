@@ -1,11 +1,17 @@
 
-import flash.display.PixelSnapping;
+package ruby.internals
+{
+public class Iseq_c
+{
+  public var rc:RubyCore;
 
-import ruby.internals.Node;
-import ruby.internals.RbISeq;
-import ruby.internals.RbThread;
-import ruby.internals.RbVm;
-import ruby.internals.Value;
+  import flash.display.PixelSnapping;
+
+  import ruby.internals.Node;
+  import ruby.internals.RbISeq;
+  import ruby.internals.RbThread;
+  import ruby.internals.RbVm;
+  import ruby.internals.Value;
 
   public var rb_cISeq:RClass;
 
@@ -17,7 +23,7 @@ import ruby.internals.Value;
     var obj:Value;
     var iseq:RbISeq;
 
-    obj = Data_Wrap_Struct(klass, new RbISeq(), null/*iseq_mark*/, null/*iseq_free*/);
+    obj = rc.Data_Wrap_Struct(klass, new RbISeq(), null/*iseq_mark*/, null/*iseq_free*/);
     return obj;
   }
 
@@ -32,28 +38,28 @@ import ruby.internals.Value;
   public function
   GetISeqPtr(obj:Value):RbISeq
   {
-    return GetCoreDataFromValue(obj);
+    return rc.vm_c.GetCoreDataFromValue(obj);
   }
 
   protected function
   set_relation(iseq:RbISeq, parent:Value):void
   {
     var type:int = iseq.type;
-    var th:RbThread = GET_THREAD();
+    var th:RbThread = rc.GET_THREAD();
     var piseq:RbISeq;
 
     // set class nest stack
     if (type == RbVm.ISEQ_TYPE_TOP) {
       // toplevel is private
-      iseq.cref_stack = NEW_BLOCK(th.top_wrapper ? th.top_wrapper : rb_cObject);
+      iseq.cref_stack = rc.NEW_BLOCK(th.top_wrapper ? th.top_wrapper : rc.object_c.rb_cObject);
       iseq.cref_stack.nd_file = null;
       iseq.cref_stack.nd_visi = Node.NOEX_PRIVATE;
     }
     else if (type == RbVm.ISEQ_TYPE_METHOD || type == RbVm.ISEQ_TYPE_CLASS) {
-      iseq.cref_stack = NEW_BLOCK(null) // place holder
+      iseq.cref_stack = rc.NEW_BLOCK(null) // place holder
       iseq.cref_stack.nd_file = null;
     }
-    else if (RTEST(parent)) {
+    else if (rc.RTEST(parent)) {
       piseq = GetISeqPtr(parent);
       iseq.cref_stack = piseq.cref_stack;
     }
@@ -62,12 +68,12 @@ import ruby.internals.Value;
         type == RbVm.ISEQ_TYPE_METHOD || type == RbVm.ISEQ_TYPE_CLASS) {
         iseq.local_iseq = iseq;
     }
-    else if (RTEST(parent)) {
+    else if (rc.RTEST(parent)) {
       piseq = GetISeqPtr(parent);
       iseq.local_iseq = piseq.local_iseq;
     }
 
-    if (RTEST(parent)) {
+    if (rc.RTEST(parent)) {
       piseq = GetISeqPtr(parent);
       iseq.parent_iseq = piseq;
     }
@@ -97,9 +103,9 @@ import ruby.internals.Value;
     // bunch more code
     // TODO: @skipped setup iseq properly
 
-    iseq.coverage = Qfalse;
+    iseq.coverage = rc.Qfalse;
 
-    return Qtrue;
+    return rc.Qtrue;
   }
 
   public function
@@ -124,7 +130,7 @@ import ruby.internals.Value;
   cleanup_iseq_build(iseq:RbISeq):Value
   {
     // skipping this
-    return Qtrue;
+    return rc.Qtrue;
   }
 
   public function
@@ -149,10 +155,10 @@ import ruby.internals.Value;
         case RbVm.ISEQ_TYPE_CLASS:
         case RbVm.ISEQ_TYPE_METHOD:
         default:
-          rb_bug("iseq cannot be compiled by Red Sun");
+          rc.error_c.rb_bug("iseq cannot be compiled by Red Sun");
       }
     } else {
-      rb_bug("should not have a call to compile in Red Sun");
+      rc.error_c.rb_bug("should not have a call to compile in Red Sun");
     }
 
     return iseq_setup(iseq, ret);
@@ -179,7 +185,7 @@ import ruby.internals.Value;
   {
     COMPILE_OPTION_DEFAULT = new RbCompileOptions();
 
-    rb_cISeq = rb_define_class_under(rb_cRubyVM, "InstructionSequence", rb_cObject);
+    rb_cISeq = rc.class_c.rb_define_class_under(rc.vm_c.rb_cRubyVM, "InstructionSequence", rc.object_c.rb_cObject);
 
     // TODO: @skipped
     // more methods
@@ -193,3 +199,5 @@ import ruby.internals.Value;
   }
 
 
+}
+}

@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class Error_c
+{
+
+  public var rc:RubyCore;
 
   import ruby.internals.RObject;
   import ruby.internals.Value;
@@ -35,39 +41,39 @@
   public var rb_eSystemCallError:RClass;
 
   public function Init_Exception():void {
-    rb_eException = rb_define_class("Exception", rb_cObject);
+    rb_eException = rc.class_c.rb_define_class("Exception", rc.object_c.rb_cObject);
     // exception methods
 
-    rb_eSystemExit = rb_define_class("SystemExit", rb_eException);
-    rb_eFatal = rb_define_class("fatal", rb_eException);
-    rb_eSignal = rb_define_class("SignalException", rb_eException);
-    rb_eInterrupt = rb_define_class("Interrupt", rb_eSignal);
+    rb_eSystemExit = rc.class_c.rb_define_class("SystemExit", rb_eException);
+    rb_eFatal = rc.class_c.rb_define_class("fatal", rb_eException);
+    rb_eSignal = rc.class_c.rb_define_class("SignalException", rb_eException);
+    rb_eInterrupt = rc.class_c.rb_define_class("Interrupt", rb_eSignal);
 
-    rb_eStandardError = rb_define_class("StandardError", rb_eException);
-    rb_eTypeError = rb_define_class("TypeError", rb_eStandardError);
-    rb_eArgError = rb_define_class("ArgumentError", rb_eStandardError);
-    rb_eIndexError = rb_define_class("IndexError", rb_eStandardError);
-    rb_eKeyError = rb_define_class("KeyError", rb_eIndexError);
-    rb_eRangeError = rb_define_class("RangeError", rb_eStandardError);
-    rb_eEncCompatError = rb_define_class("EncodingCompatibilityError", rb_eStandardError);
+    rb_eStandardError = rc.class_c.rb_define_class("StandardError", rb_eException);
+    rc.error_c.rb_eTypeError = rc.class_c.rb_define_class("TypeError", rb_eStandardError);
+    rc.error_c.rb_eArgError = rc.class_c.rb_define_class("ArgumentError", rb_eStandardError);
+    rb_eIndexError = rc.class_c.rb_define_class("IndexError", rb_eStandardError);
+    rb_eKeyError = rc.class_c.rb_define_class("KeyError", rb_eIndexError);
+    rb_eRangeError = rc.class_c.rb_define_class("RangeError", rb_eStandardError);
+    rb_eEncCompatError = rc.class_c.rb_define_class("EncodingCompatibilityError", rb_eStandardError);
 
-    rb_eScriptError = rb_define_class("ScriptError", rb_eException);
-    rb_eSyntaxError = rb_define_class("SyntaxError", rb_eScriptError);
-    rb_eLoadError = rb_define_class("LoadError", rb_eScriptError);
-    rb_eNotImpError = rb_define_class("NotImplementedError", rb_eScriptError);
+    rb_eScriptError = rc.class_c.rb_define_class("ScriptError", rb_eException);
+    rb_eSyntaxError = rc.class_c.rb_define_class("SyntaxError", rb_eScriptError);
+    rb_eLoadError = rc.class_c.rb_define_class("LoadError", rb_eScriptError);
+    rb_eNotImpError = rc.class_c.rb_define_class("NotImplementedError", rb_eScriptError);
 
-    rb_eNameError = rb_define_class("NameError", rb_eStandardError);
-    rb_cNameErrorMesg = rb_define_class_under(rb_eNameError, "message", rb_cData);
+    rb_eNameError = rc.class_c.rb_define_class("NameError", rb_eStandardError);
+    rb_cNameErrorMesg = rc.class_c.rb_define_class_under(rb_eNameError, "message", rc.object_c.rb_cData);
 
-    rb_eNoMethodError = rb_define_class("NoMethodError", rb_eNameError);
+    rb_eNoMethodError = rc.class_c.rb_define_class("NoMethodError", rb_eNameError);
 
-    rb_eRuntimeError = rb_define_class("RuntimeError", rb_eStandardError);
-    rb_eSecurityError = rb_define_class("SecurityError", rb_eException);
-    rb_eNoMemError = rb_define_class("NoMemoryError", rb_eException);
+    rb_eRuntimeError = rc.class_c.rb_define_class("RuntimeError", rb_eStandardError);
+    rb_eSecurityError = rc.class_c.rb_define_class("SecurityError", rb_eException);
+    rb_eNoMemError = rc.class_c.rb_define_class("NoMemoryError", rb_eException);
 
-    rb_eSystemCallError = rb_define_class("SystemCallError", rb_eStandardError);
+    rb_eSystemCallError = rc.class_c.rb_define_class("SystemCallError", rb_eStandardError);
 
-    rb_define_global_function("warn", rb_warn_m, 1);
+    rc.class_c.rb_define_global_function("warn", rc.error_c.rb_warn_m, 1);
 
   }
 
@@ -79,7 +85,7 @@
       trace(mesg);
       //trace(rb_default_rs);
     // }
-    return Qnil;
+    return rc.Qnil;
   }
 
   public function
@@ -103,7 +109,7 @@
   public function
   rb_bug(message:String):void
   {
-    throw new Error("rb_bug: " + message);
+    throw new Error("rc.error_c.rb_bug: " + message);
   }
 
   // error.c:621
@@ -111,7 +117,7 @@
   rb_name_error(id:int, str:String):void
   {
     // This isn't right at all
-    rb_raise(rb_eNameError, str);
+    rc.error_c.rb_raise(rb_eNameError, str);
   }
 
   // error.c:244
@@ -148,34 +154,34 @@
   {
     var types:Array = builtin_types;
 
-    if (x == Qundef) {
-      rb_bug("undef leaked to the Ruby space");
+    if (x == rc.Qundef) {
+      rc.error_c.rb_bug("undef leaked to the Ruby space");
     }
 
-    if (TYPE(x) != t) {
+    if (rc.TYPE(x) != t) {
       for each (var type:* in types) {
         if (type.type == t) {
           var etype:String;
 
-          if (NIL_P(x)) {
+          if (rc.NIL_P(x)) {
             etype = "nil";
           }
-          else if (FIXNUM_P(x)) {
+          else if (rc.FIXNUM_P(x)) {
             etype = "Fixnum";
           }
-          else if (SYMBOL_P(x)) {
+          else if (rc.SYMBOL_P(x)) {
             etype = "Symbol";
           }
-          else if (rb_special_const_p(x)) {
-            etype = RSTRING_PTR(rb_obj_as_string(x));
+          else if (rc.rb_special_const_p(x)) {
+            etype = rc.RSTRING_PTR(rc.string_c.rb_obj_as_string(x));
           }
           else {
-            etype = rb_obj_classname(x);
+            etype = rc.variable_c.rb_obj_classname(x);
           }
-          rb_raise(rb_eTypeError, "wrong argument type " + etype + " (expected "+type.name+")");
+          rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "wrong argument type " + etype + " (expected "+type.name+")");
         }
       }
-      rb_bug("unknown type 0x"+t.toString(16)+" (0x"+TYPE(x).toString(16)+" given)");
+      rc.error_c.rb_bug("unknown type 0x"+t.toString(16)+" (0x"+rc.TYPE(x).toString(16)+" given)");
     }
   }
 
@@ -183,7 +189,7 @@
   public function
   rb_exc_new(etype:Value, ptr:String):RObject
   {
-    return RObject(rb_funcall(etype, rb_intern("new"), 1, rb_str_new(ptr)));
+    return RObject(rc.vm_eval_c.rb_funcall(etype, rc.rc.parse_y.rb_intern("new"), 1, rc.string_c.rb_str_new(ptr)));
   }
 
 
@@ -194,3 +200,6 @@
     return rb_exc_new(etype, s);
   }
 
+}
+
+}

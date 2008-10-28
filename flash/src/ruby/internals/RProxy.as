@@ -17,7 +17,7 @@ public class RProxy extends Proxy
 
   flash_proxy override function callProperty(name:*, ...rest):*
   {
-    rc.rb_funcall2(value, rc.rb_intern(name.toString()), rest.length, rc.convert_to_ruby_value(rest));
+    rc.vm_eval_c.rb_funcall2(value, rc.rc.parse_y.rb_intern(name.toString()), rest.length, rc.convert_to_ruby_value(rest));
   }
 
   flash_proxy override function getProperty(name:*):*
@@ -25,12 +25,12 @@ public class RProxy extends Proxy
     if (name == "ruby_value") {
       return value;
     }
-    rc.rb_funcall(value, rc.rb_intern(name.toString()), 0);
+    rc.vm_eval_c.rb_funcall(value, rc.rc.parse_y.rb_intern(name.toString()), 0);
   }
 
   flash_proxy override function setProperty(name:*, value:*):void
   {
-    rc.rb_funcall(value, rc.rb_intern(name.toString()+"="), 1, rc.convert_to_as3(value));
+    rc.vm_eval_c.rb_funcall(value, rc.rc.parse_y.rb_intern(name.toString()+"="), 1, rc.convert_to_as3(value));
   }
 
 }

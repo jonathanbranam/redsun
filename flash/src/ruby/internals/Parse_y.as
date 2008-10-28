@@ -1,3 +1,11 @@
+package ruby.internals
+{
+  import flash.utils.Dictionary;
+
+public class Parse_y
+{
+  public var rc:RubyCore;
+
 
   import mx.utils.StringUtil;
 
@@ -9,7 +17,7 @@
 
     // deal with encoding
 
-    id = rb_intern3(RSTRING_PTR(str), enc);
+    id = rc.parse_y.rb_intern3(rc.RSTRING_PTR(str), enc);
     return id;
   }
 
@@ -21,7 +29,7 @@
 
   protected var global_symbols__sym_id:Dictionary;
   protected var global_symbols__id_str:Dictionary;
-  protected var global_symbols__last_id:int = tLAST_TOKEN;
+  protected var global_symbols__last_id:int = Id_c.tLAST_TOKEN;
 
   public function
   rb_intern3(name:String, enc:String):int
@@ -39,16 +47,16 @@
 
     switch (name.charAt()) {
       case "$":
-        id |= ID_GLOBAL;
+        id |= Id_c.ID_GLOBAL;
         m++;
         // handle special global
         break;
       case "@":
         if (name.charAt(1) == "@") {
-          id |= ID_CLASS;
+          id |= Id_c.ID_CLASS;
           m++;
         } else {
-          id |= ID_INSTANCE;
+          id |= Id_c.ID_INSTANCE;
         }
         m++;
         break;
@@ -57,8 +65,8 @@
         // TODO: @skipped check for operators
         if (name.charAt(len-1) == "=") {
           // attribute assignment
-          id = rb_intern3(name.substr(0, len-1), enc);
-          if (id > tLAST_TOKEN && !is_attrset_id(id)) {
+          id = rc.parse_y.rb_intern3(name.substr(0, len-1), enc);
+          if (id > Id_c.tLAST_TOKEN && !is_attrset_id(id)) {
             // TODO: @skipped encoding
             //enc = rb_enc_get(rb_id2str(id));
             id = rb_id_attrset(id);
@@ -66,16 +74,16 @@
           }
         }
         else if (rb_enc_isupper(name.charAt(), enc)) {
-          id = ID_CONST;
+          id = Id_c.ID_CONST;
         }
         else {
-          id = ID_LOCAL;
+          id = Id_c.ID_LOCAL;
         }
         break;
     }
 
     global_symbols__last_id++;
-    id |= (global_symbols__last_id << ID_SCOPE_SHIFT);
+    id |= (global_symbols__last_id << Id_c.ID_SCOPE_SHIFT);
 
     return register_symid(id, name, enc);
   }
@@ -92,15 +100,15 @@
   public function
   rb_id_attrset(id:int):int
   {
-    id &= ~ID_SCOPE_MASK;
-    id |= ID_ATTRSET;
+    id &= ~Id_c.ID_SCOPE_MASK;
+    id |= Id_c.ID_ATTRSET;
     return id;
   }
 
   public function
   register_symid(id:int, name:String, enc:String):int
   {
-    var str:Value = rb_enc_str_new(name, enc);
+    var str:Value = rc.string_c.rb_enc_str_new(name, enc);
     // TODO: @skipped freeze
     // OBJ_FREEZE(str);
     global_symbols__sym_id[name] = id;
@@ -111,19 +119,19 @@
   public function
   rb_intern2(name:String):int
   {
-    return rb_intern3(name, rb_usascii_encoding());
+    return rc.parse_y.rb_intern3(name, rb_usascii_encoding());
   }
 
   public function
   rb_intern(name:String):int
   {
-    return rb_intern2(name);
+    return rc.parse_y.rb_intern2(name);
   }
 
   public function
   rb_intern_const(name:String):int
   {
-    return rb_intern(name);
+    return rc.parse_y.rb_intern(name);
   }
 
   public function
@@ -138,7 +146,7 @@
   {
     var str:RString = global_symbols__id_str[id];
     if (str.klass == null) {
-      str.klass = rb_cString;
+      str.klass = rc.string_c.rb_cString;
     }
     return str;
   }
@@ -146,49 +154,49 @@
   public function
   is_notop_id(id:int):Boolean
   {
-    return id > tLAST_TOKEN;
+    return id > Id_c.tLAST_TOKEN;
   }
 
   public function
   is_local_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_LOCAL);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_LOCAL);
   }
 
   public function
   is_global_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_GLOBAL);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_GLOBAL);
   }
 
   public function
   is_instance_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_INSTANCE);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_INSTANCE);
   }
 
   public function
   is_attrset_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_ATTRSET);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_ATTRSET);
   }
 
   public function
   is_const_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_CONST);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_CONST);
   }
 
   public function
   is_class_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_CLASS);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_CLASS);
   }
 
   public function
   is_junk_id(id:int):Boolean
   {
-    return is_notop_id(id) && ((id & ID_SCOPE_MASK) == ID_JUNK);
+    return is_notop_id(id) && ((id & Id_c.ID_SCOPE_MASK) == Id_c.ID_JUNK);
   }
 
   public function
@@ -207,6 +215,8 @@
     global_symbols__sym_id = new Dictionary();
     global_symbols__id_str = new Dictionary();
 
-    Init_id();
+    rc.id_c.Init_id();
   }
 
+}
+}

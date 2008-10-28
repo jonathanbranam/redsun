@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class Gc_c
+{
+  public var rc:RubyCore;
+
   // gc.c:985
   import ruby.internals.RData;
 
@@ -38,3 +44,5 @@
   }
 
 
+}
+}

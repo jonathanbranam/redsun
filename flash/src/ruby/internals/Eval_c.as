@@ -1,8 +1,12 @@
-
+package ruby.internals
+{
+public class Eval_c
+{
   import ruby.internals.RClass;
   import ruby.internals.StackPointer;
   import ruby.internals.Value;
 
+  public var rc:RubyCore;
 
   public var rb_eLocalJumpError:Value;
 
@@ -10,14 +14,14 @@
   Init_eval():void
   {
 
-    rb_define_private_method(rb_cModule, "append_features", rb_mod_append_features, 1);
-    rb_define_private_method(rb_cModule, "extend_object", rb_mod_extend_object, 1);
-    rb_define_private_method(rb_cModule, "include", rb_mod_include, -1);
+    rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "append_features", rb_mod_append_features, 1);
+    rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "extend_object", rb_mod_extend_object, 1);
+    rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "include", rb_mod_include, -1);
 
-    Init_vm_eval();
-    Init_eval_method();
+    rc.vm_eval_c.Init_vm_eval();
+    rc.vm_method_c.Init_eval_method();
 
-    rb_define_method(rb_mKernel, "extend", rb_obj_extend, -1);
+    rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "extend", rb_obj_extend, -1);
 
   }
 
@@ -28,14 +32,14 @@
     var i:int;
 
     if (argc == 0) {
-      rb_raise(rb_eArgError, "wrong number of arguments (0 for 1)");
+      rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments (0 for 1)");
     }
     for (i = 0; i < argc; i++) {
-      Check_Type(argv.get_at(i), Value.T_MODULE);
+      rc.Check_Type(argv.get_at(i), Value.T_MODULE);
     }
     while (argc--) {
-      rb_funcall(argv.get_at(argc), rb_intern("extend_object"), 1, obj);
-      rb_funcall(argv.get_at(argc), rb_intern("extended"), 1, obj);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("extend_object"), 1, obj);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("extended"), 1, obj);
     }
     return obj;
   }
@@ -44,15 +48,15 @@
   public function
   rb_mod_append_features(module:RClass, include_:Value):Value
   {
-    switch (TYPE(include_)) {
+    switch (rc.TYPE(include_)) {
       case Value.T_CLASS:
       case Value.T_MODULE:
         break;
       default:
-        Check_Type(include_, Value.T_CLASS);
+        rc.Check_Type(include_, Value.T_CLASS);
         break;
     }
-    rb_include_module(RClass(include_), module);
+    rc.class_c.rb_include_module(RClass(include_), module);
 
     return module;
   }
@@ -61,7 +65,7 @@
   public function
   rb_extend_object(obj:Value, module:Value):void
   {
-    rb_include_module(rb_singleton_class(obj), module);
+    rc.class_c.rb_include_module(rc.class_c.rb_singleton_class(obj), module);
   }
 
   // eval.c:896
@@ -79,12 +83,12 @@
     var i:int;
 
     for (i = 0; i < argc; i++) {
-      Check_Type(argv.get_at(i), Value.T_MODULE);
+      rc.Check_Type(argv.get_at(i), Value.T_MODULE);
     }
 
     while (argc--) {
-      rb_funcall(argv.get_at(argc), rb_intern("append_features"), 1, module);
-      rb_funcall(argv.get_at(argc), rb_intern("included"), 1, module);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("append_features"), 1, module);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("included"), 1, module);
     }
 
     return module;
@@ -96,19 +100,19 @@
   {
     // TODO: @skipped pass passed block
     // PASS_PASSED_BLOCK();
-    rb_funcall2(obj, idInitialize, argc, argv);
+    rc.vm_eval_c.rb_funcall2(obj, rc.id_c.idInitialize, argc, argv);
   }
 
   // eval.c:48
   public function ruby_init():void {
     // TODO: @skipped Init_stack()
     //Init_stack(&state);
-    Init_BareVM();
-    Init_heap();
-    rb_call_inits();
-    ruby_prog_init();
+    rc.vm_c.Init_BareVM();
+    rc.gc_c.Init_heap();
+    rc.rb_call_inits();
+    rc.ruby_prog_init();
 
-    GET_VM().running = true;
+    rc.GET_VM().running = true;
   }
 
 
@@ -142,11 +146,13 @@
   ruby_exec_node(n:Value, file:String):int
   {
     var iseq:Value = n;
-    var th:RbThread = GET_THREAD();
+    var th:RbThread = rc.GET_THREAD();
 
     // TODO: @skipped PUSH_TAG, EXEC_TAG, POP_TAG");
     th.base_block = null;
-    rb_iseq_eval(iseq);
+    rc.vm_c.rb_iseq_eval(iseq);
     return 0;
   }
 
+}
+}

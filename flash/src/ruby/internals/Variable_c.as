@@ -1,3 +1,8 @@
+package ruby.internals
+{
+public class Variable_c
+{
+  public var rc:RubyCore;
 
   import ruby.internals.RClass;
 
@@ -14,17 +19,17 @@
   {
     rb_class_tbl = {};
     rb_global_tbl = {};
-    autoload = rb_intern("__autoload__");
-    classpath = rb_intern("__classpath__");
-    tmp_classpath = rb_intern("__tmp_classpath__");
+    autoload = rc.parse_y.rb_intern("__autoload__");
+    classpath = rc.parse_y.rb_intern("__classpath__");
+    tmp_classpath = rc.parse_y.rb_intern("__tmp_classpath__");
   }
 
 
   public function
   rb_name_class(klass:RClass, id:int):void
   {
-    rb_iv_set(klass, "__classid__", ID2SYM(id));
-    klass.name = rb_id2name(id);
+    rb_iv_set(klass, "__classid__", rc.ID2SYM(id));
+    klass.name = rc.parse_y.rb_id2name(id);
   }
 
   // variable.c:1654
@@ -46,26 +51,26 @@
     do {
       loop = false;
 
-      while (RTEST(tmp)) {
+      while (rc.RTEST(tmp)) {
         if (tmp.iv_tbl && tmp.iv_tbl[id] != undefined) {
           value = tmp.iv_tbl[id];
-          if (value == Qundef) {// && NIL_P(autoload_file(klass, id))) {
+          if (value == rc.Qundef) {// && NIL_P(autoload_file(klass, id))) {
             continue;
           }
-          if (exclude && tmp == rb_cObject && klass !=rb_cObject) {
-            rb_warn("toplevel constant "+rb_id2name(id)+" referenced by "+
-                    rb_class2name(klass)+"::"+rb_id2name(id));
+          if (exclude && tmp == rc.object_c.rb_cObject && klass != rc.object_c.rb_cObject) {
+            rc.error_c.rb_warn("toplevel constant "+rc.parse_y.rb_id2name(id)+" referenced by "+
+                    rb_class2name(klass)+"::"+rc.parse_y.rb_id2name(id));
           }
           return value;
         }
-        if (!recurse && klass != rb_cObject) {
+        if (!recurse && klass != rc.object_c.rb_cObject) {
           break;
         }
         tmp = tmp.super_class;
       }
       if (!exclude && !mod_retry && klass.BUILTIN_TYPE() == Value.T_MODULE) {
         mod_retry = true;
-        tmp = rb_cObject;
+        tmp = rc.object_c.rb_cObject;
         // goto retry;
         loop = true;
       }
@@ -78,7 +83,7 @@
   public function
   const_missing(klass:RClass, id:int):Value
   {
-    return rb_funcall(klass, rb_intern("const_missing"), 1, ID2SYM(id));
+    return rc.vm_eval_c.rb_funcall(klass, rc.parse_y.rb_intern("const_missing"), 1, rc.ID2SYM(id));
   }
 
   // variable.c:1477
@@ -105,20 +110,20 @@
       while (tmp) {
         if (tmp.iv_tbl && tmp.iv_tbl[id]) {
           value = tmp.iv_tbl[id];
-          if (value == Qundef) {// && NIL_P(autoload_file(klass, id))) {
+          if (value == rc.Qundef) {// && NIL_P(autoload_file(klass, id))) {
             return false;
           } else {
             return true;
           }
         }
-        if (!recurse && klass != rb_cObject) {
+        if (!recurse && klass != rc.object_c.rb_cObject) {
           break;
         }
         tmp = tmp.super_class;
       }
       if (!exclude && !mod_retry && klass.BUILTIN_TYPE() == Value.T_MODULE) {
         mod_retry = true;
-        tmp = rb_cObject;
+        tmp = rc.object_c.rb_cObject;
         // goto retry;
         loop = true;
       }
@@ -146,10 +151,10 @@
 
   }
 
-  protected function
+  public function
   rb_iv_set(obj:RObject, name:String, val:*):void
   {
-    rb_ivar_set(obj, rb_intern(name), val);
+    rb_ivar_set(obj, rc.parse_y.rb_intern(name), val);
   }
 
   public function
@@ -161,19 +166,19 @@
   public function
   classname(klass:RClass):Value
   {
-    var path:Value = Qnil;
+    var path:Value = rc.Qnil;
 
     if (!klass) {
-      klass = rb_cObject;
+      klass = rc.object_c.rb_cObject;
     }
     if (klass.iv_tbl[classpath] == undefined) {
-      var classid:int = rb_intern("__classid__");
+      var classid:int = rc.parse_y.rb_intern("__classid__");
 
       if (klass.iv_tbl[classid] == undefined) {
         return find_class_path(klass);
       }
       path = klass.iv_tbl[classid];
-      path = rb_str_dup(rb_id2str(SYM2ID(path)));
+      path = rc.string_c.rb_str_dup(rc.parse_y.rb_id2str(rc.SYM2ID(path)));
       // OBJ_FREEZE(path);
       klass.iv_tbl[classpath] = path;
       delete klass.iv_tbl[classid];
@@ -182,7 +187,7 @@
       path = klass.iv_tbl[classpath];
     }
     if (!path.is_string()) {
-      rb_bug("class path is not set properly");
+      rc.error_c.rb_bug("class path is not set properly");
     }
     return path;
   }
@@ -190,7 +195,7 @@
   public function
   rb_class_name(klass:RClass):Value
   {
-    return rb_class_path(rb_class_real(klass));
+    return rb_class_path(rc.object_c.rb_class_real(klass));
   }
 
   public function
@@ -204,7 +209,7 @@
   {
     var path:Value = classname(klass);
 
-    if (!NIL_P(path)) {
+    if (!rc.NIL_P(path)) {
       return path;
     }
     if (klass.iv_tbl[tmp_classpath] != undefined) {
@@ -212,13 +217,13 @@
     } else {
       var s:String = "Class";
       if (klass.is_module()) {
-        if (rb_obj_class(klass) == rb_cModule) {
+        if (rc.object_c.rb_obj_class(klass) == rc.object_c.rb_cModule) {
           s = "Module";
         } else {
           s = rb_class2name(klass.klass);
         }
       }
-      path = rb_str_new("#<"+s+":"+klass.toString()+">");
+      path = rc.string_c.rb_str_new("#<"+s+":"+klass.toString()+">");
       // OBJ_FREEZE(path)
       rb_ivar_set(klass, tmp_classpath, path);
 
@@ -231,12 +236,12 @@
   {
     var str:RString;
 
-    if (under == rb_cObject) {
-      str = rb_str_new2(name);
+    if (under == rc.object_c.rb_cObject) {
+      str = rc.string_c.rb_str_new2(name);
     } else {
-      str = rb_str_dup(RString(rb_class_path(under)));
-      rb_str_cat2(str, "::");
-      rb_str_cat2(str, name);
+      str = rc.string_c.rb_str_dup(RString(rb_class_path(under)));
+      rc.string_c.rb_str_cat2(str, "::");
+      rc.string_c.rb_str_cat2(str, name);
     }
     // TODO: @skipped freeze
     // OBJ_FREEZE(str);
@@ -247,12 +252,12 @@
   public function
   rb_define_const(klass:RClass, name:String, val:Value):void
   {
-    var id:int = rb_intern(name);
+    var id:int = rc.parse_y.rb_intern(name);
 
-    if (!rb_is_const_id(id)) {
-      rb_warn("rb_define_const: invalid name '"+name+"' for constant");
+    if (!rc.parse_y.rb_is_const_id(id)) {
+      rc.error_c.rb_warn("rb_define_const: invalid name '"+name+"' for constant");
     }
-    if (klass == rb_cObject) {
+    if (klass == rc.object_c.rb_cObject) {
       // TODO: @skipped security check
       // rb_secure(4);
     }
@@ -262,7 +267,7 @@
   public function
   rb_define_global_const(name:String, val:Value):void
   {
-    rb_define_const(rb_cObject, name, val);
+    rb_define_const(rc.object_c.rb_cObject, name, val);
   }
 
   // variable.c:1660
@@ -286,7 +291,7 @@
     switch (obj.get_type()) {
       case Value.T_OBJECT:
         val = RObject(obj).iv_tbl[id];
-        if (val != undefined && val != Qundef) {
+        if (val != undefined && val != rc.Qundef) {
           return val;
         }
         break;
@@ -303,7 +308,7 @@
         //}
         break;
     }
-    return Qnil;
+    return rc.Qnil;
   }
 
   public function
@@ -315,13 +320,13 @@
   public function
   rb_iv_get(obj:RObject, name:String):*
   {
-    return rb_ivar_get(obj, rb_intern(name));
+    return rb_ivar_get(obj, rc.parse_y.rb_intern(name));
   }
 
   public function
   rb_obj_classname(obj:Value):String
   {
-    return rb_class2name(CLASS_OF(obj));
+    return rb_class2name(rc.CLASS_OF(obj));
   }
 
   public function
@@ -329,7 +334,7 @@
   {
     // Loop through all defined constants searching for one that points at this class.
     // Only needed for anonymous classes that are then queried for their names
-    return Qnil;
+    return rc.Qnil;
   }
 
   // variable.c:1648
@@ -345,3 +350,6 @@
   {
     return rb_const_get_0(klass, id, true, true);
   }
+
+}
+}

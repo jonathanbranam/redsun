@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class Thread_c
+{
+  public var rc:RubyCore;
+
 
   // thread.c:348
   public function
@@ -7,3 +13,5 @@
   }
 
 
+}
+}

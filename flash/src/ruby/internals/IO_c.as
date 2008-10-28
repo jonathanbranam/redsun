@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class IO_c
+{
+  public var rc:RubyCore;
+
   public var rb_cIO:RClass;
 
   public var rb_stdout:Value;
@@ -8,20 +14,20 @@
   public function
   Init_IO():void
   {
-    rb_define_global_function("puts", rb_f_puts, -1);
+    rc.rc.class_c.rb_define_global_function("puts", rb_f_puts, -1);
 
-    rb_cIO = rb_define_class("IO", rb_cObject);
+    rb_cIO = rc.class_c.rb_define_class("IO", rc.object_c.rb_cObject);
     // enumerable
 
-    rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
+    rc.class_c.rb_define_method(rb_cIO, "puts", rb_io_puts, -1);
 
-    rb_define_method(rb_cIO, "write", io_write, 1);
+    rc.class_c.rb_define_method(rb_cIO, "write", io_write, 1);
 
-    rb_stdout = rb_obj_alloc(rb_cIO);
+    rb_stdout = rc.object_c.rb_obj_alloc(rb_cIO);
 
-    rb_default_rs = rb_str_new2("\n");
+    rb_default_rs = rc.string_c.rb_str_new2("\n");
 
-    id_write = rb_intern("write");
+    id_write = rc.rc.parse_y.rb_intern("write");
   }
 
   protected function
@@ -30,7 +36,7 @@
     if (recv == rb_stdout) {
       return rb_io_puts(argc, argv, recv);
     }
-    return rb_funcall2(rb_stdout, rb_intern("puts"), argc, argv);
+    return rc.vm_eval_c.rb_funcall2(rb_stdout, rc.rc.parse_y.rb_intern("puts"), argc, argv);
   }
 
   public function
@@ -41,10 +47,10 @@
 
     if (argc == 0) {
       rb_io_write(out, rb_default_rs);
-      return Qnil;
+      return rc.Qnil;
     }
     for (i=0; i < argc; i++) {
-      line = rb_obj_as_string(argv.get_at(i));
+      line = rc.string_c.rb_obj_as_string(argv.get_at(i));
       rb_io_write(out, line);
       // HACK b/c trace spits out newlines all the time.
       if (out != rb_stdout) {
@@ -54,24 +60,26 @@
         }
       }
     }
-    return Qnil;
+    return rc.Qnil;
   }
 
   public function
   rb_io_write(io:Value, str:Value):Value
   {
-    return rb_funcall(io, id_write, 1, str);
+    return rc.vm_eval_c.rb_funcall(io, id_write, 1, str);
   }
 
   protected function
   io_write(io:Value, str:Value):Value
   {
-    str = rb_obj_as_string(str);
+    str = rc.string_c.rb_obj_as_string(str);
     if (io == rb_stdout) {
       trace(RString(str).string);
-      return Qtrue;
+      return rc.Qtrue;
     }
 
-    return Qfalse;
+    return rc.Qfalse;
   }
 
+}
+}

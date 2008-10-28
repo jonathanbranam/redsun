@@ -1,3 +1,9 @@
+package ruby.internals
+{
+public class String_c
+{
+  public var rc:RubyCore;
+
 
   public var rb_cString:RClass;
   public var rb_cSymbol:RClass;
@@ -12,18 +18,18 @@
     var sym:Value;
     var id:int, id2:int;
 
-    id = rb_intern_str(str);
-    sym = ID2SYM(id);
-    id2 = SYM2ID(sym);
+    id = rc.parse_y.rb_intern_str(str);
+    sym = rc.ID2SYM(id);
+    id2 = rc.SYM2ID(sym);
 
     if (id != id2) {
-      var name:String = rb_id2name(id2);
+      var name:String = rc.parse_y.rb_id2name(id2);
 
       if (name) {
-        rb_raise(rb_eRuntimeError, "symbol table overflow ("+name+" given for "+
-                    RSTRING_PTR(str)+")");
+        rc.error_c.rb_raise(rc.error_c.rb_eRuntimeError, "symbol table overflow ("+name+" given for "+
+                    rc.RSTRING_PTR(str)+")");
       } else {
-        rb_raise(rb_eRuntimeError, "symbol table overflow (symbol "+RSTRING_PTR(str)+")");
+        rc.error_c.rb_raise(rc.error_c.rb_eRuntimeError, "symbol table overflow (symbol "+rc.RSTRING_PTR(str)+")");
       }
     }
     return sym;
@@ -38,9 +44,9 @@
     if (obj && obj.get_type() == Value.T_STRING) {
       return RString(obj);
     }
-    val = rb_funcall(obj, id_to_s, 0);
+    val = rc.vm_eval_c.rb_funcall(obj, id_to_s, 0);
     if (val.get_type() != Value.T_STRING) {
-      return rb_any_to_s(obj);
+      return rc.object_c.rb_any_to_s(obj);
     }
     // TODO: @skipped
     // OBJ_TAINTED
@@ -96,8 +102,8 @@
     switch (name.get_type()) {
       default:
         tmp = rb_check_string_type(name);
-        if (NIL_P(tmp)) {
-          rb_raise(rb_eTypeError, RSTRING_PTR(rb_inspect(name))+" is not a symbol");
+        if (rc.NIL_P(tmp)) {
+          rc.error_c.rb_raise(rc.error_c.rb_eTypeError, rc.RSTRING_PTR(rc.object_c.rb_inspect(name))+" is not a symbol");
         }
         name = tmp;
         // Intentional fall through
@@ -105,7 +111,7 @@
         name = rb_str_intern(name);
         // Intentional fall through
       case Value.T_SYMBOL:
-        return SYM2ID(name);
+        return rc.SYM2ID(name);
     }
     return id;
   }
@@ -114,7 +120,7 @@
   public function
   rb_check_string_type(str:Value):Value
   {
-    str = rb_check_convert_type(str, Value.T_STRING, "String", "to_str");
+    str = rc.object_c.rb_check_convert_type(str, Value.T_STRING, "String", "to_str");
     return str;
   }
 
@@ -129,3 +135,5 @@
   }
 
 
+}
+}

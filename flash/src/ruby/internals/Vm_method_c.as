@@ -1,3 +1,11 @@
+package ruby.internals
+{
+public class Vm_method_c
+{
+  public var rc:RubyCore;
+
+
+
   // vm_method.c:12
   import ruby.internals.StackPointer;
 
@@ -9,69 +17,73 @@
   public function Init_eval_method():void {
     // TODO: @skipped
     /*
-    rb_define_method(rb_mKernel, "respond_to?", obj_respond_to, -1);
+    class_c.rb_define_method(rb_mKernel, "respond_to?", obj_respond_to, -1);
 
-    rb_define_private_method(rb_cModule, "remove_method", rb_mod_remove_method, -1);
-    rb_define_private_method(rb_cModule, "undef_method", rb_mod_undef_method, -1);
-    rb_define_private_method(rb_cModule, "alias_method", rb_mod_alias_method, 2);
-    rb_define_private_method(rb_cModule, "public", rb_mod_public, -1);
-    rb_define_private_method(rb_cModule, "protected", rb_mod_protected, -1);
-    rb_define_private_method(rb_cModule, "private", rb_mod_private, -1);
-    rb_define_private_method(rb_cModule, "module_function", rb_mod_modfunc, -1);
+    class_c.rb_define_private_method(rb_cModule, "remove_method", rb_mod_remove_method, -1);
+    class_c.rb_define_private_method(rb_cModule, "undef_method", rb_mod_undef_method, -1);
+    class_c.rb_define_private_method(rb_cModule, "alias_method", rb_mod_alias_method, 2);
+    class_c.rb_define_private_method(rb_cModule, "public", rb_mod_public, -1);
+    class_c.rb_define_private_method(rb_cModule, "protected", rb_mod_protected, -1);
+    class_c.rb_define_private_method(rb_cModule, "private", rb_mod_private, -1);
+    class_c.rb_define_private_method(rb_cModule, "module_function", rb_mod_modfunc, -1);
 
-    rb_define_method(rb_cModule, "method_defined?", rb_mod_method_defined, 1);
-    rb_define_method(rb_cModule, "public_method_defined?", rb_mod_public_method_defined, 1);
-    rb_define_method(rb_cModule, "private_method_defined?", rb_mod_private_method_defined, 1);
-    rb_define_method(rb_cModule, "protected_method_defined?", rb_mod_protected_method_defined, 1);
-    rb_define_method(rb_cModule, "public_class_method", rb_mod_public_method, -1);
-    rb_define_method(rb_cModule, "private_class_method", rb_mod_private_method, -1);
+    class_c.rb_define_method(rb_cModule, "method_defined?", rb_mod_method_defined, 1);
+    class_c.rb_define_method(rb_cModule, "public_method_defined?", rb_mod_public_method_defined, 1);
+    class_c.rb_define_method(rb_cModule, "private_method_defined?", rb_mod_private_method_defined, 1);
+    class_c.rb_define_method(rb_cModule, "protected_method_defined?", rb_mod_protected_method_defined, 1);
+    class_c.rb_define_method(rb_cModule, "public_class_method", rb_mod_public_method, -1);
+    class_c.rb_define_method(rb_cModule, "private_class_method", rb_mod_private_method, -1);
 
     rb_define_singleton_method(rb_vm_top_self(), "public", top_public, -1);
     rb_define_singleton_method(rb_vm_top_self(), "private", top_private, -1);
     */
 
-    object_id = rb_intern_const("object_id");
-    __send__ = rb_intern_const("__send__");
-    eqq = rb_intern_const("===");
-    each_ = rb_intern_const("each");
-    aref = rb_intern_const("[]");
-    aset = rb_intern_const("[]=");
-    match = rb_intern_const("=~");
-    missing = rb_intern_const("method_missing");
-    added = rb_intern_const("method_added");
-    singleton_added = rb_intern_const("singleton_method_added");
-    removed = rb_intern_const("method_removed");
-    singleton_removed = rb_intern_const("singleton_method_removed");
-    undefined_ = rb_intern_const("method_undefined");
-    singleton_undefined = rb_intern_const("singleton_method_undefined");
+    object_id = rc.parse_y.rb_intern_const("object_id");
+    __send__ = rc.parse_y.rb_intern_const("__send__");
+    eqq = rc.parse_y.rb_intern_const("===");
+    each_ = rc.parse_y.rb_intern_const("each");
+    aref = rc.parse_y.rb_intern_const("[]");
+    aset = rc.parse_y.rb_intern_const("[]=");
+    match = rc.parse_y.rb_intern_const("=~");
+    missing = rc.parse_y.rb_intern_const("method_missing");
+    added = rc.parse_y.rb_intern_const("method_added");
+    singleton_added = rc.parse_y.rb_intern_const("singleton_method_added");
+    removed = rc.parse_y.rb_intern_const("method_removed");
+    singleton_removed = rc.parse_y.rb_intern_const("singleton_method_removed");
+    undefined_ = rc.parse_y.rb_intern_const("method_undefined");
+    singleton_undefined = rc.parse_y.rb_intern_const("singleton_method_undefined");
 
   }
 
   // vm_method.c:26
-  public function ruby_running():Boolean {
-    return GET_VM().running;
+  public function
+  ruby_running():Boolean
+  {
+    return rc.GET_VM().running;
   }
 
 
   // vm_method.c:104
-  protected function rb_add_method(klass:RClass, mid:int, node:Node, noex:uint):void {
+  public function
+  rb_add_method(klass:RClass, mid:int, node:Node, noex:uint):void
+  {
     if (!klass) {
-      klass = rb_cObject;
+      klass = rc.object_c.rb_cObject;
     }
     if (!klass.is_singleton() &&
       node && node.nd_type() != Node.NODE_ZSUPER &&
-      (mid == rb_intern("initialize") || mid == rb_intern("initialize_copy")))
+      (mid == rc.parse_y.rb_intern("initialize") || mid == rc.parse_y.rb_intern("initialize_copy")))
     {
       noex |= Node.NOEX_PRIVATE;
     } else if (klass.is_singleton() && node
-      && node.nd_type() == Node.NODE_CFUNC && mid == rb_intern("allocate")) {
-        rb_warn("defining "+
-          rb_class2name(rb_iv_get(klass, "__attached__"))+
+      && node.nd_type() == Node.NODE_CFUNC && mid == rc.parse_y.rb_intern("allocate")) {
+        rc.error_c.rb_warn("defining "+
+          rc.variable_c.rb_class2name(rc.variable_c.rb_iv_get(klass, "__attached__"))+
           ".allocate is deprecated; use rb_define_alloc_func()");
-        mid = ID_ALLOCATOR;
+        mid = rc.ID_ALLOCATOR;
     }
     if (klass.is_frozen()) {
-      rb_error_frozen("class/module");
+      rc.error_c.rb_error_frozen("class/module");
     }
     // TODO: @skipped
     //rb_clear_cache_by_id(mid);
@@ -79,7 +91,7 @@
     var body:Node;
 
     if (node) {
-      body = NEW_FBODY(NEW_METHOD(node, klass, NOEX_WITH_SAFE(noex)), null);
+      body = rc.NEW_FBODY(rc.NEW_METHOD(node, klass, rc.NOEX_WITH_SAFE(noex)), null);
     } else {
       body = null;
     }
@@ -90,11 +102,11 @@
 
     klass.m_tbl[mid] = body;
 
-    if (node && mid != ID_ALLOCATOR && ruby_running()) {
+    if (node && mid != rc.ID_ALLOCATOR && ruby_running()) {
       if (klass.is_singleton()) {
-        rb_funcall(rb_iv_get(klass, "__attached__"), singleton_added, 1, ID2SYM(mid));
+        rc.vm_eval_c.rb_funcall(rc.variable_c.rb_iv_get(klass, "__attached__"), singleton_added, 1, rc.ID2SYM(mid));
       } else {
-        rb_funcall(klass, added, 1, ID2SYM(mid));
+        rc.vm_eval_c.rb_funcall(klass, added, 1, rc.ID2SYM(mid));
       }
     }
   }
@@ -127,7 +139,7 @@
   }
 
   public function obj_respond_to(argc:int, argv:StackPointer, obj:Value):Value {
-    return Qtrue;
+    return rc.Qtrue;
     // TODO: @skipped
     /*
     var mid:Value;
@@ -155,7 +167,7 @@
   {
     // TODO: @skipped
     // Check_Type(klass, T_CLASS);
-    rb_add_method(rb_singleton_class(klass), ID_ALLOCATOR, NEW_CFUNC(func, 0), Node.NOEX_PRIVATE);
+    rb_add_method(rc.class_c.rb_singleton_class(klass), rc.ID_ALLOCATOR, rc.NEW_CFUNC(func, 0), Node.NOEX_PRIVATE);
   }
 
 
@@ -221,4 +233,5 @@
   }
 
 
-
+}
+}

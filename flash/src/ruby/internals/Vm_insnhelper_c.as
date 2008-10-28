@@ -1,3 +1,10 @@
+package ruby.internals
+{
+public class Vm_insnhelper_c
+{
+  public var rc:RubyCore;
+
+
 
   import ruby.internals.ByRef;
   import ruby.internals.Node;
@@ -35,7 +42,7 @@
       if (lfp.equals(dfp)) {
         cref = iseq.cref_stack;
         break;
-      } else if (dfp.get_at(-1) != Qnil) {
+      } else if (dfp.get_at(-1) != rc.Qnil) {
         cref = dfp.get_at(-1);
         break;
       }
@@ -43,7 +50,7 @@
     }
 
     if (cref == null) {
-      rb_bug("vm_get_cref: unreachable");
+      rc.error_c.rb_bug("vm_get_cref: unreachable");
     }
 
     return cref;
@@ -63,7 +70,7 @@
     var i:int;
 
     for (i = 0; i < local_size; i++) {
-      sp.set_top(Qnil);
+      sp.set_top(rc.Qnil);
       sp.inc_index();
       // *sp = Qnil;
       // sp++;
@@ -100,7 +107,7 @@
     if (iseq.arg_simple & 0x01) {
       // simple check
       if (orig_argc != iseq.argc) {
-        rb_raise(rb_eArgError, "wrong number of arguments ("+orig_argc+" for "+iseq.argc+")");
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+orig_argc+" for "+iseq.argc+")");
       }
       ret.v = 0;
     }
@@ -114,7 +121,7 @@
   vm_callee_setup_arg_complex(th:RbThread, iseq:RbISeq, orig_argc:int,
                               orig_argv:StackPointer, block:ByRef):int
   {
-    rb_bug("can't handle complex args yet.");
+    rc.error_c.rb_bug("can't handle complex args yet.");
     /*
     var m:int = iseq.argc;
     var argc:int = orig_argc;
@@ -125,7 +132,7 @@
 
     // mandatory
     if (argc < m + iseq.arg_post_len)) { // check with post arg
-      rb_raise(rb_eArgError, "wrong number of arguments ("+argc+" for "+(m+iseq.arg_post_len)+")");
+      rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+argc+" for "+(m+iseq.arg_post_len)+")");
     }
 
     argv += m;
@@ -147,7 +154,7 @@
 
     //trace("vm_setup_method - sp:" + cfp.sp.index);
 
-    iseq = GetISeqPtr(iseqval);
+    iseq = rc.iseq_c.GetISeqPtr(iseqval);
 
     var opt_pc_byref:ByRef = new ByRef(opt_pc);
     var block:ByRef = new ByRef(blockptr);
@@ -161,7 +168,7 @@
     if (!(flag & RbVm.VM_CALL_TAILCALL_BIT)) {
 
       for (i = 0; i < iseq.local_size - iseq.arg_size; i++) {
-        sp.push(Qnil);
+        sp.push(rc.Qnil);
       }
 
       vm_push_frame(th, iseq, RbVm.VM_FRAME_MAGIC_METHOD, recv, blockptr,
@@ -202,12 +209,12 @@
   call_cfunc(func:Function, recv:Value, len:int, argc:int, argv:StackPointer):Value
   {
     if (len >= 0 && argc != len) {
-      rb_raise(rb_eArgError, "wrong number of arguments("+argc+" for "+len+")");
+      rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments("+argc+" for "+len+")");
     }
 
     switch (len) {
       case -2:
-        return Qnil;//func.call(this, recv, rb_ary_new4(argc, argv);
+        return rc.Qnil;//func.call(this, recv, rb_ary_new4(argc, argv);
       case -1:
         return func.call(this, argc, argv, recv);
       case 0:
@@ -223,9 +230,9 @@
       case 5:
         return func.call(this, recv, argv.get_at(0), argv.get_at(1), argv.get_at(2), argv.get_at(3), argv.get_at(4));
       default:
-        rb_raise(rb_eArgError, "too many arguments("+len+")");
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "too many arguments("+len+")");
     }
-    return Qnil; // not reached
+    return rc.Qnil; // not reached
   }
 
   // vm_insnhelper.c:480
@@ -233,7 +240,7 @@
   vm_call_method(th:RbThread, cfp:RbControlFrame, num:int, blockptr:Value, flag:uint,
                  id:int, mn:Node, recv:Value, klass:RClass):Value
   {
-    var val:Value = Qundef;
+    var val:Value = rc.Qundef;
 
     if (mn != null) {
       // TODO: @skipped handle private and protected methods
@@ -245,7 +252,7 @@
         switch (node.nd_type()) {
         case Node.RUBY_VM_METHOD_NODE: {
           vm_setup_method(th, cfp, num, blockptr, flag, node.nd_body, recv, klass);
-          return Qundef;
+          return rc.Qundef;
         }
         case Node.NODE_CFUNC: {
           val = vm_call_cfunc(th, cfp, num, id, recv, mn.nd_clss, flag, node, blockptr);
@@ -256,8 +263,8 @@
     }
     else {
       // method missing
-      if (id == idMethodMissing) {
-        rb_bug("method missing");
+      if (id == rc.id_c.idMethodMissing) {
+        rc.error_c.rb_bug("method missing");
       }
       else {
         var stat:int = 0;
@@ -295,10 +302,10 @@
     var argv:StackPointer = STACK_ADDR_FROM_TOP(reg_cfp, num+1);
     var val:Value;
     // This does appear to wack the stack at this point, I guess it's appropriate?
-    argv.set_at(0, ID2SYM(id));
+    argv.set_at(0, rc.ID2SYM(id));
     th.method_missing_reason = opt;
     th.passed_block = blockptr;
-    val = rb_funcall2(recv, idMethodMissing, num + 1, argv);
+    val = rc.vm_eval_c.rb_funcall2(recv, rc.id_c.idMethodMissing, num + 1, argv);
     POPN(reg_cfp, num + 1);
     return val;
   }
@@ -326,7 +333,7 @@
       val = call_cfunc(mn.nd_cfnc, recv, mn.nd_argc, num, argv);
 
       if (reg_cfp != th.cfp_stack[th.cfp_stack.length-1]) {
-        rb_bug("cfp consistency error - send");
+        rc.error_c.rb_bug("cfp consistency error - send");
       }
       vm_pop_frame(th);
     }
@@ -351,24 +358,24 @@
 
         proc = cfp.sp.pop();
 
-        if (proc != Qnil) {
-          if (!rb_obj_is_proc(proc)) {
-            var b:Value = rb_check_convert_type(proc, Value.T_DATA, "Proc", "to_proc");
-            if (NIL_P(b) || !rb_obj_is_proc(b)) {
-              rb_raise(rb_eTypeError,
-                       "wrong argument type " + rb_obj_classname(proc) +
+        if (proc != rc.Qnil) {
+          if (!rc.proc_c.rb_obj_is_proc(proc)) {
+            var b:Value = rc.object_c.rb_check_convert_type(proc, Value.T_DATA, "Proc", "to_proc");
+            if (rc.NIL_P(b) || !rc.proc_c.rb_obj_is_proc(b)) {
+              rc.error_c.rb_raise(rc.error_c.rb_eTypeError,
+                       "wrong argument type " + rc.variable_c.rb_obj_classname(proc) +
                        " (expected Proc)");
             }
             proc = b;
 
           }
-          po = GetProcPtr(proc);
+          po = rc.vm_c.GetProcPtr(proc);
           blockptr = po.block;
-          RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp).proc = proc;
+          rc.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp).proc = proc;
           block.v = blockptr;
         }
       } else if (blockiseq) {
-        blockptr = RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp);
+        blockptr = rc.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp);
         blockptr.block_iseq = blockiseq;
         blockptr.proc = null;
         block.v = blockptr;
@@ -390,7 +397,7 @@
 
     // check inline method cache
 
-    mn = rb_method_node(klass, id);
+    mn = rc.vm_method_c.rb_method_node(klass, id);
 
     return mn;
   }
@@ -413,7 +420,7 @@
   {
     var val:Value;
 
-    if (orig_klass == Qnil) {
+    if (orig_klass == rc.Qnil) {
       // in current lexical scope
       var root_cref:Node = vm_get_cref(iseq, th.cfp.lfp, th.cfp.dfp);
       var cref:Node = root_cref;
@@ -423,18 +430,18 @@
         klass = cref.nd_clss;
         cref = cref.nd_next;
 
-        if (!NIL_P(klass)) {
+        if (!rc.NIL_P(klass)) {
           // search_continue:
           if (RClass(klass).iv_tbl[id] != undefined) {
             val = RClass(klass).iv_tbl[id];
-            if (val == Qundef) {
+            if (val == rc.Qundef) {
               // TODO: @skipped autoload classes - can't
               // rb_autoload_load(klass, id);
               // goto search_continue;
             }
             else {
               if (is_defined) {
-                return Qtrue;
+                return rc.Qtrue;
               }
               else {
                 return val;
@@ -445,15 +452,15 @@
       }
 
       klass = root_cref.nd_clss;
-      if (NIL_P(klass)) {
-        klass = CLASS_OF(th.cfp.self);
+      if (rc.NIL_P(klass)) {
+        klass = rc.CLASS_OF(th.cfp.self);
       }
 
       if (is_defined) {
-        return rb_const_defined(RClass(klass), id) ? Qtrue : Qfalse;
+        return rc.variable_c.rb_const_defined(RClass(klass), id) ? rc.Qtrue : rc.Qfalse;
       }
       else {
-        return rb_const_get(RClass(klass), id);
+        return rc.variable_c.rb_const_get(RClass(klass), id);
       }
 
     }
@@ -461,10 +468,10 @@
       // TODO: @skipped check if namespace
       // vm_check_if_namespace(orig_klass);
       if (is_defined) {
-        return rb_const_defined_from(RClass(orig_klass), id) ? Qtrue : Qfalse;
+        return rc.variable_c.rb_const_defined_from(RClass(orig_klass), id) ? rc.Qtrue : rc.Qfalse;
       }
       else {
-        return rb_const_get_from(RClass(orig_klass), id);
+        return rc.variable_c.rb_const_get_from(RClass(orig_klass), id);
       }
     }
   }
@@ -483,7 +490,7 @@
     var proc:RbProc;
 
     if (procval) {
-      proc = GetProcPtr(procval);
+      proc = rc.vm_c.GetProcPtr(procval);
       return proc.is_lambda;
     }
     else {
@@ -500,7 +507,7 @@
     var argc:int = num;
 
     if (GET_ISEQ(reg_cfp).local_iseq.type != RbVm.ISEQ_TYPE_METHOD || block == null) {
-      vm_localjump_error("no block given (yield)", Qnil, 0);
+      rc.vm_c.vm_localjump_error("no block given (yield)", rc.Qnil, 0);
     }
 
     iseq = RbISeq(block.block_iseq);
@@ -522,7 +529,7 @@
                     iseq.iseq_fn, iseq.iseq, opt_pc, rsp.clone_from_top(arg_size),
                     block.lfp, iseq.local_size - arg_size);
 
-      return Qundef;
+      return rc.Qundef;
     }
     else {
       var val:Value = vm_yield_with_cfunc(th, block, block.self, argc,
@@ -556,9 +563,9 @@
 
       if (!(iseq.arg_simple & 0x02) &&
           (m + iseq.arg_post_len) > 0 &&
-          argc == 1 && TYPE(argv.get_at(0)) == Value.T_ARRAY) {
+          argc == 1 && rc.TYPE(argv.get_at(0)) == Value.T_ARRAY) {
 
-          rb_bug("unimplemented vm_yield_setup_args");
+          rc.error_c.rb_bug("unimplemented vm_yield_setup_args");
           /*
           var ary:Value = argv.get_at(0);
           th.mark_stack_len = argc = RARRAY_LEN(ary);
@@ -570,7 +577,7 @@
       }
 
       for (i = argc; i < m; i++) {
-        argv.set_at(-i, Qnil);
+        argv.set_at(-i, rc.Qnil);
       }
 
       if (iseq.arg_rest == -1) {
@@ -581,13 +588,13 @@
         }
       }
       else {
-        rb_bug("don't support rest arguments yet");
+        rc.error_c.rb_bug("don't support rest arguments yet");
         // TODO: @skipped
       }
 
       // {|&n|}
       if (iseq.arg_block != -1) {
-        var procval:Value = Qnil;
+        var procval:Value = rc.Qnil;
 
         if (blockptr) {
           procval = blockptr.proc;
@@ -616,22 +623,22 @@
     var lambda:Boolean = block_proc_is_lambda(block.proc);
 
     if (lambda) {
-      rb_bug("Requires array support.");
+      rc.error_c.rb_bug("Requires array support.");
       //arg = rb_ary_new4(argc, argv);
     }
     else if (argc == 0) {
-      arg = Qnil;
+      arg = rc.Qnil;
     }
     else {
       arg = argv.get_at(0);
     }
 
     if (blockptr) {
-      rb_bug("Requires vm_make_proc");
+      rc.error_c.rb_bug("Requires vm_make_proc");
       //blockarg = vm_make_proc(th, th.cfp, blockptr, rb_cProc);
     }
     else {
-      blockarg = Qnil;
+      blockarg = rc.Qnil;
     }
 
     vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_IFUNC,
@@ -646,3 +653,5 @@
     return val;
   }
 
+}
+}

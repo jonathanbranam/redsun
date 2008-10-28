@@ -1,26 +1,32 @@
-  // vm_evalbody.c:30
+package ruby.internals
+{
+public class Vm_evalbody_c
+{
+  public var rc:RubyCore;
+
   import ruby.internals.RbControlFrame;
   import ruby.internals.RbThread;
   import ruby.internals.RubyFrame;
   import ruby.internals.Value;
 
+  // vm_evalbody.c:30
   public function
   vm_eval(th:RbThread, initial:Value):Value
   {
     var ret:Value;
 
-    var frame:RubyFrame = new RubyFrame(this, th);
+    var frame:RubyFrame = new RubyFrame(rc, th);
 
     if (th.cfp.pc_fn != null) {
       th.cfp.pc_fn.call(this, frame);
     } else if (th.cfp.pc_ary != null) {
       vm_eval_array(th, initial, frame);
     } else {
-      rb_bug("no pc_fn or pc_ary in thread");
+      rc.error_c.rb_bug("no pc_fn or pc_ary in thread");
     }
 
     if (th.cfp.VM_FRAME_TYPE() != RbVm.VM_FRAME_MAGIC_FINISH) {
-      rb_bug("cfp consistency error");
+      rc.error_c.rb_bug("cfp consistency error");
     }
 
     ret = th.cfp.sp.pop(); //pop
@@ -59,7 +65,7 @@
       var insn:* = th.cfp.pc_ary[th.cfp.pc_index];
       th.cfp.pc_index++;
       if (insn == undefined || insn == null) {
-        rb_bug("instruction undefined");
+        rc.error_c.rb_bug("instruction undefined");
       }
       if (insn is Array) {
         instruction = insn[0];
@@ -75,7 +81,7 @@
           //trace("leave");
           //break;
         }
-        if (TOPN(th.cfp.sp, 0) == Qpause) {
+        if (rc.TOPN(th.cfp.sp, 0) == rc.Qpause) {
           return;
         }
       } else {
@@ -86,3 +92,7 @@
     }
 
   }
+
+
+}
+}

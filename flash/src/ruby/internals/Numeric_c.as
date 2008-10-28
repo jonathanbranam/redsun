@@ -1,3 +1,8 @@
+package ruby.internals
+{
+public class Numeric_c
+{
+  public var rc:RubyCore;
 
   import ruby.internals.RClass;
   import ruby.internals.Value;
@@ -15,7 +20,10 @@
   public function
   Init_Numeric():void
   {
-    rb_cNumeric = rb_define_class("Numeric", rb_cObject);
-    rb_cInteger = rb_define_class("Integer", rb_cNumeric);
-    rb_cFixnum = rb_define_class("Fixnum", rb_cInteger);
+    rb_cNumeric = rc.class_c.rb_define_class("Numeric", rc.object_c.rb_cObject);
+    rb_cInteger = rc.class_c.rb_define_class("Integer", rb_cNumeric);
+    rb_cFixnum = rc.class_c.rb_define_class("Fixnum", rb_cInteger);
   }
+
+}
+}

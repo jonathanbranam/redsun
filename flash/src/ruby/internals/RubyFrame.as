@@ -48,7 +48,7 @@ public class RubyFrame
   public function
   putstring(str:String):void
   {
-    reg_sp.push(rc.rb_str_new(str));
+    reg_sp.push(rc.string_c.rb_str_new(str));
   }
 
   public function
@@ -67,9 +67,9 @@ public class RubyFrame
   putobject(val:*):void
   {
     if (val is String) {
-      reg_sp.push(rc.rb_str_new(val));
+      reg_sp.push(rc.string_c.rb_str_new(val));
     } else if (val is Number) {
-      reg_sp.push(rc.INT2FIX(val));
+      reg_sp.push(rc.numeric_c.INT2FIX(val));
     }
   }
 
@@ -78,13 +78,13 @@ public class RubyFrame
   {
     switch (value_type) {
       case RbVm.VM_SPECIAL_OBJECT_VMCORE:
-        reg_sp.push(rc.rb_mRubyVMFrozenCore);
+        reg_sp.push(rc.vm_c.rb_mRubyVMFrozenCore);
         break;
       case RbVm.VM_SPECIAL_OBJECT_CBASE:
-        reg_sp.push(rc.vm_get_cbase(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp));
+        reg_sp.push(rc.vm_c.vm_get_cbase(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp));
         break;
       default:
-        rc.rb_bug("putspecialobject insn: unknown value_type: " + value_type);
+        rc.error_c.rc.error_c.rb_bug("putspecialobject insn: unknown value_type: " + value_type);
     }
   }
 
@@ -95,10 +95,10 @@ public class RubyFrame
     var val:Value = reg_sp.pop();
     //trace("leave retval: " + val);
     if (!reg_sp.equals(reg_cfp.bp)) {
-      rc.rb_bug("Stack consistency error (sp: "+reg_sp+", bp: " +reg_cfp.bp +")");
+      rc.error_c.rc.error_c.rb_bug("Stack consistency error (sp: "+reg_sp+", bp: " +reg_cfp.bp +")");
     }
     // RUBY_VM_CHECK_INTS();
-    rc.vm_pop_frame(th);
+    rc.vm_insnhelper_c.vm_pop_frame(th);
     RESTORE_REGS();
     reg_sp.push(val);
   }
@@ -107,7 +107,7 @@ public class RubyFrame
   public function
   invokeblock(num:int, flag:int):void
   {
-    var val:Value = rc.vm_invoke_block(th, reg_cfp, num, flag);
+    var val:Value = rc.vm_insnhelper_c.vm_invoke_block(th, reg_cfp, num, flag);
     if (val == Qundef) {
       RESTORE_REGS();
       // NEXT_INSN();
@@ -126,16 +126,16 @@ public class RubyFrame
 
     var val:Value;
 
-    var op_id:int = rc.rb_intern(op_str)
+    var op_id:int = rc.rc.parse_y.rb_intern(op_str)
 
     var blockiseq:RbISeq;
     if (blockiseq_data is Array) {
       // Guessing at this, but it seems to be needed to pass in parent for a block
       var blockiseqval:Value = rc.iseqval_from_array(blockiseq_data, reg_cfp.iseq.self);
-      blockiseq = rc.GetISeqPtr(blockiseqval);
+      blockiseq = rc.iseq_c.GetISeqPtr(blockiseqval);
     }
 
-    var num:int = rc.caller_setup_args(th, reg_cfp, op_flag, op_argc, blockiseq, blockptr);
+    var num:int = rc.vm_insnhelper_c.caller_setup_args(th, reg_cfp, op_flag, op_argc, blockiseq, blockptr);
 
     var flag:int = op_flag;
     var id:int = op_id;
@@ -151,7 +151,7 @@ public class RubyFrame
     */
 
 
-    mn = rc.vm_method_search(id, klass, ic);
+    mn = rc.vm_insnhelper_c.vm_method_search(id, klass, ic);
     // TODO: @fix method_missing is not being called here.
 
     // TODO: @skipped send/funcall optimization
@@ -160,7 +160,7 @@ public class RubyFrame
     }
 
     //CALL_METHOD(num, blockptr, flag, id, mn, recv, klass);
-    var v:Value = rc.vm_call_method(th, reg_cfp, num, blockptr.v, flag, id, mn, recv, klass);
+    var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, num, blockptr.v, flag, id, mn, recv, klass);
     if (v == Qundef) {
       RESTORE_REGS();
       // NEXT_INSN();
@@ -214,8 +214,8 @@ public class RubyFrame
   getconstant(id_str:String):void
   {
     var klass:Value = reg_sp.pop();
-    var id:int = rc.rb_intern(id_str);
-    reg_sp.push(rc.vm_get_ev_const(th, rc.GET_ISEQ(reg_cfp), klass, id, false));
+    var id:int = rc.rc.parse_y.rb_intern(id_str);
+    reg_sp.push(rc.vm_insnhelper_c.vm_get_ev_const(th, rc.vm_insnhelper_c.GET_ISEQ(reg_cfp), klass, id, false));
   }
 
   public function
@@ -233,80 +233,80 @@ public class RubyFrame
     var cbase:RClass = reg_sp.pop();
     var tmpValue:Value;
 
-    var id:int = rc.rb_intern(id_str);
+    var id:int = rc.rc.parse_y.rb_intern(id_str);
 
     var class_iseq:RbISeq;
     if (class_iseq_data is RbISeq) {
       class_iseq = class_iseq_data;
     } else if (class_iseq_data is Array) {
       var iseqval:Value = rc.iseqval_from_array(class_iseq_data);
-      class_iseq = rc.GetISeqPtr(iseqval);
+      class_iseq = rc.iseq_c.GetISeqPtr(iseqval);
     }
 
     switch (define_type) {
     case 0:
       // typical class definition
       if (super_class == Qnil) {
-        super_class = rc.rb_cObject;
+        super_class = rc.object_c.rb_cObject;
       }
 
       // vm_check_if_namespace(cbase);
 
-      if (rc.rb_const_defined_at(cbase, id)) {
-        tmpValue = rc.rb_const_get_at(cbase, id);
+      if (rc.variable_c.rb_const_defined_at(cbase, id)) {
+        tmpValue = rc.variable_c.rb_const_get_at(cbase, id);
         if (!tmpValue.is_class()) {
-          rc.rb_raise(rc.rb_eTypeError, rc.rb_id2name(id)+" is not a class");
+          rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, rc.parse_y.rc.parse_y.rb_id2name(id)+" is not a class");
         }
         klass = RClass(tmpValue);
 
-        if (super_class != rc.rb_cObject) {
-          var tmp:RClass = rc.rb_class_real(klass.super_class);
+        if (super_class != rc.object_c.rb_cObject) {
+          var tmp:RClass = rc.object_c.rb_class_real(klass.super_class);
           if (tmp != super_class) {
-            rc.rb_raise(rc.rb_eTypeError, "superclass mismatch for class " + rc.rb_id2name(id));
+            rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, "superclass mismatch for class " + rc.rc.parse_y.rb_id2name(id));
           }
         }
       } else {
         // Create new class
-        klass = rc.rb_define_class_id(id, RClass(super_class));
-        rc.rb_set_class_path(klass, cbase, rc.rb_id2name(id));
-        rc.rb_const_set(cbase, id, klass);
-        rc.rb_class_inherited(RClass(super_class), klass);
+        klass = rc.class_c.rb_define_class_id(id, RClass(super_class));
+        rc.variable_c.rb_set_class_path(klass, cbase, rc.rc.parse_y.rb_id2name(id));
+        rc.variable_c.rb_const_set(cbase, id, klass);
+        rc.class_c.rb_class_inherited(RClass(super_class), klass);
       }
       break;
     case 1:
       // create singleton class
-      klass = rc.rb_singleton_class(cbase);
+      klass = rc.class_c.rb_singleton_class(cbase);
       break;
     case 2:
       // create module
 
       // vm_check_if_namespace(cbase);
 
-      if (rc.rb_const_defined_at(cbase, id)) {
-        tmpValue = rc.rb_const_get_at(cbase, id);
+      if (rc.variable_c.rb_const_defined_at(cbase, id)) {
+        tmpValue = rc.variable_c.rb_const_get_at(cbase, id);
         if (tmpValue.get_type() != Value.T_MODULE) {
-          rc.rb_raise(rc.rb_eTypeError, rc.rb_id2name(id)+" is not a module");
+          rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, rc.rc.parse_y.rb_id2name(id)+" is not a module");
         }
         klass = RClass(tmpValue);
       } else {
         // new module declaration
-        klass = rc.rb_define_module_id(id);
-        rc.rb_set_class_path(klass, cbase, rc.rb_id2name(id));
-        rc.rb_const_set(cbase, id, klass);
+        klass = rc.class_c.rb_define_module_id(id);
+        rc.variable_c.rb_set_class_path(klass, cbase, rc.rc.parse_y.rb_id2name(id));
+        rc.variable_c.rb_const_set(cbase, id, klass);
       }
       break;
     }
 
-    rc.COPY_CREF(class_iseq.cref_stack, rc.vm_cref_push(th, klass, Node.NOEX_PUBLIC));
+    rc.COPY_CREF(class_iseq.cref_stack, rc.vm_c.vm_cref_push(th, klass, Node.NOEX_PUBLIC));
 
-    rc.vm_push_frame(th, class_iseq, RbVm.VM_FRAME_MAGIC_CLASS, klass,
+    rc.vm_insnhelper_c.vm_push_frame(th, class_iseq, RbVm.VM_FRAME_MAGIC_CLASS, klass,
                      null/*GET_DFP() | 0x02*/, class_iseq.iseq_fn,
                      class_iseq.iseq, 0, reg_sp.clone(), null,
                      class_iseq.local_size);
 
     RESTORE_REGS();
 
-    rc.INC_VM_STATE_VERSION();
+    rc.vm_c.INC_VM_STATE_VERSION();
     // NEXT_INSN();
     if (false) {
       var new_frame:RubyFrame = new RubyFrame(rc, th);
