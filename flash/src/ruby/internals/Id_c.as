@@ -43,11 +43,11 @@ public class Id_c
   Init_id():void
   {
     // TODO: @skipped many ids
-    id_core_define_method = rc.rc.parse_y.rb_intern("core#define_method");
+    id_core_define_method = rc.parse_y.rb_intern("core#define_method");
 
     // TODO: @fix This is actually defined based on parse.y yacc file
-    idMethodMissing = rc.rc.parse_y.rb_intern("method_missing");
-    idInitialize = rc.rc.parse_y.rb_intern("initialize");
+    idMethodMissing = rc.parse_y.rb_intern("method_missing");
+    idInitialize = rc.parse_y.rb_intern("initialize");
   }
 
 }

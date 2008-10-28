@@ -14,7 +14,7 @@ public class IO_c
   public function
   Init_IO():void
   {
-    rc.rc.class_c.rb_define_global_function("puts", rb_f_puts, -1);
+    rc.class_c.rb_define_global_function("puts", rb_f_puts, -1);
 
     rb_cIO = rc.class_c.rb_define_class("IO", rc.object_c.rb_cObject);
     // enumerable
@@ -27,7 +27,7 @@ public class IO_c
 
     rb_default_rs = rc.string_c.rb_str_new2("\n");
 
-    id_write = rc.rc.parse_y.rb_intern("write");
+    id_write = rc.parse_y.rb_intern("write");
   }
 
   protected function
@@ -36,7 +36,7 @@ public class IO_c
     if (recv == rb_stdout) {
       return rb_io_puts(argc, argv, recv);
     }
-    return rc.vm_eval_c.rb_funcall2(rb_stdout, rc.rc.parse_y.rb_intern("puts"), argc, argv);
+    return rc.vm_eval_c.rb_funcall2(rb_stdout, rc.parse_y.rb_intern("puts"), argc, argv);
   }
 
   public function

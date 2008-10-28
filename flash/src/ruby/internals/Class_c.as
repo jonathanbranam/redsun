@@ -12,7 +12,7 @@ public class Class_c
   rb_singleton_class_attached(klass:RClass, obj:RObject):void
   {
     if (klass.is_singleton()) {
-      var attached:int = rc.rc.parse_y.rb_intern("__attached__");
+      var attached:int = rc.parse_y.rb_intern("__attached__");
       klass.iv_tbl[attached] = obj;
     }
   }
@@ -96,11 +96,11 @@ public class Class_c
     var val:Value;
     var id:int;
 
-    id = rc.rc.parse_y.rb_intern(name);
+    id = rc.parse_y.rb_intern(name);
     if (rc.variable_c.rb_const_defined(rc.object_c.rb_cObject, id)) {
       val = rc.variable_c.rb_const_get(rc.object_c.rb_cObject, id);
       if (val.get_type() != Value.T_CLASS) {
-        rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, name+" is not a class");
+        rc.error_c.rb_raise(rc.error_c.rb_eTypeError, name+" is not a class");
       }
       klass = RClass(val);
       if (rc.object_c.rb_class_real(klass.super_class) != super_class) {
@@ -109,7 +109,7 @@ public class Class_c
       return klass;
     }
     if (!super_class) {
-      rc.error_c.rc.error_c.rb_warn("no super class for '"+name+"', Object assumed");
+      rc.error_c.rb_warn("no super class for '"+name+"', Object assumed");
     }
 
     klass = rb_define_class_id(id, super_class);
@@ -128,11 +128,11 @@ public class Class_c
     var klass:RClass;
     var id:int;
 
-    id = rc.rc.parse_y.rb_intern(name);
+    id = rc.parse_y.rb_intern(name);
     if (rc.variable_c.rb_const_defined_at(outer, id)) {
       var val:Value = rc.variable_c.rb_const_get_at(outer, id);
       if (val.get_type() != Value.T_CLASS) {
-        rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, name+" is not a class");
+        rc.error_c.rb_raise(rc.error_c.rb_eTypeError, name+" is not a class");
       }
       klass = RClass(val);
       if (rc.object_c.rb_class_real(klass.super_class) != super_class) {
@@ -141,7 +141,7 @@ public class Class_c
       return klass;
     }
     if (!super_class) {
-      rc.error_c.rc.error_c.rb_warn("no super class for '"+rc.variable_c.rb_class2name(outer)+"::"+name+"', Object assumed");
+      rc.error_c.rb_warn("no super class for '"+rc.variable_c.rb_class2name(outer)+"::"+name+"', Object assumed");
     }
     klass = rb_define_class_id(id, super_class);
     rc.variable_c.rb_set_class_path(klass, outer, name);
@@ -158,7 +158,7 @@ public class Class_c
     if (!super_class) {
       super_class = rc.object_c.rb_cObject;
     }
-    inherited = rc.rc.parse_y.rb_intern("inherited");
+    inherited = rc.parse_y.rb_intern("inherited");
     return rc.vm_eval_c.rb_funcall(super_class, inherited, 1, klass);
   }
 
@@ -181,7 +181,7 @@ public class Class_c
   public function
   rb_define_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rc.vm_method_c.rb_add_method(klass, rc.rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
+    rc.vm_method_c.rb_add_method(klass, rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PUBLIC);
   }
 
   // class.c:772
@@ -196,14 +196,14 @@ public class Class_c
   public function
   rb_define_protected_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rc.vm_method_c.rb_add_method(klass, rc.rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PROTECTED);
+    rc.vm_method_c.rb_add_method(klass, rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PROTECTED);
   }
 
   // class.c:790
   public function
   rb_define_private_method(klass:RClass, name:String, func:Function, argc:int):void
   {
-    rc.vm_method_c.rb_add_method(klass, rc.rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PRIVATE);
+    rc.vm_method_c.rb_add_method(klass, rc.parse_y.rb_intern(name), rc.NEW_CFUNC(func, argc), Node.NOEX_PRIVATE);
   }
 
 
@@ -229,7 +229,7 @@ public class Class_c
       var superclass_seen:Boolean = false;
 
       if (klass.m_tbl == module.m_tbl) {
-        rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eArgError, "cyclic include detected");
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "cyclic include detected");
       }
       var skip:Boolean = false;
       // ignore if the module included already in superclasses
@@ -303,13 +303,13 @@ public class Class_c
     var id:int;
     var val:Value;
 
-    id = rc.rc.parse_y.rb_intern(name);
+    id = rc.parse_y.rb_intern(name);
     if (rc.variable_c.rb_const_defined(rc.object_c.rb_cObject, id)) {
       val = rc.variable_c.rb_const_get(rc.object_c.rb_cObject, id);
       if (val.get_type() == Value.T_MODULE) {
         return RClass(val);
       }
-      rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, rc.variable_c.rb_obj_classname(module)+" is not a module");
+      rc.error_c.rb_raise(rc.error_c.rb_eTypeError, rc.variable_c.rb_obj_classname(module)+" is not a module");
     }
     module = rb_define_module_id(id);
     rc.variable_c.rb_class_tbl[id] = module;

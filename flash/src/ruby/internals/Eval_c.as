@@ -38,8 +38,8 @@ public class Eval_c
       rc.Check_Type(argv.get_at(i), Value.T_MODULE);
     }
     while (argc--) {
-      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("extend_object"), 1, obj);
-      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("extended"), 1, obj);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.parse_y.rb_intern("extend_object"), 1, obj);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.parse_y.rb_intern("extended"), 1, obj);
     }
     return obj;
   }
@@ -87,8 +87,8 @@ public class Eval_c
     }
 
     while (argc--) {
-      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("append_features"), 1, module);
-      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.rc.parse_y.rb_intern("included"), 1, module);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.parse_y.rb_intern("append_features"), 1, module);
+      rc.vm_eval_c.rb_funcall(argv.get_at(argc), rc.parse_y.rb_intern("included"), 1, module);
     }
 
     return module;

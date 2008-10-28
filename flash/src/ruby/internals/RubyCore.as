@@ -23,8 +23,6 @@ public class RubyCore
   public var ruby_initialized:Boolean = false;
 
   // Modules
-
-  public var rc:RubyCore;
   public var class_c:Class_c;
   public var error_c:Error_c;
   public var eval_c:Eval_c;
@@ -89,37 +87,14 @@ public class RubyCore
     vm_method_c = new Vm_method_c();
     vm_method_c.rc = this;
 
-    rc = this;
   }
-
-  //include "Class_c.as"
-  //include "Error_c.as"
-  //include "Eval_c.as"
-  //include "Gc_c.as"
-  //include "Id_c.as"
-  //include "IO_c.as"
-  //include "Iseq_c.as"
-  //include "Numeric_c.as"
-  //include "Object_c.as"
-  //include "Parse_y.as"
-  //include "Proc_c.as"
-  //include "String_c.as"
-  //include "Thread_c.as"
-
-  //include "Variable_c.as"
-  //include "Vm_c.as"
-
-  //include "Vm_eval_c.as"
-  //include "Vm_evalbody_c.as"
-  //include "Vm_insnhelper_c.as"
-  //include "Vm_method_c.as"
 
   public var rb_cFlashClass:RClass;
 
   public function run_func(docClass:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
-    rc.variable_c.rb_define_global_const("Document", wrap_flash_obj(docClass));
-    rc.eval_c.ruby_run_node(iseqval_from_func(local_size, stack_max, block));
+    variable_c.rb_define_global_const("Document", wrap_flash_obj(docClass));
+    eval_c.ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
   public function run(bytecode:String, doc_class:DisplayObject=null):void  {
@@ -135,9 +110,9 @@ public class RubyCore
   public function run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void {
     init();
     if (doc_class) {
-      rc.variable_c.rb_define_global_const("Document", wrap_flash_obj(doc_class));
+      variable_c.rb_define_global_const("Document", wrap_flash_obj(doc_class));
     }
-    rc.eval_c.ruby_run_node(iseqval);
+    eval_c.ruby_run_node(iseqval);
   }
 
   public function
@@ -152,7 +127,7 @@ public class RubyCore
     if (!ruby_initialized) {
       ruby_initialized = true;
       init_modules();
-      rc.eval_c.ruby_init();
+      eval_c.ruby_init();
       init_flash_classes();
     }
   }
@@ -179,8 +154,8 @@ public class RubyCore
     //ruby_set_debug_option(getenv("RUBY_DEBUG"));
     //ruby_sysinit(&argc, &argv);
     //RUBY_INIT_STACK;
-    rc.eval_c.ruby_init();
-    rc.eval_c.ruby_run_node(n);
+    eval_c.ruby_init();
+    eval_c.ruby_run_node(n);
   }
 
   // inits.c:59
@@ -190,20 +165,20 @@ public class RubyCore
 
     // TODO: @skipped
     //Init_RandomSeed();
-    rc.parse_y.Init_sym();
-    ID_ALLOCATOR = rc.parse_y.rb_intern("allocate");
-    rc.variable_c.Init_var_tables();
-    rc.object_c.Init_Object();
-    rc.vm_c.Init_top_self();
+    parse_y.Init_sym();
+    ID_ALLOCATOR = parse_y.rb_intern("allocate");
+    variable_c.Init_var_tables();
+    object_c.Init_Object();
+    vm_c.Init_top_self();
     //Init_Encoding();
     //Init_Comparable();
     //Init_Enumerable();
     //Init_Precision();
     //Init_String();
-    rc.error_c.Init_Exception();
-    rc.eval_c.Init_eval();
+    error_c.Init_Exception();
+    eval_c.Init_eval();
     //Init_jump();
-    rc.numeric_c.Init_Numeric();
+    numeric_c.Init_Numeric();
     //Init_Bignum();
     //Init_syserr();
     //Init_Array();
@@ -214,7 +189,7 @@ public class RubyCore
     //Init_transcode();
     //Init_marshal();
     //Init_Range();
-    rc.io_c.Init_IO();
+    io_c.Init_IO();
     //Init_Dir();
     //Init_Time();
     //Init_Random();
@@ -226,8 +201,8 @@ public class RubyCore
     //Init_Math();
     //Init_GC();
     //Init_Enumerator();
-    rc.vm_c.Init_VM();
-    rc.iseq_c.Init_ISeq();
+    vm_c.Init_VM();
+    iseq_c.Init_ISeq();
     //Init_Thread();
     //Init_Cont();
     //Init_Rational();
@@ -257,7 +232,7 @@ public class RubyCore
   public function
   Data_Wrap_Struct(klass:RClass, obj:*, mark:Function, free:Function):RData
   {
-    return rc.gc_c.rb_data_object_alloc(klass, obj, mark, free);
+    return gc_c.rb_data_object_alloc(klass, obj, mark, free);
   }
 
   // ruby.c:1465
@@ -269,15 +244,15 @@ public class RubyCore
   public function
   init_flash_classes():void
   {
-    rb_cFlashClass = class_c.rb_define_class("FlashClass", rc.object_c.rb_cObject);
+    rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashClass, "method_missing", fc_method_missing, -1);
   }
 
   public function
   fc_method_missing(argc:int, argv:StackPointer, recv:Value):Value
   {
-    var fc:Object = rc.vm_c.GetCoreDataFromValue(recv);
-    var val:* = fc[rc.parse_y.rb_id2name(RSymbol(argv.get_at(0)).id)];
+    var fc:Object = vm_c.GetCoreDataFromValue(recv);
+    var val:* = fc[parse_y.rb_id2name(RSymbol(argv.get_at(0)).id)];
     if (val is Function) {
       var retval:*;
       //var func:Function = Function(val);
@@ -375,7 +350,7 @@ public class RubyCore
   }
 
   public function NEW_NODE(t:uint, a0:*, a1:*, a2:*):Node {
-    return rc.gc_c.rb_node_newnode(t, a0, a1, a2);
+    return gc_c.rb_node_newnode(t, a0, a1, a2);
   }
 
   public function NEW_BLOCK(a:*):Node {
@@ -416,7 +391,7 @@ public class RubyCore
       return RSymbol(sym).id;
     }
     if (sym.get_type() == Value.T_STRING) {
-      return rc.parse_y.rb_intern(RString(sym).string);
+      return parse_y.rb_intern(RString(sym).string);
     } else {
       return -1;
     }
@@ -436,14 +411,14 @@ public class RubyCore
     // Test for immediate objects and special values
 
     // false test first b/c Qfalse == null
-    if (obj == Qfalse) return rc.object_c.rb_cFalseClass;
+    if (obj == Qfalse) return object_c.rb_cFalseClass;
 
     if (FIXNUM_P(obj)) {
-      return rc.numeric_c.rb_cFixnum;
+      return numeric_c.rb_cFixnum;
     }
 
-    if (obj == Qnil)   return rc.object_c.rb_cNilClass;
-    if (obj == Qtrue)  return rc.object_c.rb_cTrueClass;
+    if (obj == Qnil)   return object_c.rb_cNilClass;
+    if (obj == Qtrue)  return object_c.rb_cTrueClass;
     return RBasic(obj).klass;
   }
 
@@ -473,11 +448,11 @@ public class RubyCore
     // Look at ruby.c:961 process_options() and vm.c Init_VM
 
     // Pass in null for the node first
-    var iseqval:Value = rc.iseq_c.rb_iseq_new(null, rc.string_c.rb_str_new2("<main>"),
-                                              rc.string_c.rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
+    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<main>"),
+                                              string_c.rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
 
     // Get the iseq out and assign the function pointer
-    var iseq:RbISeq = rc.iseq_c.GetISeqPtr(iseqval);
+    var iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     iseq.arg_size = 0;
     iseq.local_size = local_size;
     iseq.stack_max = stack_max;
@@ -562,17 +537,17 @@ public class RubyCore
     } else if (type_str == "rescue") {
       type = RbVm.ISEQ_TYPE_RESCUE;
     } else {
-      rc.error_c.rb_bug("unknown iseq type: " + type_str);
+      error_c.rb_bug("unknown iseq type: " + type_str);
     }
 
     parent = parent ? parent : Qfalse;
 
     // Pass in null for the node first
-    var iseqval:Value = rc.iseq_c.rb_iseq_new(null, rc.string_c.rb_str_new2("<main>"),
-                                              rc.string_c.rb_str_new2("filename.rb"), parent, type);
+    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<main>"),
+                                              string_c.rb_str_new2("filename.rb"), parent, type);
 
     // Get the iseq out and assign the function pointer
-    var iseq:RbISeq = rc.iseq_c.GetISeqPtr(iseqval);
+    var iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     iseq.arg_size = yarv_arg_size(iseq_array);
     iseq.local_size = yarv_local_size(iseq_array);
     iseq.stack_max = yarv_stack_max(iseq_array);
@@ -632,10 +607,10 @@ public class RubyCore
   public function
   class_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
   {
-    var iseqval:Value = rc.iseq_c.rb_iseq_new(null, rc.string_c.rb_str_new2("<class:"+name+">"),
-                                              rc.string_c.rb_str_new2("filename.rb"),
+    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<class:"+name+">"),
+                                              string_c.rb_str_new2("filename.rb"),
                                               Qfalse, RbVm.ISEQ_TYPE_CLASS);
-    var class_iseq:RbISeq = rc.iseq_c.GetISeqPtr(iseqval);
+    var class_iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     class_iseq.arg_size = arg_size;
     class_iseq.local_size = local_size;
     class_iseq.stack_max = stack_max;
@@ -647,10 +622,10 @@ public class RubyCore
   public function
   method_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
   {
-    var iseqval:Value = rc.iseq_c.rb_iseq_new(null, rc.string_c.rb_str_new2(name),
-                                              rc.string_c.rb_str_new2("filename.rb"),
+    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2(name),
+                                              string_c.rb_str_new2("filename.rb"),
                                               Qfalse, RbVm.ISEQ_TYPE_METHOD);
-    var class_iseq:RbISeq = rc.iseq_c.GetISeqPtr(iseqval);
+    var class_iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     class_iseq.arg_size = arg_size;
     class_iseq.local_size = local_size;
     class_iseq.stack_max = stack_max;
@@ -670,7 +645,7 @@ public class RubyCore
   public function
   Check_Type(v:Value, t:int):void
   {
-    rc.error_c.rb_check_type(v, t);
+    error_c.rb_check_type(v, t);
   }
 
   // ruby.h
@@ -730,7 +705,7 @@ public class RubyCore
   public function
   CONST_ID(str:String):int
   {
-    return rc.parse_y.rb_intern2(str);
+    return parse_y.rb_intern2(str);
   }
 
 }

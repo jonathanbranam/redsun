@@ -23,7 +23,7 @@ public class Object_c
   boot_defclass(name:String, super_class:RClass):RClass
   {
     var obj:RClass = rc.class_c.rb_class_boot(super_class);
-    var id:int = rc.rc.parse_y.rb_intern(name);
+    var id:int = rc.parse_y.rb_intern(name);
     rc.variable_c.rb_name_class(obj, id);
     rc.variable_c.rb_class_tbl[id] = obj;
     rc.variable_c.rb_const_set((rb_cObject ? rc.object_c.rb_cObject : obj), id, obj);
@@ -99,11 +99,11 @@ public class Object_c
     // setup falseclass
     rc.variable_c.rb_define_global_const("FALSE", rc.Qtrue);
 
-    id_eq = rc.rc.parse_y.rb_intern("==");
-    id_eql = rc.rc.parse_y.rb_intern("eql?");
-    id_match = rc.rc.parse_y.rb_intern("=~");
-    id_inspect = rc.rc.parse_y.rb_intern("inspect");
-    id_init_copy = rc.rc.parse_y.rb_intern("initialize_copy");
+    id_eq = rc.parse_y.rb_intern("==");
+    id_eql = rc.parse_y.rb_intern("eql?");
+    id_match = rc.parse_y.rb_intern("=~");
+    id_inspect = rc.parse_y.rb_intern("inspect");
+    id_init_copy = rc.parse_y.rb_intern("initialize_copy");
 
     rc.string_c.id_to_s = rc.parse_y.rb_intern("to_s");
 
@@ -209,7 +209,7 @@ public class Object_c
   {
     var m:int;
 
-    m = rc.rc.parse_y.rb_intern(method);
+    m = rc.parse_y.rb_intern(method);
     if (!rc.vm_method_c.rb_respond_to(val, m)) {
       if (raise) {
         rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "can't convert "+

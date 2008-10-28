@@ -189,7 +189,7 @@ public class Error_c
   public function
   rb_exc_new(etype:Value, ptr:String):RObject
   {
-    return RObject(rc.vm_eval_c.rb_funcall(etype, rc.rc.parse_y.rb_intern("new"), 1, rc.string_c.rb_str_new(ptr)));
+    return RObject(rc.vm_eval_c.rb_funcall(etype, rc.parse_y.rb_intern("new"), 1, rc.string_c.rb_str_new(ptr)));
   }
 
 

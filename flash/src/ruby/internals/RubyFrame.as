@@ -84,7 +84,7 @@ public class RubyFrame
         reg_sp.push(rc.vm_c.vm_get_cbase(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp));
         break;
       default:
-        rc.error_c.rc.error_c.rb_bug("putspecialobject insn: unknown value_type: " + value_type);
+        rc.error_c.rb_bug("putspecialobject insn: unknown value_type: " + value_type);
     }
   }
 
@@ -95,7 +95,7 @@ public class RubyFrame
     var val:Value = reg_sp.pop();
     //trace("leave retval: " + val);
     if (!reg_sp.equals(reg_cfp.bp)) {
-      rc.error_c.rc.error_c.rb_bug("Stack consistency error (sp: "+reg_sp+", bp: " +reg_cfp.bp +")");
+      rc.error_c.rb_bug("Stack consistency error (sp: "+reg_sp+", bp: " +reg_cfp.bp +")");
     }
     // RUBY_VM_CHECK_INTS();
     rc.vm_insnhelper_c.vm_pop_frame(th);
@@ -126,7 +126,7 @@ public class RubyFrame
 
     var val:Value;
 
-    var op_id:int = rc.rc.parse_y.rb_intern(op_str)
+    var op_id:int = rc.parse_y.rb_intern(op_str)
 
     var blockiseq:RbISeq;
     if (blockiseq_data is Array) {
@@ -214,7 +214,7 @@ public class RubyFrame
   getconstant(id_str:String):void
   {
     var klass:Value = reg_sp.pop();
-    var id:int = rc.rc.parse_y.rb_intern(id_str);
+    var id:int = rc.parse_y.rb_intern(id_str);
     reg_sp.push(rc.vm_insnhelper_c.vm_get_ev_const(th, rc.vm_insnhelper_c.GET_ISEQ(reg_cfp), klass, id, false));
   }
 
@@ -233,7 +233,7 @@ public class RubyFrame
     var cbase:RClass = reg_sp.pop();
     var tmpValue:Value;
 
-    var id:int = rc.rc.parse_y.rb_intern(id_str);
+    var id:int = rc.parse_y.rb_intern(id_str);
 
     var class_iseq:RbISeq;
     if (class_iseq_data is RbISeq) {
@@ -255,20 +255,20 @@ public class RubyFrame
       if (rc.variable_c.rb_const_defined_at(cbase, id)) {
         tmpValue = rc.variable_c.rb_const_get_at(cbase, id);
         if (!tmpValue.is_class()) {
-          rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, rc.parse_y.rc.parse_y.rb_id2name(id)+" is not a class");
+          rc.error_c.rb_raise(rc.error_c.rb_eTypeError, rc.parse_y.rc.parse_y.rb_id2name(id)+" is not a class");
         }
         klass = RClass(tmpValue);
 
         if (super_class != rc.object_c.rb_cObject) {
           var tmp:RClass = rc.object_c.rb_class_real(klass.super_class);
           if (tmp != super_class) {
-            rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, "superclass mismatch for class " + rc.rc.parse_y.rb_id2name(id));
+            rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "superclass mismatch for class " + rc.parse_y.rb_id2name(id));
           }
         }
       } else {
         // Create new class
         klass = rc.class_c.rb_define_class_id(id, RClass(super_class));
-        rc.variable_c.rb_set_class_path(klass, cbase, rc.rc.parse_y.rb_id2name(id));
+        rc.variable_c.rb_set_class_path(klass, cbase, rc.parse_y.rb_id2name(id));
         rc.variable_c.rb_const_set(cbase, id, klass);
         rc.class_c.rb_class_inherited(RClass(super_class), klass);
       }
@@ -285,13 +285,13 @@ public class RubyFrame
       if (rc.variable_c.rb_const_defined_at(cbase, id)) {
         tmpValue = rc.variable_c.rb_const_get_at(cbase, id);
         if (tmpValue.get_type() != Value.T_MODULE) {
-          rc.error_c.rc.error_c.rb_raise(rc.error_c.rc.error_c.rb_eTypeError, rc.rc.parse_y.rb_id2name(id)+" is not a module");
+          rc.error_c.rb_raise(rc.error_c.rb_eTypeError, rc.parse_y.rb_id2name(id)+" is not a module");
         }
         klass = RClass(tmpValue);
       } else {
         // new module declaration
         klass = rc.class_c.rb_define_module_id(id);
-        rc.variable_c.rb_set_class_path(klass, cbase, rc.rc.parse_y.rb_id2name(id));
+        rc.variable_c.rb_set_class_path(klass, cbase, rc.parse_y.rb_id2name(id));
         rc.variable_c.rb_const_set(cbase, id, klass);
       }
       break;
