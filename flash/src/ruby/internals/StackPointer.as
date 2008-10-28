@@ -106,5 +106,9 @@ public class StackPointer extends Value
     return new StackPointer(stack, index+n);
   }
 
+  public function copy(len:int):Array {
+    return stack.slice(index, index+len);
+  }
+
 }
 }

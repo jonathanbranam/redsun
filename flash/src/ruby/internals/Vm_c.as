@@ -24,6 +24,7 @@ public class Vm_c
   public var rb_mRubyVMFrozenCore:Value;
 
   protected var ruby_vm_global_state_version:int = 1;
+  public var ruby_vm_redefined_flag:uint = 0;
 
 
   public function Init_VM():void

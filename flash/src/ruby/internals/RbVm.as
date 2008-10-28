@@ -42,6 +42,24 @@ public class RbVm
   public static const ISEQ_TYPE_EVAL:uint    = 7;
   public static const ISEQ_TYPE_DEFINED_GUARD:uint = 8;
 
+  public static const BOP_PLUS:uint          =    0x01;
+  public static const BOP_MINUS:uint         =    0x02;
+  public static const BOP_MULT:uint          =    0x04;
+  public static const BOP_DIV:uint           =    0x08;
+  public static const BOP_MOD:uint           =    0x10;
+  public static const BOP_EQ:uint            =    0x20;
+  public static const BOP_LT:uint            =    0x40;
+  public static const BOP_LE:uint            =    0x80;
+  public static const BOP_LTLT:uint          =   0x100;
+  public static const BOP_AREF:uint          =   0x200;
+  public static const BOP_ASET:uint          =   0x400;
+  public static const BOP_LENGTH:uint        =   0x800;
+  public static const BOP_SUCC:uint          =  0x1000;
+  public static const BOP_GT:uint            =  0x2000;
+  public static const BOP_GE:uint            =  0x4000;
+  public static const BOP_NOT:uint           =  0x8000;
+  public static const BOP_NEQ:uint           = 0x10000;
+
   public var self:Value;
 
   public var global_vm_lock:*;

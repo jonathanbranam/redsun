@@ -265,5 +265,61 @@ public class Vm_eval_c
     return val;
   }
 
+  // vm_eval.c:571
+  public function
+  rb_iterate(it_proc:Function, data1:Value, bl_proc:Function, data2:Value):Value
+  {
+    var state:int;
+    var retval:Value = rc.Qnil;
+    var node:Node = rc.NEW_IFUNC(bl_proc, data2);
+    var th:RbThread = rc.GET_THREAD();
+    var cfp:RbControlFrame = th.cfp;
+
+    // TH_PUSH_TAG(th)
+    //state = TH_EXEC_TAG()
+    if (state == 0) {
+    }
+
+    throw new Error("unimplemented");
+
+    return retval;
+  }
+
+  // vm_eval.c:640
+  public function
+  iterate_method(obj:Value):Value
+  {
+    var arg:IterMethodArg = IterMethodArg(obj);
+
+    return rb_call(rc.CLASS_OF(arg.obj), arg.obj, arg.mid,
+                   arg.argc, arg.argv, Node.CALL_FCALL);
+  }
+
+  // vm_eval.c:650
+  public function
+  rb_block_call(obj:Value, mid:int, argc:int, argv:StackPointer,
+                bl_proc:Function, data2:Value):Value
+  {
+    var arg:IterMethodArg = new IterMethodArg();
+
+    arg.obj = obj;
+    arg.mid = mid;
+    arg.argc = argc;
+    arg.argv = argv;
+    return rb_iterate(iterate_method, arg, bl_proc, data2);
+  }
+
 }
+
+}
+  import ruby.internals.StackPointer;
+  import ruby.internals.Value;
+
+
+class IterMethodArg extends Value
+{
+  public var obj:Value;
+  public var mid:int;
+  public var argc:int;
+  public var argv:StackPointer;
 }

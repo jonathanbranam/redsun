@@ -186,16 +186,43 @@ public class RubyFrame
     return !rc.RTEST(reg_sp.pop());
   }
 
-  public function branchunless():Boolean {
+  public function
+  branchunless():Boolean
+  {
     return rc.RTEST(reg_sp.pop());
   }
 
-  public function setlocal(idx:int):void {
+  public function
+  setlocal(idx:int):void
+  {
     reg_cfp.lfp.set_at(-idx, reg_sp.pop());
   }
 
-  public function getlocal(idx:int):void {
+  public function
+  getlocal(idx:int):void
+  {
     var val:Value = reg_cfp.lfp.get_at(-idx);
+    reg_sp.push(val);
+  }
+
+  public function
+  duparray(ary:*):void
+  {
+    var val:Value;
+    if (ary is RArray) {
+      val = rc.array_c.rb_ary_dup(RArray(ary));
+    } else if (ary is Array) {
+      var array:Array = ary;
+      val = rc.array_c.rb_ary_new2(ary.length, ary);
+    }
+    reg_sp.push(val);
+  }
+
+  public function
+  dup():void
+  {
+    var val:* = reg_sp.pop();
+    reg_sp.push(val);
     reg_sp.push(val);
   }
 
@@ -342,6 +369,38 @@ public class RubyFrame
 
   }
 
+  // insns.def:1790
+  public function
+  opt_aref():void
+  {
+    var recv:Value = reg_sp.pop();
+    var obj:Value = reg_sp.pop();
+    var val:Value = null;
+    var done:Boolean = false;
+
+    if (!rc.SPECIAL_CONST_P(recv) && rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_AREF)) {
+      if (rc.HEAP_CLASS_OF(recv) == rc.array_c.rb_cArray && rc.FIXNUM_P(obj)) {
+        val = rc.array_c.rb_ary_entry(RArray(recv), rc.FIX2LONG(obj));
+        done = true;
+      }
+      /*
+      else if (rc.HEAP_CLASS_OF(recv) == rc.hash_c.rb_cHash) {
+        val - rb_hash_aref(recv, obj);
+      }*/
+    }
+    if (!done) {
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      //CALL_SIMPLE_METHOD(1, Id_c.idAREF, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idAREF;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+    }
+  }
 
 
 }

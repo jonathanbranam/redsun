@@ -24,7 +24,9 @@ public class RubyCore
   public var ruby_initialized:Boolean = false;
 
   // Modules
+  public var array_c:Array_c;
   public var class_c:Class_c;
+  public var enum_c:Enum_c;
   public var error_c:Error_c;
   public var eval_c:Eval_c;
   public var gc_c:Gc_c;
@@ -44,9 +46,14 @@ public class RubyCore
   public var vm_insnhelper_c:Vm_insnhelper_c;
   public var vm_method_c:Vm_method_c;
 
-  public function RubyCore()  {
+  public function RubyCore()
+  {
+    array_c = new Array_c();
+    array_c.rc = this;
     class_c = new Class_c();
     class_c.rc = this;
+    enum_c = new Enum_c();
+    enum_c.rc = this;
     error_c = new Error_c();
     error_c.rc = this;
     eval_c = new Eval_c();
@@ -180,7 +187,7 @@ public class RubyCore
     vm_c.Init_top_self();
     //Init_Encoding();
     //Init_Comparable();
-    //Init_Enumerable();
+    enum_c.Init_Enumerable();
     //Init_Precision();
     //Init_String();
     error_c.Init_Exception();
@@ -189,7 +196,7 @@ public class RubyCore
     numeric_c.Init_Numeric();
     //Init_Bignum();
     //Init_syserr();
-    //Init_Array();
+    array_c.Init_Array();
     //Init_Hash();
     //Init_Struct();
     //Init_Regexp();
@@ -434,6 +441,10 @@ public class RubyCore
     return NEW_NODE(Node.NODE_CFUNC, f, c, null);
   }
 
+  public function NEW_IFUNC(f:Function, c:*):Node {
+    return NEW_NODE(Node.NODE_IFUNC, f, c, null);
+  }
+
   public function NEW_METHOD(n:Value,x:Value,v:uint):Node {
     return NEW_NODE(Node.NODE_METHOD, x, n, v);
   }
@@ -496,9 +507,27 @@ public class RubyCore
   }
 
   public function
+  BASIC_OP_UNREDEFINED_P(op:int):Boolean
+  {
+    return (vm_c.ruby_vm_redefined_flag & op) == 0;
+  }
+
+  public function
+  HEAP_CLASS_OF(obj:Value):RClass
+  {
+    return rb_class_of(obj);
+  }
+
+  public function
   CLASS_OF(v:Value):RClass
   {
     return rb_class_of(v);
+  }
+
+  public function
+  FIX2LONG(x:Value):int
+  {
+    return RInt(x).value;
   }
 
   public function

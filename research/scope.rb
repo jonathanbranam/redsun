@@ -1,3 +1,26 @@
+a = [1,1,1]
+Document.graphics.lineStyle(a[0], a[1], a[2])
+Document.graphics.beginFill(0x33AAEE)
+Document.graphics.drawRect(5,5,105,105)
+=begin
+module Sketch
+  def geometry &m
+    instance_eval m
+  end
+  def circle(op)
+  end
+  def draw(s)
+  end
+end
+class Drawy
+  include Sketch
+  def a
+    skin = geometry {
+      circle {:x=>40,:y=>40,:radius=>20}
+    }
+    skin.draw(s)
+  end
+end
 module B
   def col
     0x66AA33
@@ -17,7 +40,6 @@ a.a do |s|
   s.graphics.beginFill(0x33AAEE)
   s.graphics.drawRect(5,5,105,105)
 end
-=begin
 module Draggable
   on :mouse_down do
     @dragging = true

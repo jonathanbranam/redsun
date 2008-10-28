@@ -32,8 +32,8 @@ public class Class_c
       return obj.klass = rc.object_c.rb_cClass;
     } else {
       var klass:RClass = rb_class_boot(super_class);
-      var s:uint = RClass.FL_SINGLETON;
-      klass.flags |= RClass.FL_SINGLETON;
+      var s:uint = Value.FL_SINGLETON;
+      klass.flags |= Value.FL_SINGLETON;
       klass.flags = klass.flags | s;
       if (obj.get_type() == Value.T_CLASS) {
         klass.name = RClass(obj).name+"Singleton";
