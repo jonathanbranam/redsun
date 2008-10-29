@@ -213,7 +213,8 @@ public class RubyFrame
       val = rc.array_c.rb_ary_dup(RArray(ary));
     } else if (ary is Array) {
       var array:Array = ary;
-      val = rc.array_c.rb_ary_new2(ary.length, ary);
+      array = rc.convert_array_to_ruby_value(array);
+      val = rc.array_c.rb_ary_new2(array.length, array);
     }
     reg_sp.push(val);
   }
@@ -373,8 +374,8 @@ public class RubyFrame
   public function
   opt_aref():void
   {
-    var recv:Value = reg_sp.pop();
     var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
     var val:Value = null;
     var done:Boolean = false;
 
@@ -399,7 +400,14 @@ public class RubyFrame
                                                       id,
                                                       rc.vm_method_c.rb_method_node(klass, id),
                                                       recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
     }
+    reg_sp.push(val);
   }
 
 

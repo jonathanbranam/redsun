@@ -320,7 +320,14 @@ public class RubyCore
   fo_method_missing(argc:int, argv:StackPointer, recv:Value):Value
   {
     var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
-    var val:* = flash_obj[parse_y.rb_id2name(RSymbol(argv.get_at(0)).id)];
+    var method_name:String = parse_y.rb_id2name(RSymbol(argv.get_at(0)).id);
+    var attr_set:Boolean = false;
+    if (method_name.charAt(method_name.length-1) == "=" && argc == 2) {
+      method_name = method_name.substr(0, method_name.length-1);
+      flash_obj[method_name] = convert_to_as3(argv.get_at(1));
+      return argv.get_at(0);
+    }
+    var val:* = flash_obj[method_name];
     if (val is Function) {
       var retval:*;
       //var func:Function = Function(val);
@@ -388,13 +395,13 @@ public class RubyCore
   public function
   convert_to_ruby_value(val:*):*
   {
-    if (val == undefined || val == null) {
+    if (val === undefined || val === null) {
       return Qnil;
     } else if (val is RProxy) {
       return val.ruby_value;
-    } else if (val == true) {
+    } else if (val === true) {
       return Qtrue;
-    } else if (val == false) {
+    } else if (val === false) {
       return Qfalse;
     } else if (val is String) {
       var str:RString = new RString(string_c.rb_cString);
