@@ -104,7 +104,8 @@ public class Vm_method_c
 
     if (node && mid != rc.ID_ALLOCATOR && ruby_running()) {
       if (klass.is_singleton()) {
-        rc.vm_eval_c.rb_funcall(rc.variable_c.rb_iv_get(klass, "__attached__"), singleton_added, 1, rc.ID2SYM(mid));
+        rc.vm_eval_c.rb_funcall(rc.variable_c.rb_iv_get(klass, "__attached__"),
+                                singleton_added, 1, rc.ID2SYM(mid));
       } else {
         rc.vm_eval_c.rb_funcall(klass, added, 1, rc.ID2SYM(mid));
       }

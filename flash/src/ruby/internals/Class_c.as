@@ -364,7 +364,9 @@ public class Class_c
     return mdl;
   }
 
-  public function rb_define_singleton_method(obj:Value, name:String, func:Function, argc:int):void {
+  public function
+  rb_define_singleton_method(obj:Value, name:String, func:Function, argc:int):void
+  {
     rb_define_method(rb_singleton_class(obj), name, func, argc);
   }
 

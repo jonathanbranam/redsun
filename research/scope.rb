@@ -2,15 +2,61 @@ a = [1,1,1]
 TopSprite.graphics.lineStyle(a[0], a[1], a[2])
 TopSprite.graphics.beginFill(0x33AAEE)
 TopSprite.graphics.drawRect(5,5,105,105)
+
 tf = Flash::Text::TextField.new
 tf.text = "Hello!"
-tf.x = 40
+tf.x = 250
 tf.y = 50
 tf.selectable = false
 tfor = Flash::Text::TextFormat.new
 tfor.size = 25
 tf.setTextFormat(tfor)
 TopSprite.addChild(tf)
+wait(1)
+tf.x = tf.x- 50
+wait(1)
+tf.x = tf.x- 50
+wait(1)
+tf.x = tf.x- 50
+wait(1)
+tf.x -= 50
+wait(1)
+tf.x -= 50
+wait(1)
+tf.x -= 50
+wait(1)
+tf.x -= 50
+
+@blah = "hi"
+
+def talk_to_server(blah)
+  http = HTTPService.new
+  http.url = "junk"
+  http.send
+  wait_for(http, :result)
+  result = http.result
+  parse(result)
+  yield result
+end
+
+th = Thread.new(&talk_to_server) do |result|
+ tf.text = result
+end
+
+
+next_frame()
+
+for_seconds(1.seconds) do 
+  tf.alpha += 0.1
+end
+
+fadein = Tween.new(0,1) do |obj, val|
+  obj.alpha = val
+end
+
+fadein.run(tf)
+
+
 =begin
 module Sketch
   def geometry &m

@@ -4,8 +4,10 @@ import com.adobe.serialization.json.JSONDecoder;
 
 import flash.display.DisplayObject;
 import flash.display.Sprite;
+import flash.events.TimerEvent;
 import flash.text.TextField;
 import flash.text.TextFormat;
+import flash.utils.Timer;
 
 /**
  * Class for core ruby methods.
@@ -146,7 +148,43 @@ public class RubyCore
       init_modules();
       eval_c.ruby_init();
       init_flash_classes();
+      init_global_funcs();
     }
+  }
+
+  protected function
+  init_global_funcs():void
+  {
+    class_c.rb_define_global_function("wait", wait_func, 1);
+  }
+
+  protected function
+  wait_func(recv:Value, time:RInt):Value
+  {
+    var t:Timer = new Timer(time.value*1000, 1);
+    var rc:RubyCore = this;
+    var th:RbThread = rc.GET_THREAD();
+    t.addEventListener(TimerEvent.TIMER,
+      function(e:TimerEvent):void {
+        rc.restart_thread(th);
+      });
+
+    t.start();
+    return Qpause;
+  }
+
+  protected function
+  restart_thread(th:RbThread):void
+  {
+    if (GET_THREAD() != th) {
+      error_c.rb_bug("Different thread restarted.");
+    }
+    if (th.cfp.sp.get_at(0) != Qpause) {
+      error_c.rb_bug("Tried to restart a thread that was not paused.");
+    } else {
+      th.cfp.sp.push(Qnil);
+    }
+    vm_evalbody_c.vm_eval(th, Qnil);
   }
 
   protected function
@@ -523,6 +561,12 @@ public class RubyCore
   BASIC_OP_UNREDEFINED_P(op:int):Boolean
   {
     return (vm_c.ruby_vm_redefined_flag & op) == 0;
+  }
+
+  public function
+  FIXNUM_2_P(a:Value, b:Value):Boolean
+  {
+    return FIXNUM_P(a) && FIXNUM_P(b);
   }
 
   public function

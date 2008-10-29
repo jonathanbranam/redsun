@@ -414,6 +414,52 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1357
+  public function
+  opt_minus():void
+  {
+    var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+
+    if (rc.FIXNUM_2_P(recv, obj) &&
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_MINUS)) {
+        var a:int, b:int, c:int;
+
+        a = rc.FIX2LONG(recv);
+        b = rc.FIX2LONG(obj);
+        c = a - b;
+
+        if (true) { //rc.FIXABLE(c)) {
+          val = rc.numeric_c.INT2FIX(c);
+        }
+        else {
+          rc.error_c.rb_bug("big number support not implemented");
+          //val = rc.numeric_c.rb_big_minus(rb_int2big(a), rb_int2big(b));
+        }
+    }
+    else {
+      // other
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idMINUS;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+    reg_sp.push(val);
+  }
+
   // insns.def:712
   public function
   setn(n:int):void

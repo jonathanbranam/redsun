@@ -27,16 +27,16 @@ public class Vm_evalbody_c
       rc.error_c.rb_bug("no pc_fn or pc_ary in thread");
     }
 
-    if (th.cfp.VM_FRAME_TYPE() != RbVm.VM_FRAME_MAGIC_FINISH) {
-      rc.error_c.rb_bug("cfp consistency error");
-    }
-
     ret = th.cfp.sp.pop(); //pop
 
     // Just leave Qpause on the top of the stack?
-    //if (ret == Qpause) {
-      //return Qpause;
-    //}
+    if (ret == rc.Qpause) {
+      return rc.Qpause;
+    }
+
+    if (th.cfp.VM_FRAME_TYPE() != RbVm.VM_FRAME_MAGIC_FINISH) {
+      rc.error_c.rb_bug("cfp consistency error");
+    }
 
     //th.cfp++ // pop cf
     th.cfp = th.cfp_stack.pop() // pop cf
@@ -89,6 +89,7 @@ public class Vm_evalbody_c
           //break;
         }
         if (rc.TOPN(th.cfp.sp, 0) == rc.Qpause) {
+          inner_loop_depth--;
           return;
         }
       } else {

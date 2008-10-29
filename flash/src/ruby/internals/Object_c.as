@@ -64,6 +64,10 @@ public class Object_c
     rc.class_c.rb_define_method(rb_cBasicObject, "equal?", rb_obj_equal, 1);
     rc.class_c.rb_define_method(rb_cBasicObject, "!", rb_obj_not, 0);
 
+    rc.class_c.rb_define_private_method(rb_cBasicObject, "singleton_method_added", rb_obj_dummy, 1);
+    rc.class_c.rb_define_private_method(rb_cBasicObject, "singleton_method_removed", rb_obj_dummy, 1);
+    rc.class_c.rb_define_private_method(rb_cBasicObject, "singleton_method_undefined", rb_obj_dummy, 1);
+
     //rc.class_c.rb_define_method(rb_cClass, "allocate", rb_obj_alloc, 0);
 
     rb_mKernel = rc.class_c.rb_define_module("Kernel");
