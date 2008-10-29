@@ -1,7 +1,16 @@
 a = [1,1,1]
-Document.graphics.lineStyle(a[0], a[1], a[2])
-Document.graphics.beginFill(0x33AAEE)
-Document.graphics.drawRect(5,5,105,105)
+TopSprite.graphics.lineStyle(a[0], a[1], a[2])
+TopSprite.graphics.beginFill(0x33AAEE)
+TopSprite.graphics.drawRect(5,5,105,105)
+tf = Flash::Text::TextField.new
+tf.text = "Hello!"
+tf.x = 40
+tf.y = 50
+tf.selectable = false
+tfor = Flash::Text::TextFormat.new
+tfor.size = 25
+tf.setTextFormat(tfor)
+TopSprite.addChild(tf)
 =begin
 module Sketch
   def geometry &m

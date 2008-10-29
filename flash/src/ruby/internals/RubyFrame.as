@@ -70,6 +70,12 @@ public class RubyFrame
       reg_sp.push(rc.string_c.rb_str_new(val));
     } else if (val is Number) {
       reg_sp.push(rc.numeric_c.INT2FIX(val));
+    } else if (val === rc.Qfalse) {
+      reg_sp.push(val);
+    } else if (val === rc.Qtrue) {
+      reg_sp.push(val);
+    } else {
+      rc.error_c.rb_bug("Unknown object sent to putobject: " + val);
     }
   }
 
@@ -143,12 +149,10 @@ public class RubyFrame
     recv = ((flag & RbVm.VM_CALL_FCALL_BIT) != 0) ? reg_cfp.self : reg_sp.topn(num);
     klass = rc.CLASS_OF(recv);
 
-    /*
     trace("send "+op_str+" to " + (klass ? klass.name : "?") + " with " + op_argc+ " ops");
     for (var o:int = op_argc-1; o >= 0; o--) {
       trace("       op "+(op_argc-o)+": " + reg_sp.topn(o));
     }
-    */
 
 
     mn = rc.vm_insnhelper_c.vm_method_search(id, klass, ic);
@@ -410,6 +414,14 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:712
+  public function
+  setn(n:int):void
+  {
+    var val:Value = reg_sp.topn(0);
+    reg_sp.set_topn(n-1, val);
+    reg_sp.push(val);
+  }
 
 }
 }

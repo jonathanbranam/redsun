@@ -17,7 +17,7 @@ class MainController < Ramaze::Controller
   end
 
   def compile
-    puts "request #{ request.POST() }"
+    #puts "request #{ request.POST() }"
     bytecode = request.POST()["bytecode"].tr("\r","\n")
     bc = RubyVM::InstructionSequence.compile(bytecode).to_a
     RedSun::ABC::ABCFile.yarv_to_string(bc)

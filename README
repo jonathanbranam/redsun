@@ -1,6 +1,6 @@
 This is the Red Sun Ruby library. It can parse and write SWF files and can translate Ruby code into AS3 code inside a SWF.
 
-It doesn't work yet...
+It works moderately well...
 
 (c) Jonathan Branam, 2008
 

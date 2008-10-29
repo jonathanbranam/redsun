@@ -92,6 +92,10 @@ public class StackPointer extends Value
     return stack[index-n-1];
   }
 
+  public function set_topn(n:int, val:*):void {
+    stack[index-n-1] = val;
+  }
+
   public function clone_from_top(n:int):StackPointer {
     if (n < 0) {
       throw new Error("clone_from_top expects a positive value.");

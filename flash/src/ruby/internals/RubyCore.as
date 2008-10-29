@@ -4,6 +4,8 @@ import com.adobe.serialization.json.JSONDecoder;
 
 import flash.display.DisplayObject;
 import flash.display.Sprite;
+import flash.text.TextField;
+import flash.text.TextFormat;
 
 /**
  * Class for core ruby methods.
@@ -102,7 +104,7 @@ public class RubyCore
 
   public function run_func(doc_class:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
     init();
-    variable_c.rb_define_global_const("Document", wrap_flash_obj(doc_class));
+    variable_c.rb_define_global_const("TopSprite", wrap_flash_obj(doc_class));
     eval_c.ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
@@ -119,7 +121,7 @@ public class RubyCore
   public function run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void {
     init();
     if (doc_class) {
-      variable_c.rb_define_global_const("Document", wrap_flash_obj(doc_class));
+      variable_c.rb_define_global_const("TopSprite", wrap_flash_obj(doc_class));
     }
     eval_c.ruby_run_node(iseqval);
   }
@@ -258,6 +260,7 @@ public class RubyCore
 
   public var rb_mFlash:RClass;
   public var rb_mFlashDisplay:RClass;
+  public var rb_mFlashText:RClass;
 
   public function
   init_flash_classes():void
@@ -271,6 +274,9 @@ public class RubyCore
     rb_mFlash = class_c.rb_define_module("Flash");
     rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");
     variable_c.rb_const_set(rb_mFlashDisplay, parse_y.rb_intern("Sprite"), wrap_flash_class(Sprite));
+    rb_mFlashText = class_c.rb_define_module_under(rb_mFlash, "Text");
+    variable_c.rb_const_set(rb_mFlashText, parse_y.rb_intern("TextField"), wrap_flash_class(TextField));
+    variable_c.rb_const_set(rb_mFlashText, parse_y.rb_intern("TextFormat"), wrap_flash_class(TextFormat));
   }
 
   public function

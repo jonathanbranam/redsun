@@ -291,3 +291,13 @@ Todo:
 - implement operators
 - work on Asterism rendering
 
+10/29/2008
+
+Update: Executing large blocks of Ruby code is now working successfully. 
+Arrays work with a few very basic operations. Calling to and from Flash
+objects and classes has been improved. A Ramaze webapp was written that
+will compile Ruby bytecode either on the harddrive or passed to it as
+POST data.
+
+AIR client developed which can browse for Ruby source to execute or send
+arbitrary Ruby code directly. It runs the Ruby in a new window.
