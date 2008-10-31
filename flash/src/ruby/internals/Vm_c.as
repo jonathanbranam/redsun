@@ -86,6 +86,13 @@ public class Vm_c
     vm_init_redefined_flag();
   }
 
+  // vm.c:46
+  public function
+  rb_vm_change_state():void
+  {
+    INC_VM_STATE_VERSION();
+  }
+
   // vm.c:917
   protected function
   vm_init_redefined_flag():void

@@ -59,4 +59,6 @@ c=RubyVM::InstructionSequence.compile(IO.read('rf.rb'))
 
 # RedSun::Translate.translate("r", IO.read('research/scope.rb'))
 
-
+def bc(filename)
+  RubyVM::InstructionSequence.compile(IO.read(filename)).to_a
+end

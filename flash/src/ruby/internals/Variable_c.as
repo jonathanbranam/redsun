@@ -132,35 +132,74 @@ public class Variable_c
   }
 
   protected function
-  generic_ivar_set(obj:RObject, id:String, val:*):void
+  generic_ivar_set(obj:Value, id:int, val:*):void
   {
+    rc.error_c.rb_bug("generic ivar get");
   }
 
   protected function
-  generic_ivar_get(obj:RObject, id:String):*
+  generic_ivar_get(obj:Value, id:int):*
   {
-    return undefined;//return obj.iv_tbl[id];
-  }
-
-  protected function
-  rb_ivar_set(obj:RObject, id:int, val:*):void
-  {
-    if (obj is RClass) {
-      obj.iv_tbl[id] = val;
-    }
-
+    rc.error_c.rb_bug("generic ivar get");
+    return undefined;
   }
 
   public function
-  rb_iv_set(obj:RObject, name:String, val:*):void
+  rb_iv_set(obj:Value, name:String, val:*):void
   {
     rb_ivar_set(obj, rc.parse_y.rb_intern(name), val);
   }
 
+  // variable.c:1666
   public function
-  rb_const_set(obj:RObject, id:int, val:*):void
+  mod_av_set(klass:Value, id:int, val:Value, isconst:Boolean):void
   {
-    obj.iv_tbl[id] = val;
+    var dest:String = isconst ? "constant" : "class variable";
+
+    if (!rc.OBJ_UNTRUSTED(klass) && rc.rb_safe_level() >= 4) {
+      rc.error_c.rb_raise(rc.error_c.rb_eSecurityError, "Insecure: can't set "+dest);
+    }
+    if (rc.OBJ_FROZEN(klass)) {
+      if (klass.BUILTIN_TYPE() == Value.T_MODULE) {
+        rc.error_c.rb_error_frozen("module");
+      }
+      else {
+        rc.error_c.rb_error_frozen("class");
+      }
+    }
+    if (!RClass(klass).iv_tbl) {
+      RClass(klass).iv_tbl = new Object();
+    }
+    else if (isconst) {
+      var value:Value = rc.Qfalse;
+
+      if (RClass(klass).iv_tbl[id] != undefined) {
+        value = RClass(klass).iv_tbl[id];
+        if (value == rc.Qundef) {
+          rc.error_c.rb_bug("autoload_delete not implemented.");
+          // autoload_delete(klass, id);
+        } else {
+          rc.error_c.rb_warn("already initialized " + dest + " " +
+                             rc.parse_y.rb_id2name(id));
+        }
+      }
+    }
+
+    if (isconst) {
+      rc.vm_c.rb_vm_change_state();
+    }
+    RClass(klass).iv_tbl[id] = val;
+  }
+
+  public function
+  rb_const_set(klass:Value, id:int, val:*):void
+  {
+    if (rc.NIL_P(klass)) {
+      rc.error_c.rb_raise(rc.error_c.rb_eTypeError,
+                          "no class/module to define constant " +
+                          rc.parse_y.rb_id2name(id));
+    }
+    mod_av_set(klass, id, val, true);
   }
 
   public function
@@ -179,7 +218,7 @@ public class Variable_c
       }
       path = klass.iv_tbl[classid];
       path = rc.string_c.rb_str_dup(rc.parse_y.rb_id2str(rc.SYM2ID(path)));
-      // OBJ_FREEZE(path);
+      rc.OBJ_FREEZE(path);
       klass.iv_tbl[classpath] = path;
       delete klass.iv_tbl[classid];
 
@@ -224,7 +263,7 @@ public class Variable_c
         }
       }
       path = rc.string_c.rb_str_new("#<"+s+":"+klass.toString()+">");
-      // OBJ_FREEZE(path)
+      rc.OBJ_FREEZE(path)
       rb_ivar_set(klass, tmp_classpath, path);
 
       return path;
@@ -243,8 +282,7 @@ public class Variable_c
       rc.string_c.rb_str_cat2(str, "::");
       rc.string_c.rb_str_cat2(str, name);
     }
-    // TODO: @skipped freeze
-    // OBJ_FREEZE(str);
+    rc.OBJ_FREEZE(str);
     rb_ivar_set(klass, classpath, str);
     klass.name = name;
   }
@@ -287,38 +325,116 @@ public class Variable_c
   ivar_get(obj:Value, id:int, warn:Boolean):*
   {
     var val:*;
+    var ptr:Array;
+    var iv_index_tbl:Object;
+    var len:int;
+    var index:int;
 
     switch (obj.get_type()) {
       case Value.T_OBJECT:
-        val = RObject(obj).iv_tbl[id];
-        if (val != undefined && val != rc.Qundef) {
+        len = rc.ROBJECT_NUMIV(obj);
+        ptr = rc.ROBJECT_IVPTR(obj);
+        iv_index_tbl = rc.ROBJECT_IV_INDEX_TBL(obj);
+        if (!iv_index_tbl) break;
+        if (iv_index_tbl[id] == undefined) break;
+        else index = iv_index_tbl[id];
+        val = ptr[index];
+        if (val != rc.Qundef)
           return val;
-        }
         break;
       case Value.T_CLASS:
       case Value.T_MODULE:
-        val = RObject(obj).iv_tbl[id];
+        val = RClass(obj).iv_tbl[id];
         if (val != undefined) {
           return val;
         }
         break;
       default:
+        rc.error_c.rb_bug("generic ivar not implemented");
         //if (FL_TEST(obj, FL_EXIVAR) || rb_special_const_p(obj)) {
         //  return generic_ivar_get(obj, id, warn);
         //}
         break;
     }
+    if (warn) {
+      rc.error_c.rb_warning("instance variable "+rc.parse_y.rb_id2name(id)+" not initialized");
+    }
     return rc.Qnil;
   }
 
   public function
-  rb_ivar_get(obj:RObject, id:int):*
+  rb_ivar_get(obj:Value, id:int):*
   {
    return ivar_get(obj, id, true);
   }
 
+  // variable.c:991
   public function
-  rb_iv_get(obj:RObject, name:String):*
+  rb_ivar_set(obj:Value, id:int, val:Value):Value
+  {
+    var iv_index_tbl:Object;
+    var index:int;
+    var i:int, len:int;
+    var ivar_extended:Boolean;
+
+    if (!rc.OBJ_UNTRUSTED(obj) && rc.rb_safe_level() >= 4) {
+      rc.error_c.rb_raise(rc.error_c.rb_eSecurityError, "Insecure: can't modify instance variable");
+    }
+    if (rc.OBJ_FROZEN(obj)) rc.error_c.rb_error_frozen("object");
+    switch (rc.TYPE(obj)) {
+      case Value.T_OBJECT:
+        iv_index_tbl = rc.ROBJECT_IV_INDEX_TBL(obj);
+        if (!iv_index_tbl) {
+          var klass:RClass = rc.object_c.rb_obj_class(obj);
+          iv_index_tbl = RClass(klass).iv_index_tbl;
+          if (!iv_index_tbl) {
+            iv_index_tbl = RClass(klass).iv_index_tbl = new Object();
+          }
+        }
+        ivar_extended = false;
+        if (iv_index_tbl[id] == undefined) {
+          if (iv_index_tbl.num_entries == undefined) {
+            index = iv_index_tbl.num_entries = 0;
+          } else {
+            index = iv_index_tbl.num_entries;
+          }
+          iv_index_tbl[id] = index;
+          iv_index_tbl.num_entries = iv_index_tbl.num_entries+1;
+          ivar_extended = true;
+        } else {
+          index = iv_index_tbl[id];
+        }
+        // Bunch of code to manage the size of the array which
+        // isn't needed since the array will automatically change size
+        // for us in AS3.
+        len = rc.ROBJECT_NUMIV(obj);
+        var ptr:Array = rc.ROBJECT_IVPTR(obj);
+        if (len <= index) {
+          var newsize:int = (index+1) + (index+1)/4;
+          if (!ptr) {
+            ptr = RObject(obj).ivptr = new Array(newsize);
+          }
+          for (; len < newsize; len++) {
+            ptr[len] = rc.Qundef;
+          }
+          RObject(obj).iv_index_tbl = iv_index_tbl;
+        }
+        ptr[index] = val;
+        break;
+      case Value.T_CLASS:
+      case Value.T_MODULE:
+        if (!RClass(obj).iv_tbl) RClass(obj).iv_tbl = new Object();
+        RClass(obj).iv_tbl[id] = val;
+        break;
+      default:
+        generic_ivar_set(obj, id, val);
+        break;
+    }
+    return val;
+  }
+
+  public function
+  rb_iv_get(obj:Value, name:String):*
   {
     return rb_ivar_get(obj, rc.parse_y.rb_intern(name));
   }

@@ -209,6 +209,14 @@ public class Parse_y
     }
   }
 
+  // parse.y:9302
+  public function
+  rb_is_local_id(id:int):Boolean
+  {
+    if (is_local_id(id)) return true;
+    return false;
+  }
+
   public function
   Init_sym():void
   {

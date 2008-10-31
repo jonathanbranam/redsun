@@ -92,6 +92,12 @@ public class Object_c
     rc.class_c.rb_define_method(rb_cClass, "allocate", rb_obj_alloc, 0);
     rc.class_c.rb_define_method(rb_cClass, "new", rb_class_new_instance, -1);
 
+    rc.class_c.rb_define_private_method(rb_cModule, "attr", rb_mod_attr, -1);
+    rc.class_c.rb_define_private_method(rb_cModule, "attr_reader", rb_mod_attr_reader, -1);
+    rc.class_c.rb_define_private_method(rb_cModule, "attr_writer", rb_mod_attr_writer, -1);
+    rc.class_c.rb_define_private_method(rb_cModule, "attr_accessor", rb_mod_attr_accessor, -1);
+
+
     rb_cData = rc.class_c.rb_define_class("Data", rc.object_c.rb_cObject);
     // undef alloc func
 
@@ -273,6 +279,59 @@ public class Object_c
     obj.flags = Value.T_OBJECT;
     return obj;
   }
+
+  // object.c:1535
+  public function
+  rb_mod_attr_reader(argc:int, argv:StackPointer, klass:RClass):Value
+  {
+    var i:int;
+
+    for (i = 0; i < argc; i++) {
+      rc.vm_method_c.rb_attr(klass, rc.string_c.rb_to_id(argv.get_at(i)), true, false, true);
+    }
+
+    return rc.Qnil;
+  }
+
+  // object.c:1546
+  public function
+  rb_mod_attr(argc:int, argv:StackPointer, klass:RClass):Value
+  {
+    if (argc == 2 && (argv.get_at(1) == rc.Qtrue || argv.get_at(1) == rc.Qfalse)) {
+      rc.error_c.rb_warning("optional boolean argument is obsoleted");
+      rc.vm_method_c.rb_attr(klass, rc.string_c.rb_to_id(argv.get_at(0)), true, rc.RTEST(argv.get_at(1)), true);
+      return rc.Qnil;
+    }
+    return rb_mod_attr_reader(argc, argv, klass);
+  }
+
+  // object.c:1565
+  public function
+  rb_mod_attr_writer(argc:int, argv:StackPointer, klass:RClass):Value
+  {
+    var i:int;
+
+    for (i = 0; i < argc; i++) {
+      rc.vm_method_c.rb_attr(klass, rc.string_c.rb_to_id(argv.get_at(i)), false, true, true);
+    }
+
+    return rc.Qnil;
+  }
+
+  // object:1591
+  public function
+  rb_mod_attr_accessor(argc:int, argv:StackPointer, klass:RClass):Value
+  {
+    var i:int;
+
+    for (i = 0; i < argc; i++) {
+      rc.vm_method_c.rb_attr(klass, rc.string_c.rb_to_id(argv.get_at(i)), true, true, true);
+    }
+
+    return rc.Qnil;
+  }
+
+
 
 
 }

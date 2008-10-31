@@ -268,6 +268,22 @@ public class RubyFrame
   }
 
   public function
+  getinstancevariable(id_str:String):void
+  {
+    var id:int = rc.parse_y.rb_intern(id_str);
+    var val:Value = rc.variable_c.rb_ivar_get(reg_cfp.self, id);
+    reg_sp.push(val);
+  }
+
+  public function
+  setinstancevariable(id_str:String):void
+  {
+    var id:int = rc.parse_y.rb_intern(id_str);
+    var val:Value = reg_sp.pop();
+    rc.variable_c.rb_ivar_set(reg_cfp.self, id, val);
+  }
+
+  public function
   getconstant(id_str:String):void
   {
     var klass:Value = reg_sp.pop();

@@ -233,6 +233,49 @@ public class Vm_method_c
     return rb_get_method_body(klass, id, null);
   }
 
+  // vm_method.c:429
+  public function
+  rb_attr(klass:RClass, id:int, read:Boolean, write:Boolean, ex:Boolean):void
+  {
+    var name:String;
+    var attriv:int;
+    var noex:int;
+
+    if (!ex) {
+      noex = Node.NOEX_PUBLIC;
+    }
+    else {
+      if (rc.SCOPE_TEST(Node.NOEX_PRIVATE)) {
+        noex = Node.NOEX_PRIVATE;
+        rc.error_c.rb_warning(rc.SCOPE_CHECK(Node.NOEX_MODFUNC) ?
+                              "attribute accessor as module_function" :
+                              "private attribute?");
+      }
+      else if (rc.SCOPE_TEST(Node.NOEX_PROTECTED)) {
+        noex = Node.NOEX_PROTECTED;
+      }
+      else {
+        noex = Node.NOEX_PUBLIC;
+      }
+    }
+
+    if (rc.parse_y.rb_is_local_id(id) && !rc.parse_y.rb_is_const_id(id)) {
+      rc.error_c.rb_name_error(id, "invalid attribute name '"+rc.parse_y.rb_id2name(id) + "'");
+    }
+    name = rc.parse_y.rb_id2name(id);
+    if (!name) {
+      rc.error_c.rb_raise(rc.error_c.rb_eArgError, "argument needs to be a symbol or string");
+    }
+    attriv = rc.parse_y.rb_intern("@"+name);
+    if (read) {
+      rb_add_method(klass, id, rc.NEW_IVAR(attriv), noex);
+    }
+    if (write) {
+      rb_add_method(klass, rc.parse_y.rb_id_attrset(id), rc.NEW_ATTRSET(attriv), noex);
+    }
+  }
+
+
 
 }
 }

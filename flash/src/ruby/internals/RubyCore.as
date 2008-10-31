@@ -104,23 +104,31 @@ public class RubyCore
   public var rb_cFlashObject:RClass;
   public var rb_cFlashClass:RClass;
 
-  public function run_func(doc_class:DisplayObject, local_size:int, stack_max:int, block:Function):void  {
+  public function
+  run_func(doc_class:DisplayObject, local_size:int, stack_max:int, block:Function):void
+  {
     init();
     variable_c.rb_define_global_const("TopSprite", wrap_flash_obj(doc_class));
     eval_c.ruby_run_node(iseqval_from_func(local_size, stack_max, block));
   }
 
-  public function run(bytecode:String, doc_class:DisplayObject=null):void  {
+  public function
+  run(bytecode:String, doc_class:DisplayObject=null):void
+  {
     var decoder:JSONDecoder = new JSONDecoder( bytecode, this )
     run_array(decoder.getValue(), doc_class);
   }
 
-  public function run_array(iseq_array:Array, doc_class:DisplayObject=null):void {
+  public function
+  run_array(iseq_array:Array, doc_class:DisplayObject=null):void
+  {
     init();
     run_iseqval(iseqval_from_array(iseq_array), doc_class);
   }
 
-  public function run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void {
+  public function
+  run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void
+  {
     init();
     if (doc_class) {
       variable_c.rb_define_global_const("TopSprite", wrap_flash_obj(doc_class));
@@ -480,29 +488,70 @@ public class RubyCore
     return NOEX_WITH(n, rb_safe_level());
   }
 
+  // node.h
   public function NEW_NODE(t:uint, a0:*, a1:*, a2:*):Node {
     return gc_c.rb_node_newnode(t, a0, a1, a2);
   }
 
+  // node.h
   public function NEW_BLOCK(a:*):Node {
     return NEW_NODE(Node.NODE_BLOCK, a, null, null);
   }
 
+  // node.h
   public function NEW_CFUNC(f:Function, c:int):Node {
     return NEW_NODE(Node.NODE_CFUNC, f, c, null);
   }
 
+  // node.h
   public function NEW_IFUNC(f:Function, c:*):Node {
     return NEW_NODE(Node.NODE_IFUNC, f, c, null);
   }
 
+  // node.h
   public function NEW_METHOD(n:Value,x:Value,v:uint):Node {
     return NEW_NODE(Node.NODE_METHOD, x, n, v);
   }
 
+  // node.h
   public function NEW_FBODY(n:Value,i:Value):Node {
     return NEW_NODE(Node.NODE_FBODY, i, n, null);
   }
+
+  // node.h
+  public function NEW_IVAR(v:int):Node {
+    return NEW_NODE(Node.NODE_IVAR, v, null, null);
+  }
+
+  // node.h
+  public function NEW_ATTRSET(a:int):Node {
+    return NEW_NODE(Node.NODE_ATTRSET, a, null, null);
+  }
+
+  // ruby.h:794
+  public function FL_ABLE(x:Value):Boolean
+  { return !SPECIAL_CONST_P(x) && x.BUILTIN_TYPE() != Value.T_NODE; }
+
+  // ruby.h:802
+  public function OBJ_TAINTED(x:Value):Boolean
+  { return (x.flags & Value.FL_TAINT) != 0; }
+  public function OBJ_TAINT(x:Value):void
+  { x.flags |= Value.FL_TAINT; }
+  public function OBJ_UNTRUSTED(x:Value):Boolean
+  { return (x.flags & Value.FL_UNTRUSTED) != 0; }
+  public function OBJ_UNRUST(x:Value):void
+  { x.flags |= Value.FL_UNTRUSTED; }
+  public function OBJ_INFECT(x:Value, s:Value):void
+  {
+    if (FL_ABLE(x) && FL_ABLE(s)) {
+      x.flags |= (x.flags & (Value.FL_TAINT | Value.FL_UNTRUSTED));
+    }
+  }
+
+  public function OBJ_FROZEN(x:Value):Boolean
+  { return (x.flags & Value.FL_FREEZE) != 0; }
+  public function OBJ_FREEZE(x:Value):void
+  { x.flags |= Value.FL_FREEZE; }
 
   // eval_safe.c:19
   public function
@@ -865,6 +914,55 @@ public class RubyCore
   CONST_ID(str:String):int
   {
     return parse_y.rb_intern2(str);
+  }
+
+  public function
+  ruby_vm_verbose_ptr(vm:RbVm):Value
+  {
+    return vm.verbose;
+  }
+
+  public function
+  ruby_verbose():Value
+  {
+    return ruby_vm_verbose_ptr(GET_VM());
+  }
+
+  // eval_intern.h:192
+  public function
+  SCOPE_TEST(f:int):Boolean
+  {
+    return (vm_c.vm_cref().nd_visi & f) != 0;
+  }
+
+  // eval_intern.h:193
+  public function
+  SCOPE_CHECK(f:int):Boolean
+  {
+    return vm_c.vm_cref().nd_visi == f;
+  }
+
+  // ruby.h:531
+  public function
+  ROBJECT_NUMIV(o:Value):int
+  {
+    if (RObject(o).ivptr) {
+      return RObject(o).ivptr.length;
+    } else {
+      return 0;
+    }
+  }
+
+  public function
+  ROBJECT_IVPTR(o:Value):Array
+  {
+    return RObject(o).ivptr;
+  }
+
+  public function
+  ROBJECT_IV_INDEX_TBL(o:Value):Object
+  {
+    return RObject(o).iv_index_tbl;
   }
 
 }

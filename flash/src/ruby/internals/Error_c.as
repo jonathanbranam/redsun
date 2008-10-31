@@ -100,6 +100,14 @@ public class Error_c
     trace(text);
   }
 
+  // error.c:167
+  public function
+  rb_warning(text:String):void
+  {
+    if (!rc.RTEST(rc.ruby_verbose())) return;
+    trace(text);
+  }
+
   public function
   rb_error_frozen(text:String):void
   {

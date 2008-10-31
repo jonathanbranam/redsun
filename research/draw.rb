@@ -1,7 +1,6 @@
 a = [1,1,1]
-@color = 0xDD6622
 TopSprite.graphics.lineStyle(a[0], a[1], a[2])
-TopSprite.graphics.beginFill(@color)
+TopSprite.graphics.beginFill(0x33AAEE)
 TopSprite.graphics.drawRect(5,5,105,105)
 
 tf = Flash::Text::TextField.new
@@ -131,13 +130,6 @@ class Whatever
   include Bindable
   attr_accessor :x, :y
   attr_bindable :width, :height
-  attr_commit :prop
-  attr_commit_my_method :prop, :prop_my_commit_method
-  attr_commit_order :prop, 2
-  attr_commit_order :prop2, 4
-  def prop_commit(old, new)
-    # Do really long thing
-  end
 end
 
 

@@ -6,7 +6,10 @@ import ruby.internals.Value;
 
 public class RObject extends RBasic
 {
-  public var iv_tbl:Object = {};
+  public var ivptr:Array;
+
+  // Actual storage on a class, but just a pointer on an object
+  public var iv_index_tbl:Object;
 
   public function RObject(klass:RClass=null)
   {
