@@ -149,10 +149,12 @@ public class RubyFrame
     recv = ((flag & RbVm.VM_CALL_FCALL_BIT) != 0) ? reg_cfp.self : reg_sp.topn(num);
     klass = rc.CLASS_OF(recv);
 
+    /*
     trace("send "+op_str+" to " + (klass ? klass.name : "?") + " with " + op_argc+ " ops");
     for (var o:int = op_argc-1; o >= 0; o--) {
       trace("       op "+(op_argc-o)+": " + reg_sp.topn(o));
     }
+    */
 
 
     mn = rc.vm_insnhelper_c.vm_method_search(id, klass, ic);

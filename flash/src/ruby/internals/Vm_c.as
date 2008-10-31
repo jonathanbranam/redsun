@@ -122,10 +122,14 @@ public class Vm_c
   public function
   RUBY_VM_PREVIOUS_CONTROL_FRAME(th:RbThread, cfp:RbControlFrame):RbControlFrame
   {
+    if (th.cfp == cfp) {
+      return th.cfp_stack[th.cfp_stack.length-1];
+    }
     var index:int = th.cfp_stack.indexOf(cfp);
     if (index > 0) {
       return th.cfp_stack[index-1];
     } else {
+      rc.error_c.rb_bug("couldn't find control frame");
       return null;
     }
   }

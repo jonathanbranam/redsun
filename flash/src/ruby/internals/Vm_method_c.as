@@ -259,7 +259,7 @@ public class Vm_method_c
       }
     }
 
-    if (rc.parse_y.rb_is_local_id(id) && !rc.parse_y.rb_is_const_id(id)) {
+    if (!rc.parse_y.rb_is_local_id(id) && !rc.parse_y.rb_is_const_id(id)) {
       rc.error_c.rb_name_error(id, "invalid attribute name '"+rc.parse_y.rb_id2name(id) + "'");
     }
     name = rc.parse_y.rb_id2name(id);

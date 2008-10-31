@@ -80,7 +80,7 @@ public class Vm_evalbody_c
           continue;
         }
 
-        trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
+        //trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
 
         ops = insn.slice(1);
         frame[instruction].apply(this, ops);

@@ -5,6 +5,7 @@ TopSprite.graphics.beginFill(@color)
 TopSprite.graphics.drawRect(5,5,105,105)
 
 class Text
+  attr_accessor :tf
   def initialize
     @tf = Flash::Text::TextField.new
     @tf.text = "Hello!"
@@ -27,19 +28,26 @@ end
 t = Text.new
 
 wait(1)
-t.x = t.x- 50
+t.tf.x -= 50
+#t.x = t.x- 50
 wait(1)
-t.x = t.x- 50
+t.tf.x -= 50
+#t.x = t.x- 50
 wait(1)
-t.x = t.x- 50
+t.tf.x -= 50
+#t.x = t.x- 50
 wait(1)
-t.x -= 50
+t.tf.x -= 50
+#t.x -= 50
 wait(1)
-t.x -= 50
+t.tf.x -= 50
+#t.x -= 50
 wait(1)
-t.x -= 50
+t.tf.x -= 50
+#t.x -= 50
 wait(1)
-t.x -= 50
+t.tf.x -= 50
+#t.x -= 50
 
 =begin
 
