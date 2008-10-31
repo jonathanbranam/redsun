@@ -4,29 +4,42 @@ TopSprite.graphics.lineStyle(a[0], a[1], a[2])
 TopSprite.graphics.beginFill(@color)
 TopSprite.graphics.drawRect(5,5,105,105)
 
-tf = Flash::Text::TextField.new
-tf.text = "Hello!"
-tf.x = 250
-tf.y = 50
-tf.selectable = false
-tfor = Flash::Text::TextFormat.new
-tfor.size = 25
-tf.setTextFormat(tfor)
-TopSprite.addChild(tf)
+class Text
+  def initialize
+    @tf = Flash::Text::TextField.new
+    @tf.text = "Hello!"
+    @tf.x = 250
+    @tf.y = 50
+    @tf.selectable = false
+    tfor = Flash::Text::TextFormat.new
+    tfor.size = 25
+    @tf.setTextFormat(tfor)
+    TopSprite.addChild(@tf)
+  end
+  def x
+    @tf.x
+  end
+  def x= val
+    @tf.x = val
+  end
+end
+
+t = Text.new
+
 wait(1)
-tf.x = tf.x- 50
+t.x = t.x- 50
 wait(1)
-tf.x = tf.x- 50
+t.x = t.x- 50
 wait(1)
-tf.x = tf.x- 50
+t.x = t.x- 50
 wait(1)
-tf.x -= 50
+t.x -= 50
 wait(1)
-tf.x -= 50
+t.x -= 50
 wait(1)
-tf.x -= 50
+t.x -= 50
 wait(1)
-tf.x -= 50
+t.x -= 50
 
 =begin
 

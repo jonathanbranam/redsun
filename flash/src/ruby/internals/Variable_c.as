@@ -134,7 +134,7 @@ public class Variable_c
   protected function
   generic_ivar_set(obj:Value, id:int, val:*):void
   {
-    rc.error_c.rb_bug("generic ivar get");
+    rc.error_c.rb_bug("generic ivar set");
   }
 
   protected function
@@ -366,6 +366,13 @@ public class Variable_c
   rb_ivar_get(obj:Value, id:int):*
   {
    return ivar_get(obj, id, true);
+  }
+
+  // variable.c:985
+  public function
+  rb_attr_get(obj:Value, id:int):Value
+  {
+    return ivar_get(obj, id, false);
   }
 
   // variable.c:991

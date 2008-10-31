@@ -250,14 +250,44 @@ public class Vm_insnhelper_c
         node = mn.nd_body;
 
         switch (node.nd_type()) {
-        case Node.RUBY_VM_METHOD_NODE: {
-          vm_setup_method(th, cfp, num, blockptr, flag, node.nd_body, recv, klass);
-          return rc.Qundef;
-        }
-        case Node.NODE_CFUNC: {
-          val = vm_call_cfunc(th, cfp, num, id, recv, mn.nd_clss, flag, node, blockptr);
-        }
-        // TODO: @skipped handle attrset, ivar, bmethod, zsuper
+          case Node.RUBY_VM_METHOD_NODE: {
+            vm_setup_method(th, cfp, num, blockptr, flag, node.nd_body, recv, klass);
+            return rc.Qundef;
+          }
+          case Node.NODE_CFUNC: {
+            val = vm_call_cfunc(th, cfp, num, id, recv, mn.nd_clss, flag, node, blockptr);
+            break;
+          }
+          case Node.NODE_ATTRSET:{
+            val = rc.variable_c.rb_ivar_set(recv, node.nd_vid, cfp.sp.get_at(-1));
+            cfp.sp.popn(2);
+            break;
+          }
+          case Node.NODE_IVAR:{
+            if (num != 0) {
+              rc.error_c.rb_raise(rc.error_c.rb_eArgError,
+                                  "wrong number of arguments ("+num+" for 0)")
+            }
+            val = rc.variable_c.rb_attr_get(recv, node.nd_vid);
+            cfp.sp.popn(1);
+            break;
+          }
+          case Node.NODE_BMETHOD:{
+            rc.error_c.rb_bug("bmethod not implemented");
+            //var argv:StackPointer = cfp.sp.clone_from_top(num);
+            //val = vm_call_bmethod(th, id, node.nd_cval, recv, klass, num, argv, blockptr);
+            //cfp.sp.popn(num+1);
+            break;
+          }
+          case Node.NODE_ZSUPER:{
+            klass = mn.nd_clss.super_class;
+            mn = rc.vm_method_c.rb_method_node(klass, id);
+            rc.error_c.rb_bug("super not implemented");
+          }
+
+          default:
+            rc.error_c.rb_bug("attrset ivar bmethod zsuper");
+          // TODO: @skipped handle attrset, ivar, bmethod, zsuper
         }
       //}
     }

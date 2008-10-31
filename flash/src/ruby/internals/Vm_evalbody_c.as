@@ -57,7 +57,7 @@ public class Vm_evalbody_c
 
     inner_loop_depth++;
     if (inner_loop_depth > 1) {
-      rc.error_c.rb_bug("vm_eval_array inner_loop_depth "+inner_loop_depth);
+      rc.error_c.rb_warn("vm_eval_array inner_loop_depth "+inner_loop_depth);
     }
 
     while (th.cfp.pc_ary && th.cfp.pc_index < th.cfp.pc_ary.length) {
@@ -80,7 +80,7 @@ public class Vm_evalbody_c
           continue;
         }
 
-        //trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
+        trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
 
         ops = insn.slice(1);
         frame[instruction].apply(this, ops);
@@ -90,6 +90,9 @@ public class Vm_evalbody_c
         }
         if (rc.TOPN(th.cfp.sp, 0) == rc.Qpause) {
           inner_loop_depth--;
+          if (inner_loop_depth > 0) {
+            rc.error_c.rb_bug("vm_eval_array inner_loop_depth "+inner_loop_depth);
+          }
           return;
         }
       } else {

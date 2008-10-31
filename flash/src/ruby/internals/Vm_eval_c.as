@@ -139,7 +139,7 @@ public class Vm_eval_c
       format = "super: no superclass method '%s' for %s";
     }
     if (!format) {
-      format = "undefined method '"+rc.string_c.rb_obj_as_string(obj)+"' for "+rc.parse_y.rb_id2name(id);
+      format = "undefined method '"+rc.parse_y.rb_id2name(id)+"' for "+rc.string_c.rb_obj_as_string(obj).string
     }
 
     // TODO: @skipped create class instance of message error - needs array support
@@ -216,20 +216,20 @@ public class Vm_eval_c
 
       rc.vm_c.rb_vm_set_finish_env(th);
       reg_cfp = th.cfp;
-      throw new Error("This is wrong.");
 
       // TODO: @skipped stack check, copying args onto stack");
       /*
-      CHECK_STATCK_OVERFLOW(reg_cfp, argc+1);
-
-      *reg_cfp.sp++ = recv;
-      for (i = 0; i < argc; i++) {
-        *reg_cfp.sp++ = argv[i];
-      }
+      CHECK_STACK_OVERFLOW(reg_cfp, argc+1);
       */
 
-      vm_setup_method(th, reg_cfp, argc, blockptr, 0, iseqval, recv, klass);
-      val = vm_eval_body(th);
+      reg_cfp.sp.push(recv);
+      for (i = 0; i < argc; i++) {
+        reg_cfp.sp.push(argv.get_at(i));
+      }
+
+      rc.vm_insnhelper_c.vm_setup_method(th, reg_cfp, argc, blockptr, 0, iseqval, recv, klass);
+      //val = rc.Qundef;
+      val = rc.vm_c.vm_eval_body(th);
       break;
     }
     case Node.NODE_CFUNC:
@@ -253,8 +253,18 @@ public class Vm_eval_c
       }
       break;
     case Node.NODE_ATTRSET:
+      if (argc != 1) {
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+argc+
+                            " for 1)");
+      }
+      val = rc.variable_c.rb_ivar_set(recv, body.nd_vid, argv.get_at(0));
       break;
     case Node.NODE_IVAR:
+      if (argc != 0) {
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+argc+
+                            " for 0)")
+      }
+      val = rc.variable_c.rb_attr_get(recv, body.nd_vid);
       break;
     case Node.NODE_BMETHOD:
       break;

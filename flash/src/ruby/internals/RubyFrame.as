@@ -480,7 +480,7 @@ public class RubyFrame
   public function
   setn(n:int):void
   {
-    var val:Value = reg_sp.topn(0);
+    var val:Value = reg_sp.pop();
     reg_sp.set_topn(n-1, val);
     reg_sp.push(val);
   }
