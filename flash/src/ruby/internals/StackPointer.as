@@ -19,6 +19,10 @@ public class StackPointer extends Value
     return "[StackPointer len="+stack.length+", index="+index+"]";
   }
 
+  public function add_to_index(n:int):void {
+    index += n;
+  }
+
   public function set_index(n:int):void {
     index = n;
   }

@@ -968,6 +968,12 @@ public class RubyCore
     return RObject(o).iv_index_tbl;
   }
 
+  public function
+  DOUBLE2NUM(dbl:Number):RFloat
+  {
+    return numeric_c.rb_float_new(dbl);
+  }
+
 }
 }
 

@@ -188,14 +188,68 @@ public class RubyFrame
 
   }
 
-  public function branchif():Boolean {
-    return !rc.RTEST(reg_sp.pop());
+  public function
+  JUMP(dst:int):void
+  {
+    reg_cfp.pc_index += dst;
   }
 
   public function
-  branchunless():Boolean
+  JUMP_LABEL(label:String):void
   {
-    return rc.RTEST(reg_sp.pop());
+    var pc:Array = reg_cfp.pc_ary;
+    var pc_len:int = pc.length;
+    var i:int;
+    var started_at:int = reg_cfp.pc_index;
+    var found:Boolean = false;
+    // search forward, most likely case:
+    for (i = started_at; i < pc_len; i++) {
+      if (pc[i] == label) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      reg_cfp.pc_index = i;
+      return;
+    }
+    // search backwards
+    for (i = started_at-1; i >= 0; i--) {
+      if (pc[i] == label) {
+        found = true;
+        break;
+      }
+    }
+    if (found) {
+      reg_cfp.pc_index = i;
+      return;
+    } else {
+      rc.error_c.rb_bug("JUMP_LABEL couldn't find destination");
+    }
+  }
+
+  public function
+  jump(label:String):void
+  {
+    JUMP_LABEL(label);
+  }
+
+  public function
+  branchif(label:String):void
+  {
+    var val:Value = reg_sp.pop()
+    if (rc.RTEST(val)) {
+      JUMP_LABEL(label);
+    }
+  }
+
+  public function
+  branchunless(label:String):void
+  {
+    var val:Value = reg_sp.pop()
+    if (!rc.RTEST(val)) {
+      JUMP_LABEL(label);
+    }
   }
 
   public function
@@ -447,6 +501,82 @@ public class RubyFrame
       }
     }
     reg_sp.push(val);
+  }
+
+  // insns.def:1444
+  public function
+  opt_div():void
+  {
+    var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+    var normal_dispatch:Boolean = false;
+
+    do {
+      if (rc.FIXNUM_2_P(recv, obj) &&
+          rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_DIV)) {
+        var x:int, y:int, div:int;
+
+        x = rc.FIX2LONG(recv);
+        y = rc.FIX2LONG(obj);
+        {
+          // copied from numeric.c#fixdivmod
+          var mod:int;
+          if (y == 0) {
+            // goto INSN_LABEL(normal_dispatch)
+            normal_dispatch = true;
+            break;
+          } else if (y < 0) {
+            if (x < 0) {
+              div = -x / -y;
+            } else {
+              div = -(x / -y);
+            }
+          }
+          else {
+            if (x < 0) {
+              div = -(-x / y);
+            } else {
+              div = x / y;
+            }
+          }
+          mod = x - div * y;
+          if ((mod < 0 && y > 0) || (mod > 0 && y < 0)) {
+            mod += y;
+            div -= 1;
+          }
+        }
+        val = rc.numeric_c.INT2FIX(div);
+        //val = rc.LONG2NUM(div);
+      }
+      else if (!rc.SPECIAL_CONST_P(recv) && !rc.SPECIAL_CONST_P(obj)) {
+        if (rc.HEAP_CLASS_OF(recv) == rc.numeric_c.rb_cFloat &&
+            rc.HEAP_CLASS_OF(obj) == rc.numeric_c.rb_cFloat &&
+            rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_DIV)) {
+          val = rc.DOUBLE2NUM(RFloat(recv).float_value/RFloat(obj).float_value);
+        }
+      }
+    } while (0);
+    if (normal_dispatch) {
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idMINUS;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+    reg_sp.push(val);
+
   }
 
   // insns.def:1357

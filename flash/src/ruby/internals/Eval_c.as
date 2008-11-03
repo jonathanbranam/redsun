@@ -21,8 +21,25 @@ public class Eval_c
     rc.vm_eval_c.Init_vm_eval();
     rc.vm_method_c.Init_eval_method();
 
+    rc.class_c.rb_define_singleton_method(rc.vm_c.rb_vm_top_self(), "include", top_include, -1);
+
     rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "extend", rb_obj_extend, -1);
 
+  }
+
+  // eval.c:954
+  protected function
+  top_include(argc:int, argv:StackPointer, self:Value):Value
+  {
+    var th:RbThread = rc.GET_THREAD();
+
+    // TODO: @skipped
+    // rb_secure(4);
+    if (th.top_wrapper) {
+      rc.error_c.rb_warning("main#include in the wrapped load is effective only in wrapper module");
+      return rb_mod_include(argc, argv, th.top_wrapper);
+    }
+    return rb_mod_include(argc, argv, rc.object_c.rb_cObject);
   }
 
   // eval.c:928
@@ -78,7 +95,7 @@ public class Eval_c
 
   // eval.c:842
   public function
-  rb_mod_include(argc:int, argv:StackPointer, module:RClass):Value
+  rb_mod_include(argc:int, argv:StackPointer, module:Value):Value
   {
     var i:int;
 
