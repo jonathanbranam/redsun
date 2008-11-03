@@ -1,22 +1,32 @@
-
-class Rectangle
-  attr_accessor :x, :y, :width, :height, :style
+module Drawable
+  attr_accessor :style
   def draw(sprite)
     @style.begin_style(sprite) if @style
-    sprite.graphics.drawRect(@x, @y, @width, @height)
+    draw_commands(sprite)
     @style.end_style(sprite) if @style
   end
 end
 
+class Rectangle
+  attr_accessor :x, :y, :width, :height
+  include Drawable
+  def draw_commands(sprite)
+    sprite.graphics.moveTo(@x,@y)
+    sprite.graphics.lineTo(@x+@width,@y)
+    sprite.graphics.lineTo(@x+@width,@y+@height)
+    sprite.graphics.lineTo(@x,@y+@height)
+    sprite.graphics.lineTo(@x,@y)
+  end
+end
+
 class Circle
-  attr_accessor :x, :y, :radius, :style
+  attr_accessor :x, :y, :radius
+  include Drawable
   def diameter=(v)
     @radius = v/2
   end
-  def draw(sprite)
-    @style.begin_style(sprite) if @style
+  def draw_commands(sprite)
     sprite.graphics.drawCircle(@x, @y, @radius)
-    @style.end_style(sprite) if @style
   end
 end
 
@@ -46,12 +56,15 @@ module Geometry
   end
 end
 
-class DrawStyle
+module Style
   attr_accessor :line_thickness, :line_color, :line_alpha
-  attr_accessor :fill, :fill_color
+  attr_accessor :fill, :fill_color, :fill_alpha
+  def initialize
+    @fill_alpha = 1
+  end
   def begin_style(sprite)
     sprite.graphics.lineStyle(@line_thickness, @line_color, @line_alpha)
-    sprite.graphics.beginFill(@fill_color) if @fill
+    sprite.graphics.beginFill(@fill_color, @fill_alpha) if @fill
   end
   def end_style(sprite)
     sprite.graphics.endFill() if @fill
@@ -63,8 +76,13 @@ class DrawStyle
     ns.line_alpha = @line_alpha
     ns.fill = @fill
     ns.fill_color = @fill_color
+    ns.fill_alpha = @fill_alpha
     ns
   end
+end
+
+class DrawStyle
+  include Style
 end
 
 include Geometry
@@ -78,6 +96,7 @@ red.fill_color = 0xFF5522
 rectangle({:x=>43, :y=>16, :width=>100, :height=>20, :style=>red}).draw(TopSprite)
 blue = red.clone
 blue.fill_color = 0x2255FF
+blue.fill_alpha = 0.2
 c = circle ({:x=>50, :y=>80, :radius =>30, :style=>blue })
 c.draw(TopSprite)
 

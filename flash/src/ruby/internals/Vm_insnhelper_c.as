@@ -683,5 +683,56 @@ public class Vm_insnhelper_c
     return val;
   }
 
+  // vm_insnhelper.c:1089
+  protected function
+  vm_search_normal_superclass(klass:Value, recv:Value):Value
+  {
+    if (klass.BUILTIN_TYPE() == Value.T_CLASS) {
+      klass = RClass(klass).super_class;
+    }
+    else if (klass.BUILTIN_TYPE() == Value.T_MODULE) {
+      var k:Value = rc.CLASS_OF(recv);
+      while (k) {
+        if (k.BUILTIN_TYPE() == Value.T_ICLASS && RBasic(k).klass == klass) {
+          klass = RClass(k).super_class;
+          break;
+        }
+        k = RClass(k).super_class;
+      }
+    }
+    return klass;
+  }
+
+  // vm_insnhelper.c:1119
+  public function
+  vm_search_superclass(reg_cfp:RbControlFrame, ip:RbISeq,
+                       recv:Value, sigval:Value,
+                       idp:ByRef, klassp:ByRef):void
+  {
+    var id:int;
+    var klass:Value;
+
+    while (ip && !ip.klass) {
+      ip = ip.parent_iseq;
+    }
+
+    if (ip == null) {
+      rc.error_c.rb_raise(rc.error_c.rb_eNoMethodError, "super called outside of method");
+    }
+
+    id = ip.defined_method_id;
+
+    if (ip != ip.local_iseq) {
+      // defined by Module#define_method()
+      rc.error_c.rb_bug("not implemented");
+    }
+    else {
+      klass = vm_search_normal_superclass(ip.klass, recv);
+    }
+
+    idp.v = id;
+    klassp.v = klass;
+  }
+
 }
 }

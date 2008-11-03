@@ -76,8 +76,10 @@ public class RubyFrame
   {
     if (val is String) {
       reg_sp.push(rc.string_c.rb_str_new(val));
-    } else if (val is Number) {
+    } else if (val is int || val is uint) {
       reg_sp.push(rc.numeric_c.INT2FIX(val));
+    } else if (val is Number) {
+      reg_sp.push(rc.DOUBLE2NUM(val));
     } else if (val === rc.Qfalse) {
       reg_sp.push(val);
     } else if (val === rc.Qtrue) {
@@ -128,6 +130,52 @@ public class RubyFrame
       return;
     }
     reg_cfp.sp.push(val);
+  }
+
+  // insns.def:1007
+  public function
+  invokesuper(op_argc:int, blockiseq_data:*, op_flag:int):void
+  {
+    var val:Value;
+    var blockptr:RbBlock = !(op_flag & RbVm.VM_CALL_ARGS_BLOCKARG_BIT) ? rc.vm_insnhelper_c.GET_BLOCK_PTR(reg_cfp) : null;
+    var blockptr_ref:ByRef = new ByRef(blockptr);
+
+    var blockiseq:RbISeq;
+    if (blockiseq_data is Array) {
+      // Guessing at this, but it seems to be needed to pass in parent for a block
+      var blockiseqval:Value = rc.iseqval_from_array(blockiseq_data, reg_cfp.iseq.self);
+      blockiseq = rc.iseq_c.GetISeqPtr(blockiseqval);
+    }
+
+    var num:int = rc.vm_insnhelper_c.caller_setup_args(th, reg_cfp, op_flag, op_argc, blockiseq, blockptr_ref);
+    blockptr = blockptr_ref.v;
+
+    var recv:Value;
+    var klass:RClass;
+    var mn:Node;
+    var id:int;
+    var flag:uint = RbVm.VM_CALL_SUPER_BIT | RbVm.VM_CALL_FCALL_BIT;
+
+    recv = reg_cfp.self;
+    var id_ref:ByRef = new ByRef(id);
+    var klass_ref:ByRef = new ByRef(klass);
+    rc.vm_insnhelper_c.vm_search_superclass(reg_cfp, rc.vm_insnhelper_c.GET_ISEQ(reg_cfp), recv,
+                         reg_cfp.sp.topn(num), id_ref, klass_ref);
+    id = id_ref.v;
+    klass = klass_ref.v;
+    mn = rc.vm_method_c.rb_method_node(klass, id);
+
+    // CALL_METHOD(num, blockptr, flag, id, mn, recv, klass);
+    var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, num, blockptr, flag, id, mn, recv, klass);
+    if (v == Qundef) {
+      RESTORE_REGS();
+      // NEXT_INSN();
+      return;
+    } else {
+      val = v;
+    }
+
+    reg_sp.push(val);
   }
 
   public function
@@ -618,6 +666,52 @@ public class RubyFrame
       // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
       var klass:RClass = rc.CLASS_OF(recv);
       var id:int = Id_c.idMINUS;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+    reg_sp.push(val);
+  }
+
+  // insns.def:1281
+  public function
+  opt_plus():void
+  {
+    var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+
+    if (rc.FIXNUM_2_P(recv, obj) &&
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_MINUS)) {
+        var a:int, b:int, c:int;
+
+        a = rc.FIX2LONG(recv);
+        b = rc.FIX2LONG(obj);
+        c = a + b;
+
+        if (true) { //rc.FIXABLE(c)) {
+          val = rc.numeric_c.INT2FIX(c);
+        }
+        else {
+          rc.error_c.rb_bug("big number support not implemented");
+          //val = rc.numeric_c.rb_big_minus(rb_int2big(a), rb_int2big(b));
+        }
+    }
+    else {
+      // other
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idPLUS;
       //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
       var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
                                                       id,

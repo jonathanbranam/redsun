@@ -423,6 +423,8 @@ public class RubyCore
       return false;
     } else if (val is RInt) {
       return RInt(val).value;
+    } else if (val is RFloat) {
+      return RFloat(val).float_value;
     } else if (val is Value) {
       var v:Value = Value(val);
       var type:uint = v.get_type();
@@ -462,10 +464,10 @@ public class RubyCore
       var str:RString = new RString(string_c.rb_cString);
       str.string = val;
       return str;
-    } else if (val is int) {
+    } else if (val is int || val is uint) {
       return new RInt(val);
     } else if (val is Number) {
-      return new RNumber(val);
+      return new RFloat(numeric_c.rb_cFloat, val);
     } else {
       return wrap_flash_obj(val);
     }
