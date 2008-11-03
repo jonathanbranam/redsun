@@ -2,7 +2,9 @@ a = [1,1,1]
 @color = 0xDD6622
 TopSprite.graphics.lineStyle(a[0], a[1], a[2])
 TopSprite.graphics.beginFill(@color)
-TopSprite.graphics.drawRect(5,5,105,105)
+
+p = {:x =>5, :y =>5, :width =>20, :height =>100}
+TopSprite.graphics.drawRect(p[:x], p[:y], p[:width], p[:height])
 
 class Text
   attr_accessor :tf

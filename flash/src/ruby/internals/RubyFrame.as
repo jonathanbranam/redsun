@@ -392,6 +392,23 @@ public class RubyFrame
 
   }
 
+  public function
+  newhash(num:int):void
+  {
+    var i:int;
+
+    var val:Value = rc.hash_c.rb_hash_new();
+
+    for (i = num; i > 0; i-=2) {
+      var v:Value = reg_sp.topn(i-2);
+      var k:Value = reg_sp.topn(i-1);
+      rc.hash_c.rb_hash_aset(val, k, v);
+    }
+    reg_sp.popn(num);
+
+    reg_sp.push(val);
+  }
+
   // insns.def:1790
   public function
   opt_aref():void
@@ -406,10 +423,10 @@ public class RubyFrame
         val = rc.array_c.rb_ary_entry(RArray(recv), rc.FIX2LONG(obj));
         done = true;
       }
-      /*
       else if (rc.HEAP_CLASS_OF(recv) == rc.hash_c.rb_cHash) {
-        val - rb_hash_aref(recv, obj);
-      }*/
+        val = rc.hash_c.rb_hash_aref(recv, obj);
+        done = true;
+      }
     }
     if (!done) {
       reg_sp.push(recv);

@@ -54,9 +54,15 @@ public class String_c
   }
 
   public function
+  str_alloc(klass:RClass):RString
+  {
+    return new RString(klass);
+  }
+
+  public function
   str_new(klass:RClass, str:String):RString
   {
-    var res:RString = new RString(klass);
+    var res:RString = str_alloc(klass);
     res.string = str;
     return res;
   }
@@ -69,11 +75,64 @@ public class String_c
     return dup;
   }
 
+  // string.c:446
+  public function
+  rb_usascii_str_new_cstr(ptr:String):RString
+  {
+    var str:RString = rb_str_new2(ptr);
+    // ENCODING_CODERANGE_SET(str, rb_usascii_encindex(), ENC_CODERANGE_7BIT);
+    return str;
+  }
+
+  public function
+  rb_usascii_str_new2(ptr:String):RString
+  {
+    return rb_usascii_str_new_cstr(ptr);
+  }
+
+  public function
+  rb_usascii_str_new(ptr:String):RString
+  {
+    return rb_usascii_str_new_cstr(ptr);
+  }
+
   public function
   rb_str_cat2(str:RString, ptr:String):RString
   {
     str.string += ptr;
     return str;
+  }
+
+  // string.c:529
+  public function
+  str_new4(klass:RClass, str:Value):RString
+  {
+    var str2:RString;
+
+    str2 = str_alloc(klass);
+    // STR_SET_NOEMBED(str2)
+    // TODO: SHARED strings
+    str2.string = RString(str).string;
+    rc.OBJ_INFECT(str2, str);
+    return str2;
+  }
+
+  public function
+  rb_str_new_frozen(orig:Value):Value
+  {
+    var klass:RClass, str:RString;
+
+    if (rc.OBJ_FROZEN(orig)) return orig;
+    klass = rc.object_c.rb_obj_class(orig);
+    str = str_new4(klass, orig);
+    rc.OBJ_FREEZE(str);
+    return str;
+  }
+
+  public function
+  rb_str_new4(orig:Value):Value
+  {
+    return rb_str_new_frozen(orig);
   }
 
   public function rb_str_new(str:String):RString
@@ -132,6 +191,20 @@ public class String_c
     // TODO: @skipped
     // rb_enc_associate(str, enc);
     return str;
+  }
+
+  // string.c:6622
+  public function
+  Init_String():void
+  {
+    rb_cString = rc.class_c.rb_define_class("String", rc.object_c.rb_cObject);
+
+    // TODO: Lots of String methods
+
+    rb_cSymbol = rc.class_c.rb_define_class("Symbol", rc.object_c.rb_cObject);
+
+    // TODO: Lots of Symbol methods
+
   }
 
 

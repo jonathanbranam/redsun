@@ -1,13 +1,36 @@
 package ruby.internals
 {
-  import flash.utils.Dictionary;
+import flash.utils.Dictionary;
 
 public class Parse_y
 {
   public var rc:RubyCore;
 
+  protected var global_symbols:Symbols;
 
-  import mx.utils.StringUtil;
+  protected var op_tbl:Array = [
+    new OpTbl(Id_c.tDOT2,       ".."),
+    new OpTbl(Id_c.tDOT3,       ".."),
+    new OpTbl("+".charCodeAt(), "+(binary)"),
+    new OpTbl("-".charCodeAt(), "-(binary)"),
+    new OpTbl(Id_c.tPOW,        "**"),
+    new OpTbl(Id_c.tUPLUS,      "+@"),
+    new OpTbl(Id_c.tUMINUS,     "-@"),
+    new OpTbl(Id_c.tCMP,        "<=>"),
+    new OpTbl(Id_c.tGEQ,        ">="),
+    new OpTbl(Id_c.tLEQ,        "<="),
+    new OpTbl(Id_c.tEQ,         "=="),
+    new OpTbl(Id_c.tEQQ,        "==="),
+    new OpTbl(Id_c.tNEQ,        "!="),
+    new OpTbl(Id_c.tMATCH,      "=~"),
+    new OpTbl(Id_c.tNMATCH,     "!~"),
+    new OpTbl(Id_c.tAREF,       "[]"),
+    new OpTbl(Id_c.tASET,       "[]="),
+    new OpTbl(Id_c.tLSHFT,      "<<"),
+    new OpTbl(Id_c.tRSHFT,      ">>"),
+    new OpTbl(Id_c.tCOLON2,     "::"),
+  ];
+  protected var op_tbl_count:int = op_tbl.length;
 
   public function
   rb_intern_str(str:Value):int
@@ -21,29 +44,42 @@ public class Parse_y
     return id;
   }
 
+  // encoding.h:142
+  public function
+  rb_enc_isascii(c:int, enc:String):Boolean
+  {
+    // only support ASCII
+    return true;
+  }
+
+  // encoding.h:146
+  public function
+  rb_enc_ispunct(c:int, enc:String):Boolean
+  {
+    // only support ascii
+    return rb_ispunct(c);
+  }
+
   public function
   rb_usascii_encoding():String
   {
     return "ASCII";
   }
 
-  protected var global_symbols__sym_id:Dictionary;
-  protected var global_symbols__id_str:Dictionary;
-  protected var global_symbols__last_id:int = Id_c.tLAST_TOKEN;
-
   public function
   rb_intern3(name:String, enc:String):int
   {
     var id:int;
 
-    if (global_symbols__sym_id[name] != undefined) {
-      return global_symbols__sym_id[name];
+    if (global_symbols.sym_id[name] != undefined) {
+      return global_symbols.sym_id[name];
     }
 
     var m:int = 0;
     var len:int = name.length;
     var c:int;
     var c_str:String;
+    var skip_new_id:Boolean = false;
 
     switch (name.charAt()) {
       case "$":
@@ -62,7 +98,30 @@ public class Parse_y
         break;
       default:
         c = name.charCodeAt(0);
-        // TODO: @skipped check for operators
+        var op_handled:Boolean = false;
+        if (c != "_".charCodeAt() && rb_enc_isascii(c, enc) && rb_enc_ispunct(c, enc)) {
+          // operators
+          var i:int;
+
+          if (len == 1) {
+            id = c;
+            // goto id_register;
+            skip_new_id = true;
+            op_handled = true;
+            break;
+          }
+          for (i = 0; i < op_tbl_count; i++) {
+            if (OpTbl(op_tbl[i]).name == name) {
+              id = OpTbl(op_tbl[i]).token;
+              // goto id_register;
+              skip_new_id = true;
+              op_handled = true;
+              break;
+            }
+          }
+        }
+        if (op_handled) break;
+
         if (name.charAt(len-1) == "=") {
           // attribute assignment
           id = rc.parse_y.rb_intern3(name.substr(0, len-1), enc);
@@ -71,6 +130,8 @@ public class Parse_y
             //enc = rb_enc_get(rb_id2str(id));
             id = rb_id_attrset(id);
             // goto id_register;
+            skip_new_id = true;
+            break;
           }
         }
         else if (rb_enc_isupper(name.charAt(), enc)) {
@@ -82,9 +143,13 @@ public class Parse_y
         break;
     }
 
-    global_symbols__last_id++;
-    id |= (global_symbols__last_id << Id_c.ID_SCOPE_SHIFT);
+    // new_id:
+    if (!skip_new_id) {
+      global_symbols.last_id++;
+      id |= (global_symbols.last_id << Id_c.ID_SCOPE_SHIFT);
+    }
 
+    // id_register:
     return register_symid(id, name, enc);
   }
 
@@ -111,8 +176,8 @@ public class Parse_y
     var str:Value = rc.string_c.rb_enc_str_new(name, enc);
     // TODO: @skipped freeze
     // OBJ_FREEZE(str);
-    global_symbols__sym_id[name] = id;
-    global_symbols__id_str[id] = str;
+    global_symbols.sym_id[name] = id;
+    global_symbols.id_str[id] = str;
     return id;
   }
 
@@ -142,13 +207,72 @@ public class Parse_y
   }
 
   public function
+  rb_ispunct(c:int):Boolean
+  {
+    return c < "A".charCodeAt() ||
+           (c > "Z".charCodeAt() && c < "a".charCodeAt());
+  }
+
+  public function
   rb_id2str(id:int):RString
   {
-    var str:RString = global_symbols__id_str[id];
-    if (str.klass == null) {
-      str.klass = rc.string_c.rb_cString;
+    var str:RString;
+    if (id < Id_c.tLAST_TOKEN) {
+      var i:int = 0;
+
+      if (rb_ispunct(id)) {
+        i = id;
+        str = global_symbols.op_sym[i];
+        if (!str) {
+          var name:String = String.fromCharCode(id);
+          str = rc.string_c.rb_usascii_str_new2(name);
+          rc.OBJ_FREEZE(str);
+          global_symbols.op_sym[i] = str;
+        }
+        return str;
+      }
+      for (i = 0; i < op_tbl_count; i++) {
+        if (OpTbl(op_tbl[i]).token == id) {
+          var entry:OpTbl = op_tbl[i];
+          str = global_symbols.op_sym[i];
+          if (!str) {
+            str = rc.string_c.rb_usascii_str_new2(entry.name);
+            rc.OBJ_FREEZE(str);
+            global_symbols.op_sym[i] = str;
+          }
+          return str;
+        }
+      }
     }
-    return str;
+    if (global_symbols.id_str[id] != undefined) {
+      str = global_symbols.id_str[id];
+      if (str.klass == null) {
+        str.klass = rc.string_c.rb_cString;
+      }
+      return str;
+    }
+
+    if (is_attrset_id(id)) {
+      var id2:int = (id & ~Id_c.ID_SCOPE_MASK) | Id_c.ID_LOCAL;
+
+      while (!(str = rb_id2str(id2))) {
+        if (!is_local_id(id2)) return null;
+        id2 = (id & ~Id_c.ID_SCOPE_MASK) | Id_c.ID_CONST;
+      }
+      str = rc.string_c.rb_str_dup(str);
+      rc.string_c.rb_str_cat2(str, "=");
+      rb_intern_str(str);
+      if (global_symbols.id_str[id] != undefined) {
+        str = global_symbols.id_str[id];
+        if (str.klass == null) {
+          str.klass = rc.string_c.rb_cString;
+        }
+        return str;
+      }
+    }
+
+    rc.error_c.rb_bug("failed id lookup");
+    return null;
   }
 
   public function
@@ -220,11 +344,39 @@ public class Parse_y
   public function
   Init_sym():void
   {
-    global_symbols__sym_id = new Dictionary();
-    global_symbols__id_str = new Dictionary();
+    global_symbols = new Symbols();
+    global_symbols.sym_id = new Dictionary();
+    global_symbols.id_str = new Dictionary();
 
     rc.id_c.Init_id();
   }
 
 }
+}
+  import flash.utils.Dictionary;
+  import ruby.internals.Id_c;
+
+
+class Symbols
+{
+  public var last_id:int = Id_c.tLAST_ID;
+  public var sym_id:Dictionary;
+  public var id_str:Dictionary;
+  public var ivar2_id:Dictionary;
+  public var id_ivar2:Dictionary;
+
+  public var op_sym:Array = new Array(Id_c.tLAST_TOKEN);
+
+
+}
+
+class OpTbl
+{
+  public var token:int;
+  public var name:String;
+  public function OpTbl(token:int=-1, name:String=null)
+  {
+    this.token = token;
+    this.name = name;
+  }
 }

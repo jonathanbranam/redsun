@@ -34,6 +34,7 @@ public class RubyCore
   public var error_c:Error_c;
   public var eval_c:Eval_c;
   public var gc_c:Gc_c;
+  public var hash_c:Hash_c;
   public var io_c:IO_c;
   public var id_c:Id_c;
   public var iseq_c:Iseq_c;
@@ -64,6 +65,8 @@ public class RubyCore
     eval_c.rc = this;
     gc_c = new Gc_c();
     gc_c.rc = this;
+    hash_c = new Hash_c();
+    hash_c.rc = this;
     io_c = new IO_c();
     io_c.rc = this;
     id_c = new Id_c();
@@ -237,7 +240,7 @@ public class RubyCore
     //Init_Comparable();
     enum_c.Init_Enumerable();
     //Init_Precision();
-    //Init_String();
+    string_c.Init_String();
     error_c.Init_Exception();
     eval_c.Init_eval();
     //Init_jump();
@@ -245,7 +248,7 @@ public class RubyCore
     //Init_Bignum();
     //Init_syserr();
     array_c.Init_Array();
-    //Init_Hash();
+    hash_c.Init_Hash();
     //Init_Struct();
     //Init_Regexp();
     //Init_pack();
