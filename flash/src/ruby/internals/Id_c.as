@@ -76,13 +76,23 @@ public class Id_c
   public static const tLAST_TOKEN:int = 400;
   public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
 
+  public var id_core_set_method_alias:int;
+  public var id_core_set_variable_alias:int;
+  public var id_core_undef_method:int;
   public var id_core_define_method:int;
+  public var id_core_define_singleton_method:int;
+  public var id_core_set_postexe:int;
 
   public function
   Init_id():void
   {
     // TODO: @skipped many ids
+    id_core_set_method_alias = rc.parse_y.rb_intern("core#set_method_alias");
+    id_core_set_variable_alias = rc.parse_y.rb_intern("core#set_variable_alias");
+    id_core_undef_method = rc.parse_y.rb_intern("core#undef_method");
     id_core_define_method = rc.parse_y.rb_intern("core#define_method");
+    id_core_define_singleton_method = rc.parse_y.rb_intern("core#define_singleton_method");
+    id_core_set_postexe = rc.parse_y.rb_intern("core#set_postexe");
 
     // TODO: @fix This is actually defined based on parse.y yacc file
     idMethodMissing = rc.parse_y.rb_intern("method_missing");

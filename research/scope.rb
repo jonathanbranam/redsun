@@ -25,9 +25,22 @@ class Text
   def x= val
     @tf.x = val
   end
+  class << self
+    def new_blah
+      t = Text.new
+      t.tf.text = "BLAH"
+      t
+    end
+  end
 end
 
-t = Text.new
+t = Text.new_blah
+
+def t.name(s)
+  @tf.text = s
+end
+
+t.name("bloooy")
 
 wait(1)
 t.tf.x -= 50

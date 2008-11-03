@@ -44,7 +44,10 @@ public class Vm_c
     klass = rc.class_c.rb_singleton_class(fcore);
     klass.name = "FrozenCoreSingleton";
     // define various methods
-    rc.class_c.rb_define_method_id(klass, rc.id_c.id_core_define_method, m_core_define_method, 3);
+    rc.class_c.rb_define_method_id(klass, rc.id_c.id_core_define_method,
+                                   m_core_define_method, 3);
+    rc.class_c.rb_define_method_id(klass, rc.id_c.id_core_define_singleton_method,
+                                   m_core_define_singleton_method, 3);
     // rb_obj_freeze(fcore);
     rb_mRubyVMFrozenCore = fcore;
 
@@ -452,7 +455,6 @@ public class Vm_c
   public function
   m_core_define_method(self:Value, cbase:Value, sym:Value, iseqval:Value):Value
   {
-    // TODO: @skipped rewind cfp
     // REWIND_CFP({
     var th__:RbThread = rc.GET_THREAD();
     var cur_cfp:RbControlFrame = th__.cfp;
@@ -560,6 +562,22 @@ public class Vm_c
   GetProcPtr(obj:Value):RbProc
   {
     return GetCoreDataFromValue(obj);
+  }
+
+  // vm.c:1695
+  public function
+  m_core_define_singleton_method(self:Value, cbase:Value, sym:Value, iseqval:Value):Value
+  {
+    // REWIND_CFP({
+    var th__:RbThread = rc.GET_THREAD();
+    var cur_cfp:RbControlFrame = th__.cfp;
+    var popped_cfp:RbControlFrame = th__.cfp_stack.pop();
+    th__.cfp = popped_cfp;
+      vm_define_method(rc.GET_THREAD(), cbase, rc.SYM2ID(sym), iseqval, true, vm_cref());
+    th__.cfp_stack.push(popped_cfp);
+    th__.cfp = cur_cfp;
+    //});
+    return rc.Qnil;
   }
 
 }
