@@ -63,6 +63,14 @@ public class RubyFrame
     reg_sp.push(iseqval);
   }
 
+  // insns.def:303
+  public function
+  putself():void
+  {
+    var val:Value = reg_cfp.self;
+    reg_sp.push(val);
+  }
+
   public function
   putobject(val:*):void
   {

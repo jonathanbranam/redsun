@@ -79,6 +79,8 @@ public class Object_c
     rc.class_c.rb_define_private_method(rb_cModule, "method_removed", rb_obj_dummy, 1);
     rc.class_c.rb_define_private_method(rb_cModule, "method_undefined", rb_obj_dummy, 1);
 
+    rc.class_c.rb_define_method(rb_mKernel, "class", rb_obj_class, 0);
+
     rc.class_c.rb_define_method(rb_mKernel, "to_s", rb_any_to_s, 0);
 
     // Lots of kernel methods
@@ -151,6 +153,26 @@ public class Object_c
   rb_obj_dummy(...argv):Value
   {
     return rc.Qnil;
+  }
+
+  // object.c:228
+  public function
+  rb_obj_clone(obj:Value):Value
+  {
+    var clone:Value;
+
+    if (rc.rb_special_const_p(obj)) {
+      rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "can't clone " +
+        rc.variable_c.rb_obj_classname(obj));
+    }
+    clone = rb_obj_alloc(rb_obj_class(obj));
+    RBasic(clone).flags = (RBasic(obj).flags | (clone.flags|Value.FL_TAINT) |
+      (clone.flags|Value.FL_UNTRUSTED)) & ~(Value.FL_FREEZE|Value.FL_FINALIZE);
+    //init_copy(clone, obj);
+    rc.error_c.rb_bug("Object#clone not fully implemented");
+    clone.flags |= obj.flags & Value.FL_FREEZE;
+
+    return clone;
   }
 
   // object.c
