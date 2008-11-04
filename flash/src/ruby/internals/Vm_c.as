@@ -21,6 +21,7 @@ public class Vm_c
 
   public var rb_cRubyVM:RClass;
   public var rb_cThread:RClass;
+  public var rb_cEnv:RClass;
   public var rb_mRubyVMFrozenCore:Value;
 
   protected var ruby_vm_global_state_version:int = 1;
@@ -50,6 +51,9 @@ public class Vm_c
                                    m_core_define_singleton_method, 3);
     // rb_obj_freeze(fcore);
     rb_mRubyVMFrozenCore = fcore;
+
+    // ::VM::Env
+    rb_cEnv = rc.class_c.rb_define_class_under(rb_cRubyVM, "Env", rc.object_c.rb_cObject);
 
     rb_cThread = rc.class_c.rb_define_class("Thread", rc.object_c.rb_cObject);
     // rb_undef_alloc_func(rb_cThread);
@@ -516,13 +520,115 @@ public class Vm_c
     return ruby_vm_global_state_version;
   }
 
+  // vm.h:218
+  public function
+  ENV_IN_HEAP_P(th:RbThread, env:StackPointer):Boolean
+  {
+    if (th.stack.stack != env.stack) {
+      return false;
+    }
+    else {
+      return !(th.stack.index < env.index && env.index < (th.stack.index + th.stack_size));
+    }
+  }
+
+  // vm.h:220
+  public function
+  ENV_VAL(env:StackPointer):Value
+  {
+    return env.get_at(1);
+  }
+
+  // vm.c:178
+  public function
+  env_alloc():Value
+  {
+    var obj:Value;
+    var env:RbEnv = new RbEnv();
+    obj = rc.Data_Wrap_Struct(rb_cEnv, env, null, null);
+    env.env = null;
+    env.prev_envval = null;
+    env.block.block_iseq = null;
+    return obj;
+  }
+
   // vm.c:226
   protected function
   vm_make_env_each(th:RbThread, cfp:RbControlFrame,
-                   envptr:Value, endptr:Value):Value
+                   envptr:StackPointer, endptr:StackPointer):Value
   {
-    rc.error_c.rb_bug("vm_make_env_each not implemented");
-    return null;
+    var envval:Value, penvval:Value;
+    var env:RbEnv;
+    var nenvptr:StackPointer;
+    var i:int, local_size:int;
+
+    if (ENV_IN_HEAP_P(th, envptr)) {
+      return ENV_VAL(envptr);
+    }
+
+    if (!envptr.equals(endptr)) {
+      var penvptr:StackPointer = envptr.get_at(0);
+      var pcfp:RbControlFrame = cfp;
+
+      if (ENV_IN_HEAP_P(th, penvptr)) {
+        penvval = ENV_VAL(penvptr);
+      }
+      else {
+        while (pcfp.dfp != penvptr) {
+          pcfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th, pcfp);
+          if (pcfp.dfp == null) {
+            rc.error_c.rb_bug("invalid dfp");
+          }
+        }
+        penvval = vm_make_env_each(th, pcfp, penvptr, endptr);
+        cfp.lfp = pcfp.lfp.clone();
+        envptr = pcfp.dfp.clone();
+      }
+    }
+
+    // allocate env
+    envval = env_alloc();
+    env = GetEnvPtr(envval);
+
+    if (!RUBY_VM_NORMAL_ISEQ_P(cfp.iseq)) {
+      local_size = 2;
+    }
+    else {
+      local_size = cfp.iseq.local_size;
+    }
+
+    env.env_size = local_size + 1 + 2;
+    env.local_size = local_size;
+    env.env = new StackPointer(new Array(env.env_size));
+    env.prev_envval = penvval;
+
+    for (i = 0; i <= local_size; i++) {
+      env.env.set_at(i, envptr.get_at(-local_size + i));
+      // Some removed code here
+    }
+
+    envptr.set_at(0, envval);                         // GC mark
+    nenvptr = env.env.clone_from_top(i - 1);
+    nenvptr.set_at(1, envval);                // frame self
+    nenvptr.set_at(2, penvval);               // frame prev env object
+
+    // reset lfp/dfp in cfp
+    cfp.dfp = nenvptr;
+    if (envptr.equals(endptr)) {
+      cfp.lfp = nenvptr;
+    }
+
+    // as Binding
+    env.block.self = cfp.self;
+    env.block.lfp = cfp.lfp.clone();
+    env.block.dfp = cfp.dfp.clone();
+    env.block.block_iseq = cfp.iseq;
+
+    if (!RUBY_VM_NORMAL_ISEQ_P(cfp.iseq)) {
+      // TODO
+      env.block.block_iseq = null;
+    }
+    return envval;
   }
 
   // vm.c:344
@@ -572,7 +678,7 @@ public class Vm_c
     var procval:Value, envval:Value, blockprocval:Value;
     var proc:RbProc;
 
-    if (cfp.lfp.get_at(0) != null) {
+    if (cfp.lfp.get_at(0) != null && cfp.lfp.get_at(0) is RbBlock) {
       // ptr & 0x02
       if (true) { //!RUBY_VM_CLASS_SPECIAL_P(cfp.lfp.get_at(0))) {
         var p:RbProc;
@@ -605,6 +711,77 @@ public class Vm_c
 
     return procval;
   }
+
+  // vm.c:443
+  public function
+  invoke_block_from_c(th:RbThread, block:RbBlock,
+                      self:Value, argc:int, argv:StackPointer,
+                      blockptr:RbBlock, cref:Node):Value
+  {
+    if (block.block_iseq.BUILTIN_TYPE() != Value.T_NODE) {
+      var iseq:RbISeq = block.block_iseq;
+      var cfp:RbControlFrame = th.cfp;
+      var i:int, opt_pc:int;
+      var arg_size:int = iseq.arg_size;
+      var type:int = rc.vm_insnhelper_c.block_proc_is_lambda(block.proc) ?
+                     RbVm.VM_FRAME_MAGIC_LAMBDA :
+                     RbVm.VM_FRAME_MAGIC_BLOCK;
+
+      rb_vm_set_finish_env(th);
+
+      // CHECK_STACK_OVERFLOW(cfp, argc + iseq.stack_max);
+
+      for (i = 0; i < argc; i++) {
+        cfp.sp.set_at(i, argv.get_at(i));
+      }
+
+      opt_pc = rc.vm_insnhelper_c.vm_yield_setup_args(th, iseq, argc, cfp.sp.clone(), blockptr,
+                                   type == RbVm.VM_FRAME_MAGIC_LAMBDA);
+
+      rc.vm_insnhelper_c.vm_push_frame(th, iseq, type,
+                                       self, block.dfp.clone(),
+                                       iseq.iseq_fn, iseq.iseq, opt_pc,
+                                       cfp.sp.clone_down_stack(arg_size),
+                                       block.lfp.clone(), iseq.local_size-arg_size);
+
+      if (cref) {
+        th.cfp.dfp.set_at(-1, cref);
+      }
+
+      return vm_eval_body(th);
+    }
+    else {
+      return rc.vm_insnhelper_c.vm_yield_with_cfunc(th, block, self, argc, argv, blockptr);
+    }
+  }
+
+  // vm.c:508
+  public function
+  vm_invoke_proc(th:RbThread, proc:RbProc, self:Value,
+                 argc:int, argv:StackPointer, blockptr:RbBlock):Value
+  {
+    var val:Value = rc.Qundef;
+    var state:int;
+    var stored_safe:int = th.safe_level;
+    var cfp:RbControlFrame = th.cfp;
+
+    // TH_PUSH_TAG(th)
+    // if ((state = EXEC_TAG()) == 0) {
+    if (!proc.is_from_method) {
+      th.safe_level = proc.safe_level;
+    }
+    val = invoke_block_from_c(th, proc.block, self, argc, argv, blockptr, null);
+    // TH_POP_TAG();
+
+    if (!proc.is_from_method) {
+      th.safe_level = stored_safe;
+    }
+
+    // TODO: handle exceptions and TAGS
+
+    return val;
+  }
+
 
   // vm.c:821
   public function
@@ -650,6 +827,13 @@ public class Vm_c
   // vm_core.h:526
   public function
   GetProcPtr(obj:Value):RbProc
+  {
+    return GetCoreDataFromValue(obj);
+  }
+
+  // vm_core.h:589
+  public function
+  GetEnvPtr(obj:Value):RbEnv
   {
     return GetCoreDataFromValue(obj);
   }

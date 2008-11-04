@@ -1,6 +1,8 @@
 
-def callback(e)
- yield e
+def callback(e, &p)
+  p.call e
 end
 
-callback(nil) do |e|; end
+callback("hello from proc") do |e|
+  puts e
+end

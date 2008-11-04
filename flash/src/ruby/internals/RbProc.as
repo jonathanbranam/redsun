@@ -13,6 +13,7 @@ public class RbProc extends Value
   public function RbProc()
   {
     super();
+    block = new RbBlock();
   }
 
 }

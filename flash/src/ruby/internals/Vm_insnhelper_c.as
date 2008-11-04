@@ -124,7 +124,7 @@ public class Vm_insnhelper_c
     var i:int;
     var m:int = iseq.argc;
     var argc:int = orig_argc;
-    var argv:StackPointer = orig_argv;
+    var argv:StackPointer = orig_argv.clone();
     var opt_pc:int = 0;
 
     th.mark_stack_len = argc + iseq.arg_size;
@@ -134,7 +134,7 @@ public class Vm_insnhelper_c
       rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+argc+" for "+(m+iseq.arg_post_len)+")");
     }
 
-    argv += m;
+    argv.index += m;
     argc -= m;
 
     // post arguments
@@ -213,7 +213,7 @@ public class Vm_insnhelper_c
     var opt_pc_byref:ByRef = new ByRef(opt_pc);
     var block:ByRef = new ByRef(blockptr);
     // TODO: @skipped Check all these for byref
-    VM_CALLEE_SETUP_ARG(opt_pc_byref, th, iseq, argc, rsp, block);
+    VM_CALLEE_SETUP_ARG(opt_pc_byref, th, iseq, argc, rsp.clone(), block);
     opt_pc = opt_pc_byref.v;
     blockptr = block.v;
 
@@ -436,7 +436,6 @@ public class Vm_insnhelper_c
 
     if (block) {
       if (flag & RbVm.VM_CALL_ARGS_BLOCKARG_BIT) {
-        // Handle dispatching to a proc
         var po:RbProc;
         var proc:Value;
 
@@ -694,7 +693,6 @@ public class Vm_insnhelper_c
 
     }
   }
-
 
   // vm_insnhelper.c:662
   public function

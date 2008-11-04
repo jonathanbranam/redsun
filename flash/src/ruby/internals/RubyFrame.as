@@ -217,7 +217,7 @@ public class RubyFrame
     for (var o:int = op_argc-1; o >= 0; o--) {
       trace("       op "+(op_argc-o)+": " + reg_sp.topn(o));
     }
-    */
+    //*/
 
 
     mn = rc.vm_insnhelper_c.vm_method_search(id, klass, ic);

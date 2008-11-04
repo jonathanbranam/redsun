@@ -28,6 +28,21 @@ public class Eval_c
 
   }
 
+  // eval.c:544
+  public function
+  rb_block_given_p():Boolean
+  {
+    var th:RbThread = rc.GET_THREAD();
+
+    // magic pointer arithmetic here
+    if (th.cfp.lfp.get_at(0) is RbBlock) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
   // eval.c:954
   protected function
   top_include(argc:int, argv:StackPointer, self:Value):Value
