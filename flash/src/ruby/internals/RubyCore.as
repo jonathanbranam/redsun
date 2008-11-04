@@ -183,15 +183,31 @@ public class RubyCore
     var rc:RubyCore = this;
     var th:RbThread = rc.GET_THREAD();
     var block:RbBlock = vm_insnhelper_c.GET_BLOCK_PTR(GET_THREAD().cfp);
+
+    var blockval:Value = rc.Qnil;
+    // make Proc object
+    if (block.proc == null) {
+      var proc:RbProc;
+
+      blockval = rc.vm_c.vm_make_proc(th, th.cfp, block, rc.proc_c.rb_cProc);
+
+      proc = rc.vm_c.GetProcPtr(blockval);
+      //block.v = proc.block;
+    }
+    else {
+      blockval = block.proc;
+    }
+    //orig_argv.set_at(iseq.arg_block, blockval); // Proc or nil
+
     top.addEventListener(str.string, function (e:Event):void {
-      rc.bare_block_call(block, rc.wrap_flash_obj(e));
+      rc.bare_block_call(blockval, rc.wrap_flash_obj(e));
     });
 
     return Qnil;
   }
 
   public function
-  bare_block_call(block:RbBlock, ...args):void
+  bare_block_call(block:Value, ...args):void
   {
     //var argv:StackPointer = new StackPointer(args, 0);
     //eval_c.ruby_run_node(block);
@@ -221,15 +237,16 @@ public class RubyCore
         ["putiseq",
           [
             "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
-            {arg_size:1, local_size:2, stack_max:1},
+            {arg_size:2, local_size:3, stack_max:2},
             "callback", "<compiled>",
             "method",
-            ["e"],
-            1,
+            ["e", "p"],
+            2,
             [],
             [
               ["getlocal", 2],
-              ["invokeblock", 1, 0],
+              ["getlocal", 3],
+              ["send", "call", 1, rc.Qnil, 0, rc.Qnil],
               ["leave"],
             ]
           ]
@@ -241,7 +258,7 @@ public class RubyCore
         // Loop and push args
         ["putobject", args[0]],
         ["putobject", block],
-        ["send", "callback", 1, block.block_iseq, 12, rc.Qnil],
+        ["send", "callback", 2, rc.Qnil, 8, rc.Qnil],
         "label_27",
         ["leave"],
       ],
