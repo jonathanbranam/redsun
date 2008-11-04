@@ -4,6 +4,8 @@ import com.adobe.serialization.json.JSONDecoder;
 
 import flash.display.DisplayObject;
 import flash.display.Sprite;
+import flash.events.Event;
+import flash.events.EventDispatcher;
 import flash.events.TimerEvent;
 import flash.text.TextField;
 import flash.text.TextFormat;
@@ -167,6 +169,89 @@ public class RubyCore
   init_global_funcs():void
   {
     class_c.rb_define_global_function("wait", wait_func, 1);
+    class_c.rb_define_singleton_method(vm_c.rb_vm_top_self(), "on", on_top_func, 1);
+  }
+
+  protected function
+  on_top_func(recv:Value, event_name:Value):Value
+  {
+    var top:EventDispatcher;
+    var docval:Value = variable_c.rb_const_get(object_c.rb_cObject, parse_y.rb_intern("TopSprite"));
+    top = RData(docval).data;
+    var str:RString = string_c.rb_obj_as_string(event_name);
+
+    var rc:RubyCore = this;
+    var th:RbThread = rc.GET_THREAD();
+    var block:RbBlock = vm_insnhelper_c.GET_BLOCK_PTR(GET_THREAD().cfp);
+    top.addEventListener(str.string, function (e:Event):void {
+      rc.bare_block_call(block, rc.wrap_flash_obj(e));
+    });
+
+    return Qnil;
+  }
+
+  public function
+  bare_block_call(block:RbBlock, ...args):void
+  {
+    //var argv:StackPointer = new StackPointer(args, 0);
+    //eval_c.ruby_run_node(block);
+    //vm_c.rb_iseq_eval(iseq);
+    var th:RbThread = GET_THREAD();
+    //vm_insnhelper_c.vm_push_frame(th, null, RbVm.VM_FRAME_MAGIC_TOP, Qnil, null,
+    //              null, null, 0, th.stack, null, 1);
+
+    //vm_c.rb_vm_set_finish_env(th);
+
+    var rc:RubyCore = this;
+
+    var empty_iseq_array:Array = [
+      "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+      {arg_size:0, local_size:1, stack_max:4},
+      "<compiled>", "<compiled>",
+      "top",
+      [],
+      0,
+      [
+        ["break", rc.Qnil, "label_19", "label_27", "label_27", 0],
+      ],
+      [
+        ["putspecialobject", 1],
+        ["putspecialobject", 2],
+        ["putobject", "callback"],
+        ["putiseq",
+          [
+            "YARVInstructionSequence/SimpleDataFormat", 1, 1, 1,
+            {arg_size:1, local_size:2, stack_max:1},
+            "callback", "<compiled>",
+            "method",
+            ["e"],
+            1,
+            [],
+            [
+              ["getlocal", 2],
+              ["invokeblock", 1, 0],
+              ["leave"],
+            ]
+          ]
+        ],
+        ["send", "core#define_method", 3, rc.Qnil, 0, rc.Qnil],
+        ["pop"],
+        "label_19",
+        ["putnil"],
+        // Loop and push args
+        ["putobject", args[0]],
+        ["putobject", block],
+        ["send", "callback", 1, block.block_iseq, 12, rc.Qnil],
+        "label_27",
+        ["leave"],
+      ],
+    ];
+
+    var iseqval:Value = iseqval_from_array(empty_iseq_array);
+    var iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
+
+    vm_c.rb_iseq_eval(iseqval);
+
   }
 
   protected function
@@ -262,8 +347,8 @@ public class RubyCore
     //Init_signal();
     //Init_process();
     //Init_load();
-    //Init_Proc();
-    //Init_Binding();
+    proc_c.Init_Proc();
+    proc_c.Init_Binding();
     //Init_Math();
     //Init_GC();
     //Init_Enumerator();
@@ -639,12 +724,6 @@ public class RubyCore
   FIX2LONG(x:Value):int
   {
     return RInt(x).value;
-  }
-
-  public function
-  RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp:RbControlFrame):RbBlock
-  {
-    return cfp;
   }
 
   public function

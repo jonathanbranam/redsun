@@ -8,7 +8,8 @@ public class Eval_c
 
   public var rc:RubyCore;
 
-  public var rb_eLocalJumpError:Value;
+  public var rb_eLocalJumpError:RClass;
+  public var rb_eSysStackError:RClass;
 
   public function
   Init_eval():void

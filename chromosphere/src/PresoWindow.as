@@ -1,7 +1,6 @@
 package
 {
 import flash.events.Event;
-import flash.events.KeyboardEvent;
 
 import mx.core.UIComponent;
 import mx.core.Window;
@@ -9,15 +8,16 @@ import mx.events.AIREvent;
 import mx.events.FlexEvent;
 
 import ruby.internals.RubyCore;
+import ruby.internals.Value;
 
-public class RubyWindow extends Window
+public class PresoWindow extends Window
 {
 
   public var fullUIC:UIComponent;
   public var bytecode:String;
   public var rc:RubyCore;
 
-  public function RubyWindow()
+  public function PresoWindow()
   {
     super();
     this.width = 300;
@@ -25,31 +25,23 @@ public class RubyWindow extends Window
     this.addEventListener(AIREvent.WINDOW_COMPLETE, windowComplete);
   }
 
-  protected function keyDownH(e:Event):void
-  {
-    trace("keydown: " + e);
-  }
-
   protected function windowComplete(e:AIREvent):void
   {
     fullUIC = new UIComponent();
-    fullUIC.enabled = true;
-    fullUIC.focusEnabled = true;
     fullUIC.x = fullUIC.y = 0;
     fullUIC.percentWidth = fullUIC.percentHeight = 100;
     fullUIC.addEventListener(FlexEvent.CREATION_COMPLETE, uicCC);
-    fullUIC.addEventListener(KeyboardEvent.KEY_DOWN, keyDownH);
     this.addChild(fullUIC);
   }
 
   protected function uicCC(e:Event):void
   {
-    fullUIC.setFocus();
     rc = new RubyCore();
     rc.init();
     rc.variable_c.rb_define_global_const("TopSprite", rc.wrap_flash_obj(fullUIC));
-    rc.variable_c.rb_define_global_const("AIRWindow", rc.wrap_flash_obj(this));
-    rc.variable_c.rb_define_global_const("Document", rc.wrap_flash_obj(this));
+    var this_val:Value = rc.wrap_flash_obj(this);
+    rc.variable_c.rb_define_global_const("AIRWindow", this_val);
+    rc.variable_c.rb_define_global_const("Document", this_val);
     rc.run(bytecode, fullUIC);
   }
 

@@ -84,6 +84,8 @@ public class RubyFrame
       reg_sp.push(val);
     } else if (val === rc.Qtrue) {
       reg_sp.push(val);
+    } else if (val is Value) {
+      reg_sp.push(val);
     } else {
       rc.error_c.rb_bug("Unknown object sent to putobject: " + val);
     }
@@ -184,20 +186,25 @@ public class RubyFrame
     var mn:Node;
     var recv:Value;
     var klass:RClass;
-    var blockptr:ByRef = new ByRef();
+    var blockptr:ByRef = new ByRef(null);
 
     var val:Value;
 
-    var op_id:int = rc.parse_y.rb_intern(op_str)
+    var op_id:int = rc.parse_y.rb_intern(op_str);
 
     var blockiseq:RbISeq;
     if (blockiseq_data is Array) {
       // Guessing at this, but it seems to be needed to pass in parent for a block
       var blockiseqval:Value = rc.iseqval_from_array(blockiseq_data, reg_cfp.iseq.self);
       blockiseq = rc.iseq_c.GetISeqPtr(blockiseqval);
+    } else {
+      if (blockiseq_data != rc.Qnil) {
+        blockiseq = blockiseq_data;
+      }
     }
 
-    var num:int = rc.vm_insnhelper_c.caller_setup_args(th, reg_cfp, op_flag, op_argc, blockiseq, blockptr);
+    var num:int = rc.vm_insnhelper_c.caller_setup_args(th, reg_cfp, op_flag, op_argc,
+                                                       blockiseq, blockptr);
 
     var flag:int = op_flag;
     var id:int = op_id;
@@ -733,6 +740,30 @@ public class RubyFrame
   {
     var val:Value = reg_sp.pop();
     reg_sp.set_topn(n-1, val);
+    reg_sp.push(val);
+  }
+
+  // insns.def:406
+  public function
+  tostring():void
+  {
+    var val:Value = reg_sp.pop();
+    val = rc.string_c.rb_obj_as_string(val);
+    reg_sp.push(val);
+  }
+
+  // insns.def:385
+  public function
+  concatstrings(num:int):void
+  {
+    var val:RString;
+    var i:int;
+    val = rc.string_c.rb_str_new("");
+    for ( i = num - 1; i >= 0; i--) {
+      var v:RString = reg_sp.topn(i);
+      rc.string_c.rb_str_append(val, v);
+    }
+
     reg_sp.push(val);
   }
 

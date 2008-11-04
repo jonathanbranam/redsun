@@ -193,6 +193,24 @@ public class String_c
     return str;
   }
 
+  // string.c:1639
+  public function
+  rb_str_buf_append(str:RString, str2:RString):RString
+  {
+    str.string += str2.string;
+    rc.OBJ_INFECT(str, str2);
+    return str;
+  }
+
+  // string.c:1655
+  public function
+  rb_str_append(str:RString, str2:RString):RString
+  {
+    // Reallocation code skipped
+    rc.OBJ_INFECT(str, str2);
+    return rb_str_buf_append(str, str2);
+  }
+
   // string.c:6622
   public function
   Init_String():void

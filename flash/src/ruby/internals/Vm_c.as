@@ -516,6 +516,96 @@ public class Vm_c
     return ruby_vm_global_state_version;
   }
 
+  // vm.c:226
+  protected function
+  vm_make_env_each(th:RbThread, cfp:RbControlFrame,
+                   envptr:Value, endptr:Value):Value
+  {
+    rc.error_c.rb_bug("vm_make_env_each not implemented");
+    return null;
+  }
+
+  // vm.c:344
+  public function
+  vm_make_env_object(th:RbThread, cfp:RbControlFrame):Value
+  {
+    var envval:Value;
+
+    if (cfp.VM_FRAME_TYPE() == RbVm.VM_FRAME_MAGIC_FINISH) {
+      // for method missing
+      cfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th, cfp);
+    }
+
+    envval = vm_make_env_each(th, cfp, cfp.dfp.clone(), cfp.lfp.clone());
+
+    // if (PROCDEBUG)
+
+    return envval;
+  }
+
+  // vm.c:375
+  public function
+  vm_make_proc_from_block(th:RbThread, cft:RbControlFrame,
+                          block:RbBlock, klass:RClass):Value
+  {
+    var procval:Value;
+    var bcfp:RbControlFrame;
+    var bdfp:StackPointer // to gc mark
+
+    procval = block.proc;
+    if (procval && RBasic(procval).klass == klass) {
+      return procval;
+    }
+
+    bcfp = RUBY_VM_GET_CFP_FROM_BLOCK_PTR(block);
+    bdfp = bcfp.dfp.clone();
+    procval = vm_make_proc(th, bcfp, block, klass);
+    if (!block.proc) block.proc = procval;
+    return procval;
+  }
+
+  // vm.c:411
+  public function
+  vm_make_proc(th:RbThread, cfp:RbControlFrame,
+               block:RbBlock, klass:RClass):Value
+  {
+    var procval:Value, envval:Value, blockprocval:Value;
+    var proc:RbProc;
+
+    if (cfp.lfp.get_at(0) != null) {
+      // ptr & 0x02
+      if (true) { //!RUBY_VM_CLASS_SPECIAL_P(cfp.lfp.get_at(0))) {
+        var p:RbProc;
+
+        blockprocval = vm_make_proc_from_block(
+          th, cfp, RbBlock(cfp.lfp.get_at(0)), klass);
+
+        p = GetProcPtr(blockprocval);
+        cfp.lfp.set_at(0, p.block);
+      }
+    }
+    envval = vm_make_env_object(th, cfp);
+
+    //if (PROCDEBUG) {
+    //  check_env_value(envval);
+    //}
+    procval = rc.proc_c.rb_proc_alloc(klass);
+    proc = GetProcPtr(procval);
+    proc.blockprocval = blockprocval;
+    proc.block.self = block.self;
+    proc.block.lfp = block.lfp.clone();
+    proc.block.dfp = block.dfp.clone();
+    proc.block.block_iseq = block.block_iseq;
+    proc.block.proc = procval;
+    proc.envval = envval;
+    proc.safe_level = th.safe_level;
+
+    // if (VMDEBUG) {
+    // }
+
+    return procval;
+  }
+
   // vm.c:821
   public function
   vm_localjump_error(mesg:String, value:Value, reason:int):void
@@ -579,6 +669,21 @@ public class Vm_c
     //});
     return rc.Qnil;
   }
+
+  // vm_core.h:635
+  public function
+  RUBY_VM_GET_CFP_FROM_BLOCK_PTR(b:RbBlock):RbControlFrame
+  {
+    return RbControlFrame(b);
+  }
+
+  // vm_core.h:634
+  public function
+  RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp:RbControlFrame):RbBlock
+  {
+    return cfp;
+  }
+
 
 }
 }

@@ -31,7 +31,7 @@
 
   protected function cc():void
   {
-    ti.text = "research/scope.rb";
+    ti.text = "research/rubyconf.rb";
     read_file(ti.text);
     sp = new UIComponent();
     sp.y = 50;
@@ -95,6 +95,17 @@
     http.addEventListener("fault", okf);
   }
 
+  protected function preso(filename:String):void
+  {
+    // Call to rails app running
+    var http:HTTPService = new HTTPService();
+    http.url = "http://localhost:7000/compile_file/"+filename;
+    http.resultFormat = "text";
+    http.send();
+    http.addEventListener("result", preso_result);
+    http.addEventListener("fault", okf);
+  }
+
   protected function execute_bytecode(bytecode:String):void
   {
     // Call to rails app running
@@ -125,6 +136,14 @@
     rw.open();
   }
 
+  protected function preso_result(e:ResultEvent):void
+  {
+    var bc:String = e.result.toString();
+    var p:PresoWindow = new PresoWindow();
+    p.bytecode = bc;
+    p.open();
+  }
+
   protected function okf(e:FaultEvent):void
   {
     trace("FAIL! "+e.fault);
@@ -136,6 +155,7 @@
     <mx:TextInput width="100%" id="ti"/>
     <mx:Button id="pb" label="Browse..." click="openButton(ti.text)"/>
     <mx:Button label="Execute" click="execute(ti.text)"/>
+    <mx:Button label="Launch Preso" click="preso(ti.text)"/>
     <mx:CheckBox label="New Window" selected="true" id="nw"/>
   </mx:HBox>
   <mx:TextArea width="100%" height="100%" id="ta"/>

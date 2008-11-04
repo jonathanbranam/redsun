@@ -85,18 +85,22 @@ public class Iseq_c
                      parent:Value, type:uint, block_opt:Value,
                      option:RbCompileOptions):Value
   {
+    rc.OBJ_FREEZE(name);
+    rc.OBJ_FREEZE(filename);
+
     iseq.name = name;
     iseq.filename = filename;
     iseq.defined_method_id = 0;
-    iseq.mark_ary = null; //rb_ary_new();
-    //RBasic(iseq.mark_ary).klass = null;
+    iseq.mark_ary = rc.array_c.rb_ary_new();
+    RBasic(iseq.mark_ary).klass = null;
 
     iseq.type = type;
     iseq.arg_rest = -1;
     iseq.arg_block = -1;
     iseq.klass = null;
 
-    // TODO: @skipped setup iseq properly
+    // TODO: @skipped setup iseq compile_data properly
+    iseq.compile_data = null;
 
     set_relation(iseq, parent);
 
@@ -167,6 +171,7 @@ public class Iseq_c
   protected function
   iseq_setup(iseq:RbISeq, anchor:*):int
   {
+    // Could convert labels into offsets here
     return 0;
   }
 

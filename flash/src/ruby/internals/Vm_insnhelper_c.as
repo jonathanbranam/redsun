@@ -121,24 +121,78 @@ public class Vm_insnhelper_c
   vm_callee_setup_arg_complex(th:RbThread, iseq:RbISeq, orig_argc:int,
                               orig_argv:StackPointer, block:ByRef):int
   {
-    rc.error_c.rb_bug("can't handle complex args yet.");
-    /*
+    var i:int;
     var m:int = iseq.argc;
     var argc:int = orig_argc;
-    var argv:Array = orig_argv;
+    var argv:StackPointer = orig_argv;
     var opt_pc:int = 0;
 
     th.mark_stack_len = argc + iseq.arg_size;
 
     // mandatory
-    if (argc < m + iseq.arg_post_len)) { // check with post arg
+    if (argc < (m + iseq.arg_post_len)) { // check with post arg
       rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+argc+" for "+(m+iseq.arg_post_len)+")");
     }
 
     argv += m;
     argc -= m;
-    */
-    return 0;
+
+    // post arguments
+    if (iseq.arg_post_len != 0) {
+      if (!(orig_argc < iseq.arg_post_start)) {
+        var new_argv:StackPointer = new StackPointer(new Array(argc));
+        for (i = 0; i < argc; i++) {
+          new_argv.push(argv.get_at(i));
+        }
+        argv = new_argv;
+      }
+      for (i = 0; i < iseq.arg_post_len; i++) {
+        orig_argv.set_at(iseq.arg_post_start+i, argv.get_at(argc - iseq.arg_post_len+i));
+      }
+      argc -= iseq.arg_post_len;
+    }
+
+    // opt arguments
+    if (iseq.arg_opts != 0) {
+      rc.error_c.rb_bug("optional arguments not implemented");
+    }
+
+    // rest arguments
+    if (iseq.arg_rest != -1) {
+      rc.error_c.rb_bug("rest arguments not implemented");
+    }
+
+    // block arguments
+    if (block && iseq.arg_block != -1) {
+      var blockval:Value = rc.Qnil;
+      var blockptr:RbBlock = block.v;
+
+      if (argc != 0) {
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments ("+
+                            orig_argc + " for " + (m+iseq.arg_post_len) + ")");
+      }
+
+      if (blockptr) {
+        // make Proc object
+        if (blockptr.proc == null) {
+          var proc:RbProc;
+
+          blockval = rc.vm_c.vm_make_proc(th, th.cfp, blockptr, rc.proc_c.rb_cProc);
+
+          proc = rc.vm_c.GetProcPtr(blockval);
+          block.v = proc.block;
+        }
+        else {
+          blockval = blockptr.proc;
+        }
+      }
+
+      orig_argv.set_at(iseq.arg_block, blockval); // Proc or nil
+    }
+
+    th.mark_stack_len = 0;
+
+    return opt_pc;
   }
 
   // vm_insnhelper.c:424
@@ -401,11 +455,11 @@ public class Vm_insnhelper_c
           }
           po = rc.vm_c.GetProcPtr(proc);
           blockptr = po.block;
-          rc.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp).proc = proc;
+          rc.vm_c.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp).proc = proc;
           block.v = blockptr;
         }
       } else if (blockiseq) {
-        blockptr = rc.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp);
+        blockptr = rc.vm_c.RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp);
         blockptr.block_iseq = blockiseq;
         blockptr.proc = null;
         block.v = blockptr;
