@@ -48,8 +48,7 @@ public class String_c
     if (val.get_type() != Value.T_STRING) {
       return rc.object_c.rb_any_to_s(obj);
     }
-    // TODO: @skipped
-    // OBJ_TAINTED
+    if (rc.OBJ_TAINTED(obj)) rc.OBJ_TAINT(val);
     return RString(val);
   }
 

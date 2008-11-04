@@ -27,6 +27,22 @@ public class Numeric_c
     return flt;
   }
 
+  // numeric.c:2064
+  public function
+  fix_to_s(argc:int, argv:StackPointer, x:Value):Value
+  {
+    var base:int;
+
+    if (argc == 0) base = 10;
+    else {
+      var b:Value;
+
+      b = argv.get_at(0);
+      base = rc.FIX2LONG(b);
+    }
+
+    return rc.string_c.rb_str_new(RInt(x).value.toString(base));
+  }
 
   public function
   Init_Numeric():void
@@ -35,6 +51,8 @@ public class Numeric_c
     rb_cInteger = rc.class_c.rb_define_class("Integer", rb_cNumeric);
     rb_cFixnum = rc.class_c.rb_define_class("Fixnum", rb_cInteger);
     rb_cFloat = rc.class_c.rb_define_class("Float", rb_cNumeric);
+
+    rc.class_c.rb_define_method(rb_cFixnum, "to_s", fix_to_s, -1);
   }
 
 }

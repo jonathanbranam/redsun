@@ -734,6 +734,54 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1851
+  public function
+  opt_length():void
+  {
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+
+    var normal_dispatch:Boolean = false;
+    if (!rc.SPECIAL_CONST_P(recv) &&
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_LENGTH)) {
+      if (rc.HEAP_CLASS_OF(recv) == rc.string_c.rb_cString) {
+        val = rc.numeric_c.INT2FIX(RString(recv).string.length);
+      }
+      else if (rc.HEAP_CLASS_OF(recv) == rc.array_c.rb_cArray) {
+        val = rc.numeric_c.INT2FIX(RArray(recv).array.length);
+      }
+      else if (rc.HEAP_CLASS_OF(recv) == rc.hash_c.rb_cHash) {
+        normal_dispatch = true;
+        //val = rc.numeric_c.INT2FIX((RHash(recv).ntbl);
+      }
+      else {
+        normal_dispatch = true;
+      }
+    }
+    else {
+      normal_dispatch = true;
+    }
+    if (normal_dispatch) {
+      reg_sp.push(recv);
+      // CALL_SIMPLE_METHOD(0, idLength, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = rc.id_c.idLength;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 0, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+
+    reg_sp.push(val);
+  }
+
   // insns.def:712
   public function
   setn(n:int):void
@@ -763,6 +811,7 @@ public class RubyFrame
       var v:RString = reg_sp.topn(i);
       rc.string_c.rb_str_append(val, v);
     }
+    reg_sp.popn(num);
 
     reg_sp.push(val);
   }

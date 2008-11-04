@@ -174,8 +174,7 @@ public class Parse_y
   register_symid(id:int, name:String, enc:String):int
   {
     var str:Value = rc.string_c.rb_enc_str_new(name, enc);
-    // TODO: @skipped freeze
-    // OBJ_FREEZE(str);
+    rc.OBJ_FREEZE(str);
     global_symbols.sym_id[name] = id;
     global_symbols.id_str[id] = str;
     return id;

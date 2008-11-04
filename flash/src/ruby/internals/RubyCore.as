@@ -404,6 +404,7 @@ public class RubyCore
 
     rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashClass, "new", fc_new_obj, -1);
+    class_c.rb_define_method(rb_cFlashClass, "method_missing", fo_method_missing, -1);
 
     rb_mFlash = class_c.rb_define_module("Flash");
     rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");

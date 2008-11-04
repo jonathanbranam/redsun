@@ -96,6 +96,9 @@ public class Vm_evalbody_c
           return;
         }
       } else {
+        if (insn is int) {
+          //trace("Line " + insn);
+        }
         // line number
         // label
         // ?

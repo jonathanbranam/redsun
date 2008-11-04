@@ -1,5 +1,6 @@
 package
 {
+import flash.display.Screen;
 import flash.events.Event;
 
 import mx.core.UIComponent;
@@ -42,6 +43,8 @@ public class PresoWindow extends Window
     var this_val:Value = rc.wrap_flash_obj(this);
     rc.variable_c.rb_define_global_const("AIRWindow", this_val);
     rc.variable_c.rb_define_global_const("Document", this_val);
+    rc.variable_c.rb_define_const(rc.rb_mFlashDisplay, "Screen", rc.wrap_flash_class(Screen));
+    //variable_c.rb_const_set(rb_mFlashDisplay, parse_y.rb_intern("Sprite"), wrap_flash_class(Sprite));
     rc.run(bytecode, fullUIC);
   }
 

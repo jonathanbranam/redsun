@@ -55,6 +55,9 @@ public class Id_c
   public static const idEqTilde:int = tMATCH;
   public static const idAREF:int = tAREF;
   public static const idASET:int = tASET;
+  public static const tLAST_TOKEN:int = 400;
+  public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
+
   public static const tIntern:int = 318;
   public static const tMethodMissing:int = 319;
   public static const tLength:int = 320;
@@ -67,14 +70,14 @@ public class Id_c
   public static const tInitialize:int = 327;
   public static const tBitblt:int = 328;
   public static const tAnswer:int = 329;
+
   public static const tLAST_ID:int = 330;
 
 
   public var idInitialize:int;
   public var idMethodMissing:int;
+  public var idLength:int;
 
-  public static const tLAST_TOKEN:int = 400;
-  public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
 
   public var id_core_set_method_alias:int;
   public var id_core_set_variable_alias:int;
@@ -97,6 +100,7 @@ public class Id_c
     // TODO: @fix This is actually defined based on parse.y yacc file
     idMethodMissing = rc.parse_y.rb_intern("method_missing");
     idInitialize = rc.parse_y.rb_intern("initialize");
+    idLength = rc.parse_y.rb_intern("length");
   }
 
 }

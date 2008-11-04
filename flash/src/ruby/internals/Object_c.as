@@ -135,7 +135,7 @@ public class Object_c
     var str:RString;
 
     str = rc.string_c.rb_str_new2("#<"+cname+":"+obj+">");
-    // OBJ_INFECT(str, obj);
+    rc.OBJ_INFECT(str, obj);
 
     return str;
   }
