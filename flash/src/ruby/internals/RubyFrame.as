@@ -337,7 +337,13 @@ public class RubyFrame
     } else if (ary is Array) {
       var array:Array = ary;
       array = rc.convert_array_to_ruby_value(array);
-      val = rc.array_c.rb_ary_new2(array.length, array);
+      var rarray:RArray = rc.array_c.rb_ary_new2(array.length);
+      var i:int;
+      for (i = 0; i < array.length; i++) {
+        rarray.array[i] = array[i];
+      }
+      rarray.len = array.length;
+      val = rarray;
     }
     reg_sp.push(val);
   }
@@ -400,6 +406,24 @@ public class RubyFrame
     var id:int = rc.parse_y.rb_intern(id_str);
     var val:Value = reg_sp.pop();
     rc.variable_c.rb_ivar_set(reg_cfp.self, id, val);
+  }
+
+  public function
+  getclassvariable(id_str:String):void
+  {
+    var id:int = rc.parse_y.rb_intern(id_str);
+    var cref:Node = rc.vm_insnhelper_c.vm_get_cref(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp);
+    var val:Value = rc.variable_c.rb_cvar_get(rc.vm_insnhelper_c.vm_get_cvar_base(cref), id);
+    reg_sp.push(val);
+  }
+
+  public function
+  setclassvariable(id_str:String):void
+  {
+    var id:int = rc.parse_y.rb_intern(id_str);
+    var val:Value = reg_sp.pop();
+    var cref:Node = rc.vm_insnhelper_c.vm_get_cref(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp);
+    rc.variable_c.rb_cvar_set(rc.vm_insnhelper_c.vm_get_cvar_base(cref), id, val);
   }
 
   public function
@@ -507,6 +531,14 @@ public class RubyFrame
       //rc.vm_eval(th, Qnil);
     }
 
+  }
+
+  public function
+  newarray(num:int):void
+  {
+    var val:Value = rc.array_c.rb_ary_new4(num, reg_sp.clone_from_top(num));
+    reg_sp.popn(num);
+    reg_sp.push(val);
   }
 
   public function
@@ -734,6 +766,52 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1756
+  public function
+  opt_ltlt():void
+  {
+    var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+    var normal_dispatch:Boolean = false;
+
+    if (!rc.SPECIAL_CONST_P(recv)) {
+      if (rc.HEAP_CLASS_OF(recv) == rc.string_c.rb_cString &&
+          rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_LTLT)) {
+        val = rc.string_c.rb_str_concat(RString(recv), obj);
+      }
+      else if (rc.HEAP_CLASS_OF(recv) == rc.array_c.rb_cArray &&
+               rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_LTLT)) {
+        val = rc.array_c.rb_ary_push(RArray(recv), obj);
+      }
+      else {
+        normal_dispatch = true;
+      }
+    }
+    else {
+      normal_dispatch = true;
+    }
+    if (normal_dispatch) {
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      // CALL_SIMPLE_METHOD(1, Id_c.idLTLT, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idLTLT;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+    reg_sp.push(val);
+  }
+
   // insns.def:1851
   public function
   opt_length():void
@@ -748,7 +826,7 @@ public class RubyFrame
         val = rc.numeric_c.INT2FIX(RString(recv).string.length);
       }
       else if (rc.HEAP_CLASS_OF(recv) == rc.array_c.rb_cArray) {
-        val = rc.numeric_c.INT2FIX(RArray(recv).array.length);
+        val = rc.numeric_c.INT2FIX(RArray(recv).len);
       }
       else if (rc.HEAP_CLASS_OF(recv) == rc.hash_c.rb_cHash) {
         normal_dispatch = true;

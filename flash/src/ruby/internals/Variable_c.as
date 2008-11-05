@@ -474,5 +474,142 @@ public class Variable_c
     return rb_const_get_0(klass, id, true, true);
   }
 
+  // variable.c:1731
+  public function
+  original_module(c:RClass):RClass
+  {
+    if (rc.TYPE(c) == Value.T_ICLASS) {
+      return RBasic(c).klass;
+    }
+    return c;
+  }
+
+  // variable.c:1766
+  public function
+  rb_cvar_set(klass:RClass, id:int, val:Value):void
+  {
+    var tmp:RClass, front:RClass, target:RClass;
+
+    tmp = klass;
+    //CVAR_LOOKUP(&value, {if (!front) front = klass; target = klass;});
+    if (klass.iv_tbl && klass.iv_tbl[id] != undefined) {
+      //value = klass.iv_tbl[id];
+      if (!front) {
+        front = klass;
+      }
+      target = klass;
+    }
+    if (rc.FL_TEST(klass, Value.FL_SINGLETON)) {
+      var obj:Value = rb_iv_get(klass, "__attached__");
+      switch (rc.TYPE(obj)) {
+        case Value.T_MODULE:
+        case Value.T_CLASS:
+          klass = RClass(obj);
+          break;
+        default:
+          klass = klass.super_class;
+          break;
+      }
+    }
+    else {
+      klass = klass.super_class;
+    }
+    while (klass) {
+      if (klass.iv_tbl && klass.iv_tbl[id] != undefined) {
+        //value = klass.iv_tbl[id];
+        if (!front) {
+          front = klass;
+        }
+        target = klass;
+      }
+      klass = klass.super_class;
+    }
+
+    if (target) {
+      if (front && target != front) {
+        var did:int = id;
+
+        if (rc.RTEST(rc.ruby_verbose())) {
+          rc.error_c.rb_warning("class variable "+
+                                rc.parse_y.rb_id2name(id)+" of "+
+                                rb_class2name(original_module(front))+
+                                " is overtaken by "+
+                                rb_class2name(original_module(target)));
+        }
+        if (front.BUILTIN_TYPE() == Value.T_CLASS) {
+          delete front.iv_tbl[did];
+        }
+      }
+    }
+    else {
+      target = tmp;
+    }
+    mod_av_set(target, id, val, false);
+  }
+
+  // variable.c:1793
+  public function
+  rb_cvar_get(klass:RClass, id:int):Value
+  {
+    var value:Value, tmp:RClass, front:RClass, target:RClass;
+
+    tmp = klass;
+    //CVAR_LOOKUP(&value, {if (!front) front = klass; target = klass;});
+    if (klass.iv_tbl && klass.iv_tbl[id] != undefined) {
+      value = klass.iv_tbl[id];
+      if (!front) {
+        front = klass;
+      }
+      target = klass;
+    }
+    if (rc.FL_TEST(klass, Value.FL_SINGLETON)) {
+      var obj:Value = rb_iv_get(klass, "__attached__");
+      switch (rc.TYPE(obj)) {
+        case Value.T_MODULE:
+        case Value.T_CLASS:
+          klass = RClass(obj);
+          break;
+        default:
+          klass = klass.super_class;
+          break;
+      }
+    }
+    else {
+      klass = klass.super_class;
+    }
+    while (klass) {
+      if (klass.iv_tbl && klass.iv_tbl[id] != undefined) {
+        value = klass.iv_tbl[id];
+        if (!front) {
+          front = klass;
+        }
+        target = klass;
+      }
+      klass = klass.super_class;
+    }
+
+    if (!target) {
+      rc.error_c.rb_name_error(id,"uninitialized class variable "+
+                               rc.parse_y.rb_id2name(id) + " in "+
+                               rb_class2name(tmp));
+
+    }
+    if (front && target != front) {
+      var did:int = id;
+
+      if (rc.RTEST(rc.ruby_verbose())) {
+        rc.error_c.rb_warning("class variable "+
+                              rc.parse_y.rb_id2name(id) + " of "+
+                              rb_class2name(original_module(front)) +
+                              " is overtaken by "+
+                              rb_class2name(original_module(target)));
+      }
+      if (front.BUILTIN_TYPE() == Value.T_CLASS) {
+        delete RClass(front).iv_tbl[did];
+      }
+    }
+    return value;
+  }
+
 }
 }

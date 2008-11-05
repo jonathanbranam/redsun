@@ -206,6 +206,41 @@ public class RubyCore
     return Qnil;
   }
 
+  protected function
+  fo_on(recv:Value, event_name:Value):Value
+  {
+    var dispatcher:EventDispatcher;
+    var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
+    dispatcher = EventDispatcher(flash_obj);
+    var str:RString = string_c.rb_obj_as_string(event_name);
+
+    var rc:RubyCore = this;
+    var th:RbThread = rc.GET_THREAD();
+    var block:RbBlock = vm_insnhelper_c.GET_BLOCK_PTR(GET_THREAD().cfp);
+
+    var blockval:Value = rc.Qnil;
+    // make Proc object
+    if (block.proc == null) {
+      var proc:RbProc;
+
+      blockval = rc.vm_c.vm_make_proc(th, th.cfp, block, rc.proc_c.rb_cProc);
+
+      proc = rc.vm_c.GetProcPtr(blockval);
+      //block.v = proc.block;
+    }
+    else {
+      blockval = block.proc;
+    }
+    //orig_argv.set_at(iseq.arg_block, blockval); // Proc or nil
+
+    dispatcher.addEventListener(str.string, function (e:Event):void {
+      rc.bare_block_call(blockval, rc.wrap_flash_obj(e));
+    });
+
+    return Qnil;
+  }
+
+
   public function
   bare_block_call(block:Value, ...args):void
   {
@@ -418,6 +453,7 @@ public class RubyCore
   {
     rb_cFlashObject = class_c.rb_define_class("FlashObject", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashObject, "method_missing", fo_method_missing, -1);
+    class_c.rb_define_method(rb_cFlashObject, "on", fo_on, 1);
 
     rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashClass, "new", fc_new_obj, -1);
@@ -1071,6 +1107,12 @@ public class RubyCore
   DOUBLE2NUM(dbl:Number):RFloat
   {
     return numeric_c.rb_float_new(dbl);
+  }
+
+  public function
+  FL_TEST(v:Value, flag:uint):Boolean
+  {
+    return (v.flags & flag) != 0
   }
 
 }

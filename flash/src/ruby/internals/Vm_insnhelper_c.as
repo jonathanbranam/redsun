@@ -472,6 +472,31 @@ public class Vm_insnhelper_c
     return argc;
   }
 
+  // vm_insnhelper.c:1043
+  public function
+  vm_get_cvar_base(cref:Node):RClass
+  {
+    var klass:RClass
+
+    while (cref && cref.nd_next &&
+           (rc.NIL_P(cref.nd_clss) ||
+           (cref.nd_clss.flags & Value.FL_SINGLETON))) {
+      cref = cref.nd_next;
+
+      if (!cref.nd_next) {
+        rc.error_c.rb_warn("class variable access from toplevel");
+      }
+    }
+
+    klass = cref.nd_clss;
+
+    if (rc.NIL_P(klass)) {
+      rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "no class variables available");
+    }
+    return klass;
+  }
+
+
   // vm_insnhelper.c:1065
   public function
   vm_method_search(id:int, klass:RClass, ic:Value):Node

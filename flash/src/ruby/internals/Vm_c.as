@@ -608,7 +608,7 @@ public class Vm_c
     }
 
     envptr.set_at(0, envval);                         // GC mark
-    nenvptr = env.env.clone_from_top(i - 1);
+    nenvptr = env.env.clone_down_stack(i - 1);
     nenvptr.set_at(1, envval);                // frame self
     nenvptr.set_at(2, penvval);               // frame prev env object
 
@@ -753,6 +753,28 @@ public class Vm_c
     else {
       return rc.vm_insnhelper_c.vm_yield_with_cfunc(th, block, self, argc, argv, blockptr);
     }
+  }
+
+  // vm.c:482
+  public function
+  check_block(th:RbThread):RbBlock
+  {
+    var blockptr:RbBlock = th.cfp.lfp.get_at(0);
+
+    if (blockptr == null) {
+      vm_localjump_error("no block given", rc.Qnil, 0);
+    }
+
+    return blockptr;
+  }
+
+  // vm.c:501
+  public function
+  vm_yield(th:RbThread, argc:int, argv:StackPointer):Value
+  {
+    var blockptr:RbBlock = check_block(th);
+    return invoke_block_from_c(th, blockptr, blockptr.self,
+                               argc, argv, null, null);
   }
 
   // vm.c:508

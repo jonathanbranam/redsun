@@ -275,6 +275,25 @@ public class Vm_eval_c
     return val;
   }
 
+  // vm_eval.c:482
+  public function
+  rb_yield_0(argc:int, argv:StackPointer):Value
+  {
+    return rc.vm_c.vm_yield(rc.GET_THREAD(), argc, argv);
+  }
+
+  // vm_eval.c:488
+  public function
+  rb_yield(val:Value):Value
+  {
+    if (val == rc.Qundef) {
+      return rb_yield_0(0, null);
+    }
+    else {
+      return rb_yield_0(1, new StackPointer([val]));
+    }
+  }
+
   // vm_eval.c:571
   public function
   rb_iterate(it_proc:Function, data1:Value, bl_proc:Function, data2:Value):Value

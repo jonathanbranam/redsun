@@ -48,13 +48,9 @@ public class Array_c
 
   // array.c:111
   public function
-  ary_new(klass:RClass, len:int, contents:Array=null):RArray
+  ary_new(klass:RClass, len:int):RArray
   {
     var ary:RArray;
-
-    if (contents != null) {
-      len = contents.length;
-    }
 
     if (len < 0) {
       rc.error_c.rb_raise(rc.error_c.rb_eArgError, "negative array size (or size too big)");
@@ -64,20 +60,16 @@ public class Array_c
     }
     ary = ary_alloc(klass);
     if (len == 0) len++;
-    if (contents != null) {
-      ary.array = contents;
-    } else {
-      ary.array = new Array(len);
-    }
+    ary.array = new Array(len);
 
     return ary;
   }
 
   // array.c:130
   public function
-  rb_ary_new2(len:int, contents:Array=null):RArray
+  rb_ary_new2(len:int):RArray
   {
-    return ary_new(rb_cArray, len, contents);
+    return ary_new(rb_cArray, len);
   }
 
   // array.c:137
@@ -93,11 +85,13 @@ public class Array_c
   {
     var ary:RArray;
 
+    ary = rb_ary_new2(n);
     if (n > 0 && elts) {
-      ary = rb_ary_new2(n, elts.copy(n));
-    } else {
-      ary = rb_ary_new2(n);
-
+      var i:int;
+      for (i = 0; i < n; i++) {
+        ary.array[i] = elts.get_at(i);
+      }
+      ary.len = n;
     }
 
     return ary;
@@ -108,9 +102,9 @@ public class Array_c
   rb_ary_store(ary:RArray, idx:int, val:Value):void
   {
     if (idx < 0) {
-      idx += ary.array.length;
+      idx += ary.len;
       if (idx < 0) {
-        rc.error_c.rb_raise(rc.error_c.rb_eIndexError, "index " + (idx - ary.array.length) +
+        rc.error_c.rb_raise(rc.error_c.rb_eIndexError, "index " + (idx - ary.len) +
                             " out of array");
       }
     }
@@ -121,6 +115,9 @@ public class Array_c
     rb_ary_modify(ary);
     if (idx > ary.array.length) {
     }
+    if (idx >= ary.len) {
+      ary.len = idx + 1;
+    }
     ary.array[idx] = val;
   }
 
@@ -128,7 +125,7 @@ public class Array_c
   public function
   rb_ary_push(ary:RArray, item:Value):Value
   {
-    rb_ary_store(ary, RArray(ary).array.length, item);
+    rb_ary_store(ary, RArray(ary).len, item);
     return ary;
   }
 
@@ -136,8 +133,8 @@ public class Array_c
   public function
   rb_ary_elt(ary:RArray, offset:int):Value
   {
-    if (ary.array.length == 0) return rc.Qnil;
-    if (offset < 0 || ary.array.length <= offset) {
+    if (ary.len == 0) return rc.Qnil;
+    if (offset < 0 || ary.len <= offset) {
       return rc.Qnil;
     }
     return ary.array[offset];
@@ -148,16 +145,40 @@ public class Array_c
   rb_ary_entry(ary:RArray, offset:int):Value
   {
     if (offset < 0) {
-      offset += ary.array.length;
+      offset += ary.len;
     }
     return rb_ary_elt(ary, offset);
+  }
+
+  // array.c:1135
+  public function
+  rb_ary_each(aryv:Value):Value
+  {
+    var i:int;
+    var ary:RArray = RArray(aryv);
+
+    //RETURN_ENUMERATOR(ary, 0, null);
+    if (!rc.eval_c.rb_block_given_p()) {
+      rc.error_c.rb_bug("rb_ary_each no missing block support");
+      //return rb_enumeratorize(obj, rc.ID2SYM(rb_frame_this_func()), argc, argv);
+    }
+    for (i = 0; i < ary.len; i++) {
+      rc.vm_eval_c.rb_yield(ary.array[i]);
+    }
+    return ary;
   }
 
   // array.c:1238
   public function
   rb_ary_dup(ary:RArray):RArray
   {
-    var dup:RArray = rb_ary_new2(ary.array.length, ary.array.concat());
+    var dup:RArray = rb_ary_new2(ary.len);
+    // DUPSETUP
+    var i:int;
+    for (i = 0; i < ary.len; i++) {
+      dup.array[i] = ary.array[i];
+    }
+    dup.len = ary.len;
     return dup;
   }
 
@@ -167,6 +188,8 @@ public class Array_c
   {
     rb_cArray = rc.class_c.rb_define_class("Array", rc.object_c.rb_cObject);
     rc.class_c.rb_include_module(rb_cArray, rc.enum_c.rb_mEnumerable);
+
+    rc.class_c.rb_define_method(rb_cArray, "each", rb_ary_each, 0);
   }
 
 }

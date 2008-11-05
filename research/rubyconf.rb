@@ -9,16 +9,70 @@ puts "Screen: #{ms.bounds.left} to #{ms.bounds.right} and #{ms.bounds.top} to #{
 
 AIRWindow.nativeWindow.x = ms.bounds.x
 AIRWindow.nativeWindow.y = ms.bounds.y
-AIRWindow.nativeWindow.width = ms.bounds.width
-AIRWindow.nativeWindow.height = ms.bounds.height
+AIRWindow.nativeWindow.width = 300 || ms.bounds.width
+AIRWindow.nativeWindow.height = 300 || ms.bounds.height
 
 
 include Geometry
+
+class ValidationManager
+  attr_accessor :props, :size, :display
+  def initialize
+    @@vm = self
+    @props = []
+    @size = []
+    @display = []
+    vm = self
+    TopSprite.on :enterFrame { |e| vm.validate }
+  end
+  def validate()
+    props = @props
+    @props = []
+    puts "validate #{props.length} objects"
+    props.each do |o|
+      o.commitProperties()
+    end
+  end
+  def self.invalidateProperties(o)
+    @@vm.props << o
+  end
+  def self.invalidateSize(o)
+    @@vm.size << o
+  end
+  def self.invalidateDisplay(o)
+    @@vm.display << o
+  end
+end
+
+@vm = ValidationManager.new
+
+module PropValidator
+  def invalidateProperties()
+    ValidationManager.invalidateProperties(self)
+  end
+  def commitProperties()
+  end
+end
+
+
+class Slide
+  attr_accessor :parent, :layout, :children
+  include PropValidator
+  def initialize(parent)
+    @parent = parent
+  end
+  def commitProperties()
+  end
+end
+
 
 top = Flash::Display::Sprite.new
 scale = ms.bounds.width/200/2
 TopSprite.addChild(top)
 top.scaleX = top.scaleY = scale
+
+sl1 = Slide.new(top)
+sl1.invalidateProperties()
 
 sp = Flash::Display::Sprite.new
 top.addChild(sp)

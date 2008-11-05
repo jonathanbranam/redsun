@@ -201,12 +201,43 @@ public class String_c
     return str;
   }
 
+  // string.c:1697
+  public function
+  rb_str_concat(str1:RString, str2:Value):Value
+  {
+    if (rc.FIXNUM_P(str2)) {
+      var c:int = rc.FIX2LONG(str2);
+      str1.string += String.fromCharCode(c);
+      return str1;
+    }
+    return rb_str_append(str1, str2);
+  }
+
+  // string.c:635
+  public function
+  rb_str_to_str(str:Value):RString
+  {
+    return RString(rc.object_c.rb_convert_type(str, Value.T_STRING, "String", "to_str"));
+  }
+
+  // string.c:1103
+  public function
+  rb_string_value(ptr:Value):RString
+  {
+    var s:Value = ptr;
+    if (rc.TYPE(s) != Value.T_STRING) {
+      s = rb_str_to_str(s);
+    }
+    return RString(s);
+  }
+
   // string.c:1655
   public function
-  rb_str_append(str:RString, str2:RString):RString
+  rb_str_append(str:RString, val2:Value):RString
   {
     // Reallocation code skipped
     rc.OBJ_INFECT(str, str2);
+    var str2:RString = rb_string_value(val2);
     return rb_str_buf_append(str, str2);
   }
 
