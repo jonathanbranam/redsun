@@ -57,7 +57,7 @@ public class Vm_evalbody_c
 
     inner_loop_depth++;
     if (inner_loop_depth > 1) {
-      rc.error_c.rb_warn("vm_eval_array inner_loop_depth "+inner_loop_depth);
+      //rc.error_c.rb_warn("vm_eval_array inner_loop_depth "+inner_loop_depth);
     }
 
     while (th.cfp.pc_ary && th.cfp.pc_index < th.cfp.pc_ary.length) {

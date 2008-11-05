@@ -860,6 +860,39 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1934
+  public function
+  opt_not(ic:Value):void
+  {
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+
+    var mn:Node = rc.vm_insnhelper_c.vm_method_search(Id_c.idNot, rc.CLASS_OF(recv), ic);
+
+    if (rc.vm_insnhelper_c.check_cfunc(mn, rc.object_c.rb_obj_not)) {
+      val = rc.RTEST(recv) ? rc.Qfalse : rc.Qtrue;
+    }
+    else {
+      reg_sp.push(recv);
+      // CALL_SIMPLE_METHOD(0, idNot, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idNot;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 0, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+
+    reg_sp.push(val);
+  }
+
   // insns.def:712
   public function
   setn(n:int):void

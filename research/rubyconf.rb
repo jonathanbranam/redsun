@@ -28,7 +28,7 @@ class ValidationManager
   def validate()
     props = @props
     @props = []
-    puts "validate #{props.length} objects"
+    #puts "validate #{props.length} objects"
     props.each do |o|
       o.commitProperties()
     end
@@ -89,6 +89,15 @@ blue.fill_color = 0x2255FF
 blue.fill_alpha = 0.2
 c = circle ({:x=>50, :y=>80, :radius =>30, :style=>blue })
 c.draw(sp)
+
+cl = true
+on :enterFrame do |e|
+  c.x = (c.x-1) if cl
+  c.x = (c.x+1) if not cl
+  cl = true if c.x > 50
+  cl = false if c.x <= 0
+end
+
 
 
 tf = Flash::Text::TextField.new

@@ -811,5 +811,18 @@ public class Vm_insnhelper_c
     klassp.v = klass;
   }
 
+  // vm_insnhelper.c:1364
+  public function
+  check_cfunc(mn:Node, func:Function):Boolean
+  {
+    if (mn && Node(mn.nd_body).nd_type() == Node.NODE_CFUNC &&
+        Node(mn.nd_body).nd_cfnc == func) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
 }
 }
