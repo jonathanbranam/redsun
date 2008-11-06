@@ -18,6 +18,17 @@ public class Vm_insnhelper_c
   import ruby.internals.StackPointer;
   import ruby.internals.Value;
 
+  public static const DEFINED_IVAR:int   = 1;
+  public static const DEFINED_IVAR2:int  = 2;
+  public static const DEFINED_GVAR:int   = 3
+  public static const DEFINED_CVAR:int   = 5;
+  public static const DEFINED_CONST:int  = 6;
+  public static const DEFINED_METHOD:int = 7;
+  public static const DEFINED_YIELD:int  = 8;
+  public static const DEFINED_REF:int    = 9;
+  public static const DEFINED_ZSUPER:int = 9;
+  public static const DEFINED_FUNC:int   = 10;
+
   public function
   GET_PREV_DFP(dfp:StackPointer):StackPointer
   {

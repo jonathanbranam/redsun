@@ -54,12 +54,53 @@ module PropValidator
   end
 end
 
+class SlideShow
+  attr_accessor :frame, :slides, :index
+  def initialize(parent)
+    @frame = Flash::Display::Sprite.new
+    parent.addChild(@frame)
+    @slides = []
+    @cur_frame = nil
+  end
+  def add(sl)
+    @slides << sl
+  end
+  def start
+    @index = -1
+    next_slide
+  end
+  def next_slide
+    @frame.removeChild(@cur_frame) if @cur_frame
+    @cur_frame = nil
+    @index = @index + 1 if @index <= @slides.length
+    return if @index >= @slides.length
+    @cur_frame = Flash::Display::Sprite.new
+    sl = @slides[@index]
+    sl.parent = @cur_frame
+    @frame.addChild(@cur_frame)
+  end
+  def prev_slide
+    @frame.removeChild(@cur_frame) if @cur_frame
+    @cur_frame = nil
+    @index = @index - 1 if @index > 0
+    return if @index >= @slides.length
+    return if @index < 0
+    @cur_frame = Flash::Display::Sprite.new
+    sl = @slides[@index]
+    sl.parent = @cur_frame
+    @frame.addChild(@cur_frame)
+  end
+end
+    
 
 class Slide
-  attr_accessor :parent, :layout, :children
+  attr_accessor :layout, :children, :sprite
   include PropValidator
-  def initialize(parent)
-    @parent = parent
+  def parent=(v)
+    v.addChild(sprite)
+  end
+  def initialize
+    @sprite = Flash::Display::Sprite.new
   end
   def commitProperties()
   end
@@ -77,24 +118,32 @@ AIRWindow.on :windowResize do |e|
   top.scaleX = top.scaleY = scale
 end
 
-sl1 = Slide.new(top)
+sl1 = Slide.new
 sl1.invalidateProperties()
 
-sp = Flash::Display::Sprite.new
-top.addChild(sp)
+sl2 = Slide.new
 
+
+show = SlideShow.new(top)
+show.add(sl1)
+show.add(sl2)
+
+#sp = Flash::Display::Sprite.new
+#sl1.addChild(sp)
+
+sp = sl1.sprite
 red=DrawStyle.new
 red.line_thickness = 2
 red.line_color = 0
 red.line_alpha = 1
 red.fill = true
 red.fill_color = 0xFF5522
-rectangle({:x=>11, :y=>16, :width=>100, :height=>20, :style=>red}).draw(sp)
+rectangle({:x=>11, :y=>16, :width=>100, :height=>20, :style=>red}).draw(sl1.sprite)
 blue = red.clone
 blue.fill_color = 0x2255FF
 blue.fill_alpha = 0.2
 c = circle ({:x=>50, :y=>80, :radius =>30, :style=>blue })
-c.draw(sp)
+c.draw(sl1.sprite)
 
 cl = true
 on :enterFrame do |e|
@@ -111,5 +160,19 @@ tf.x = 200
 tf.y = 0
 tf.width = 200
 tf.height = 400
-top.addChild(tf)
+sl1.sprite.addChild(tf)
 tf.text = "def Circle\n  def draw(sprite)\n  end\nend"
+
+c = circle ({:x=>50, :y=>80, :radius =>30, :style=>blue })
+c.draw(sl2.sprite)
+
+
+show.start
+
+on :keyDown do |e|
+  puts "key code #{e.keyCode}"
+  show.next_slide if e.keyCode == 39
+  show.prev_slide if e.keyCode == 37
+end
+
+TopSprite.setFocus()

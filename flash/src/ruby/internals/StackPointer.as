@@ -36,6 +36,10 @@ public class StackPointer extends Value
     //trace("StackPointer inc_index " + index);
   }
 
+  public function dec(n:int):void {
+    index -= n;
+  }
+
   public function set_top(val:*):* {
     stack[index] = val;
   }

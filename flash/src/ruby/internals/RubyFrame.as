@@ -40,6 +40,115 @@ public class RubyFrame
   }
 
   public function
+  dup():void
+  {
+    var val:* = reg_sp.pop();
+    reg_sp.push(val);
+    reg_sp.push(val);
+  }
+
+  // insns.def:650
+  public function
+  dupn(n:int):void
+  {
+    var i:int;
+    var sp:StackPointer = reg_sp.clone_from_top(n);
+    for (i = 0; i < n; i++) {
+      reg_sp.set_at(i, sp.get_at(i));
+    }
+    reg_sp.inc_index();
+  }
+
+  // insns.def:670
+  public function
+  swap():void
+  {
+    var obj:Value = reg_sp.pop();
+    var val:Value = reg_sp.pop();
+    reg_sp.push(obj);
+    reg_sp.push(val);
+  }
+
+  // insns.def:684
+  public function
+  reput():void
+  {
+    var val:Value = reg_sp.pop();
+    reg_sp.push(val);
+  }
+
+  // insns.def:698
+  public function
+  topn(n:int):void
+  {
+    var val:Value = reg_sp.get_at(n);
+    reg_sp.push(val);
+  }
+
+  // insns.def:712
+  public function
+  setn(n:int):void
+  {
+    var val:Value = reg_sp.pop();
+    reg_sp.set_topn(n-1, val);
+    reg_sp.push(val);
+  }
+
+  // insns.def:726
+  public function
+  adjuststack(n:int):void
+  {
+    reg_sp.dec(n);
+  }
+
+  // insns.def:745
+  public function
+  defined(type:int, obj:Value, needstr:Value):void
+  {
+    var v:Value = reg_sp.pop();
+
+    var klass:RClass;
+    var expr_type:String;
+    var val:Value = rc.Qnil;
+
+    switch (type) {
+      /*
+      case Vm_insnhelper_c.DEFINED_IVAR:
+        if (rc.variable_c.rb_ivar_defined(reg_cfp.self, rc.SYM2ID(obj))) {
+          expr_type = "instance-variable";
+        }
+        break;
+      case Vm_insnhelper_c.DEFINED_IVAR2:
+        klass = rc.vm_insnhelper_c.vm_get_cbas(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp);
+        break;
+      case Vm_insnhelper_c.DEFINED_GVAR:
+        if (rc.variable_c.rb_gvar_defined(GlobalEntry(obj))) {
+          expr_type = "global-variable";
+        }
+        break;
+      case Vm_insnhelper_c.DEFINED_CVAR:
+        klass = rc.vm_insnhelper_c.vm_get_cbase(reg_cfp.iseq, reg_cfp.lfp, reg_cfp.dfp);
+        if (rc.variable_c.rb_cvar_defined(klass, rc.SYM2ID(obj))) {
+          expr_type = "class variable";
+        }
+        break;
+      */
+      default:
+        rc.error_c.rb_bug("unimplemented defined? type (VM)");
+    }
+    if (expr_type != null) {
+      if (needstr != rc.Qfalse) {
+        val = rc.string_c.rb_str_new2(expr_type);
+      }
+      else {
+        val = rc.Qtrue;
+      }
+    }
+
+    reg_sp.push(val);
+  }
+
+  public function
   putnil():void
   {
     reg_sp.push(Qnil);
@@ -118,6 +227,28 @@ public class RubyFrame
     // RUBY_VM_CHECK_INTS();
     rc.vm_insnhelper_c.vm_pop_frame(th);
     RESTORE_REGS();
+    reg_sp.push(val);
+  }
+
+  // insns.def:1077
+  public function
+  finish():Value
+  {
+    var val:Value = reg_sp.pop();
+    th.cfp = th.cfp_stack.pop();
+    return val;
+  }
+
+  // insns.def:1100
+  public function
+  rthrow(throw_state:int):void
+  {
+    var throwobj:Value = reg_sp.pop();
+    var val:Value = rc.Qnil;
+    rc.error_c.rb_bug("throw unimplemented");
+    // RUBY_VM_CHECK_INTS();
+    //val = vm_throw(th, reg_cfp, throw_state, throwobj);
+    //THROW_EXCEPTION(val);
     reg_sp.push(val);
   }
 
@@ -349,14 +480,6 @@ public class RubyFrame
   }
 
   public function
-  dup():void
-  {
-    var val:* = reg_sp.pop();
-    reg_sp.push(val);
-    reg_sp.push(val);
-  }
-
-  public function
   setdynamic(idx:int, level:int):void
   {
     var val:Value = reg_cfp.sp.pop();
@@ -385,6 +508,12 @@ public class RubyFrame
   getinlinecache(ic:Value, dst:String):void
   {
     putnil();
+  }
+
+  public function
+  onceinlinecache(ic:Value, dst:String):void
+  {
+    rc.error_c.rb_bug("onceinelinecache unimplemented bytecode");
   }
 
   public function
@@ -634,6 +763,26 @@ public class RubyFrame
     reg_sp.popn(num);
 
     reg_sp.push(val);
+  }
+
+  // insns.def:1234
+  public function
+  opt_case_dispatch(hash:Object, else_offset:String):void
+  {
+    var key:Value = reg_sp.pop();
+    rc.error_c.rb_bug("case bytecode not implemented");
+  }
+
+  // insns.def:1259
+  public function
+  opt_checkenv():void
+  {
+    if (reg_cfp.bp.index != reg_cfp.dfp.index+1 && reg_cfp.bp.stack == reg_cfp.dfp.stack) {
+      var new_dfp:StackPointer = reg_cfp.bp.get_at(-1);
+      // TODO: copy env and clean stack at creating env?
+      new_dfp.set_at(0, reg_cfp.dfp);
+      reg_cfp.dfp = new_dfp;
+    }
   }
 
   // insns.def:1790
@@ -1202,15 +1351,6 @@ public class RubyFrame
       }
     }
 
-    reg_sp.push(val);
-  }
-
-  // insns.def:712
-  public function
-  setn(n:int):void
-  {
-    var val:Value = reg_sp.pop();
-    reg_sp.set_topn(n-1, val);
     reg_sp.push(val);
   }
 
