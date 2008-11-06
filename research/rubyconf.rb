@@ -67,9 +67,15 @@ end
 
 
 top = Flash::Display::Sprite.new
-scale = ms.bounds.width/200/2
+scale = AIRWindow.nativeWindow.width/200.1/2
 TopSprite.addChild(top)
 top.scaleX = top.scaleY = scale
+
+AIRWindow.on :windowResize do |e|
+  scale = e.afterBounds.width/200.1/2
+  #puts "#{e.afterBounds.width} x #{e.afterBounds.height} scale: #{scale}" 
+  top.scaleX = top.scaleY = scale
+end
 
 sl1 = Slide.new(top)
 sl1.invalidateProperties()
@@ -92,10 +98,10 @@ c.draw(sp)
 
 cl = true
 on :enterFrame do |e|
-  c.x = (c.x-1) if cl
-  c.x = (c.x+1) if not cl
-  cl = true if c.x > 50
-  cl = false if c.x <= 0
+  sp.x = sp.x-1 if cl
+  sp.x = sp.x+1 if not cl
+  cl = true if sp.x > 50
+  cl = false if sp.x <= 0
 end
 
 

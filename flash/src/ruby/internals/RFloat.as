@@ -7,6 +7,7 @@ public class RFloat extends RBasic
   public function RFloat(klass:RClass=null, val:Number=NaN)
   {
     super(klass);
+    this.flags = Value.T_FLOAT;
     this.float_value = val;
   }
 

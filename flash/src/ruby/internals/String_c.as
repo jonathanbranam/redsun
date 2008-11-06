@@ -241,6 +241,32 @@ public class String_c
     return rb_str_buf_append(str, str2);
   }
 
+  // string.c:1906
+  public function
+  rb_str_comparable(str1:Value, str2:Value):Boolean
+  {
+    // TODO: @skipped encoding checks
+    return true;
+  }
+
+  // string.c:1951
+  public function
+  rb_str_equal(str1:Value, str2:Value):Value
+  {
+    if (str1 == str2) return rc.Qtrue;
+    if (rc.TYPE(str2) != Value.T_STRING) {
+      if (!rc.vm_method_c.rb_respond_to(str2, rc.parse_y.rb_intern("to_str"))) {
+        return rc.Qfalse;
+      }
+      return rc.object_c.rb_equal(str2, str1);
+    }
+    if (!rb_str_comparable(str1, str2)) return rc.Qfalse;
+    if (RString(str1).string == RString(str2).string) {
+      return rc.Qtrue;
+    }
+    return rc.Qfalse;
+  }
+
   // string.c:6622
   public function
   Init_String():void

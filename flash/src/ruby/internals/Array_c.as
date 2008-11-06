@@ -9,6 +9,16 @@ public class Array_c
   public static const ARY_DEFAULT_SIZE:int = 16;
   public static const ARY_MAX_SIZE:int = int(int.MAX_VALUE / 4);
 
+  // array.c:26
+  public function
+  rb_mem_clear(mem:StackPointer, size:int):void
+  {
+    var i:int;
+    for (i = 0; i < size; i++) {
+      mem.set_at(i, rc.Qnil);
+    }
+  }
+
   // array.c:41
   public function
   ARY_SHARED_P(a:Value):Boolean
@@ -79,6 +89,23 @@ public class Array_c
     return rb_ary_new2(ARY_DEFAULT_SIZE);
   }
 
+  // array.c:145
+  public function
+  rb_ary_new3(n:int, ...args):RArray
+  {
+    var ary:RArray;
+    var i:int;
+
+    ary = rb_ary_new2(n);
+
+    for (i = 0; i < n; i++) {
+      ary.array[i] = args[i];
+    }
+
+    ary.len = n;
+    return ary;
+  }
+
   // array.c:164
   public function
   rb_ary_new4(n:int, elts:StackPointer):RArray
@@ -95,6 +122,13 @@ public class Array_c
     }
 
     return ary;
+  }
+
+  // array.c:218
+  public function
+  to_ary(ary:Value):Value
+  {
+    return rc.object_c.rb_convert_type(ary, Value.T_ARRAY, "Array", "to_ary");
   }
 
   // array.c:372
@@ -150,6 +184,93 @@ public class Array_c
     return rb_ary_elt(ary, offset);
   }
 
+  // array.c:958
+  public function
+  rb_ary_to_ary(obj:Value):Value
+  {
+    if (rc.TYPE(obj) == Value.T_ARRAY) {
+      return obj;
+    }
+    if (rc.vm_method_c.rb_respond_to(obj, rc.parse_y.rb_intern("to_ary"))) {
+      return to_ary(obj);
+    }
+    return rb_ary_new3(1, obj);
+  }
+
+  // array.c:970
+  public function
+  rb_ary_splice(ary:RArray, beg:int, len:int, rpl:Value):void
+  {
+    var rlen:int;
+    var i:int;
+
+    if (len < 0) {
+      rc.error_c.rb_raise(rc.error_c.rb_eIndexError,
+                          "negative length ("+len+")");
+    }
+    if (beg < 0) {
+      beg += ary.len;
+      if (beg < 0) {
+        beg -= ary.len;
+        rc.error_c.rb_raise(rc.error_c.rb_eIndexError,
+                            "index "+ beg+ " out of array");
+      }
+    }
+    if (ary.len < len  || ary.len < (beg + len)) {
+      len = ary.len - beg;
+    }
+
+    if (rpl == rc.Qundef) {
+      rlen = 0;
+    }
+    else {
+      rpl = rb_ary_to_ary(rpl);
+      rlen = RArray(rpl).len;
+    }
+    rb_ary_modify(ary);
+    if (beg >= ary.len) {
+      if (beg > ARY_MAX_SIZE - rlen) {
+        rc.error_c.rb_raise(rc.error_c.rb_eIndexError, "index " + beg+" too big");
+      }
+      len = beg + rlen;
+      if (len >= ary.array.length) {
+        ary.array.length = len;
+      }
+      rb_mem_clear(new StackPointer(ary.array, len), beg - ary.len);
+      if (rlen > 0) {
+        var rary:RArray = RArray(ary);
+        for (i = 0; i < rlen; i++) {
+          ary.array[beg+i] = rary.array[i];
+        }
+        ary.len = len;
+      }
+    }
+    else {
+      var alen:int;
+
+      if (beg + len > ary.len) {
+        len = ary.len - beg;
+      }
+
+      alen = ary.len + rlen - len;
+      if (alen > ary.array.length) {
+        ary.array.length = alen;
+      }
+
+      if (len != rlen) {
+        var end:int = ary.len - (beg + len);
+        for (i = 0; i < end; i++) {
+          ary.array[beg+rlen+i] = ary.array[beg+len+i];
+        }
+      }
+      if (rlen > 0) {
+        for (i = 0; i < rlen; i++) {
+          ary.array[beg+i] = RArray(rpl).array[i];
+        }
+      }
+    }
+  }
+
   // array.c:1135
   public function
   rb_ary_each(aryv:Value):Value
@@ -180,6 +301,17 @@ public class Array_c
     }
     dup.len = ary.len;
     return dup;
+  }
+
+  // array.c:2263
+  public function
+  rb_ary_concat(x:RArray, yv:Value):RArray
+  {
+    var y:RArray = RArray(to_ary(yv));
+    if (y.len > 0) {
+      rb_ary_splice(x, x.len, 0, y);
+    }
+    return x;
   }
 
   // array.c:3547

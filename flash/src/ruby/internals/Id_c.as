@@ -55,6 +55,7 @@ public class Id_c
   public static const idEqTilde:int = tMATCH;
   public static const idAREF:int = tAREF;
   public static const idASET:int = tASET;
+  // id.h:50
   public static const tLAST_TOKEN:int = 400;
   public static const idLAST_TOKEN:int = tLAST_TOKEN >> ID_SCOPE_SHIFT;
 
@@ -71,20 +72,25 @@ public class Id_c
   public static const tBitblt:int = 328;
   public static const tAnswer:int = 329;
 
-  public static const tLAST_ID:int = 330;
+  public static const tLAST_ID:int = 400;
 
+  // parse.y:734
+  public var idNULL:int = 330;
+  public var idRespond_to:int = 331;
+  public var idIFUNC:int = 332;
+  public var idCFUNC:int = 333;
+  public var idThrowState:int = 334;
+  public var id_core_set_method_alias:int = 335;
+  public var id_core_set_variable_alias:int = 336;
+  public var id_core_undef_method:int = 337;
+  public var id_core_define_method:int = 338;
+  public var id_core_define_singleton_method:int = 339;
+  public var id_core_set_postexe:int = 340;
 
   public var idInitialize:int;
   public var idMethodMissing:int;
   public var idLength:int;
 
-
-  public var id_core_set_method_alias:int;
-  public var id_core_set_variable_alias:int;
-  public var id_core_undef_method:int;
-  public var id_core_define_method:int;
-  public var id_core_define_singleton_method:int;
-  public var id_core_set_postexe:int;
 
   public function
   Init_id():void

@@ -121,6 +121,25 @@ public class Object_c
 
   }
 
+  // object.c:47
+  public function
+  rb_equal(obj1:Value, obj2:Value):Value
+  {
+    var result:Value;
+
+    if (obj1 == obj2) return rc.Qtrue;
+    result = rc.vm_eval_c.rb_funcall(obj1, id_eq, 1, obj2);
+    if (rc.RTEST(result)) return rc.Qtrue;
+    return rc.Qfalse;
+  }
+
+  // object.c:58
+  public function
+  rb_eql(obj1:Value, obj2:Value):Boolean
+  {
+    return rc.RTEST(rc.vm_eval_c.rb_funcall(obj1, id_eql, 1, obj2));
+  }
+
   public function
   rb_obj_class(obj:Value):RClass
   {
@@ -213,6 +232,14 @@ public class Object_c
   rb_obj_not(obj:Value):Value
   {
     return rc.RTEST(obj) ? rc.Qfalse : rc.Qtrue;
+  }
+
+  // object.c:120
+  public function
+  rb_obj_not_equal(obj1:Value, obj2:Value):Value
+  {
+    var result:Value = rc.vm_eval_c.rb_funcall(obj1, id_eq, 1, obj2);
+    return rc.RTEST(result) ? rc.Qfalse : rc.Qtrue;
   }
 
   public function

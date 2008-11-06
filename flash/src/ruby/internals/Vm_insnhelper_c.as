@@ -573,8 +573,7 @@ public class Vm_insnhelper_c
 
     }
     else {
-      // TODO: @skipped check if namespace
-      // vm_check_if_namespace(orig_klass);
+      vm_check_if_namespace(orig_klass);
       if (is_defined) {
         return rc.variable_c.rb_const_defined_from(RClass(orig_klass), id) ? rc.Qtrue : rc.Qfalse;
       }
@@ -760,6 +759,21 @@ public class Vm_insnhelper_c
     return val;
   }
 
+  // vm_insnhelper.c:970
+  public function
+  vm_check_if_namespace(klass:Value):void
+  {
+    switch (rc.TYPE(klass)) {
+      case Value.T_CLASS:
+      case Value.T_MODULE:
+        break;
+      default:
+        rc.error_c.rb_raise(rc.error_c.rb_eTypeError, ""+
+                            RString(rc.object_c.rb_inspect(klass)).string+
+                            " is not a class/module");
+    }
+  }
+
   // vm_insnhelper.c:1089
   protected function
   vm_search_normal_superclass(klass:Value, recv:Value):Value
@@ -822,6 +836,55 @@ public class Vm_insnhelper_c
     else {
       return false;
     }
+  }
+
+  // vm_insnhelper.c:1380
+  public function
+  opt_eq_func(recv:Value, obj:Value, ic:Value):Value
+  {
+    var val:Value = rc.Qundef;
+
+    if (rc.FIXNUM_2_P(recv, obj) &&
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_EQ)) {
+      if (RInt(recv).value == RInt(obj).value) {
+        val = rc.Qtrue;
+      }
+      else {
+        val = rc.Qfalse;
+      }
+    }
+    else if (!rc.SPECIAL_CONST_P(recv) && !rc.SPECIAL_CONST_P(obj)) {
+      if (rc.HEAP_CLASS_OF(recv) == rc.numeric_c.rb_cFloat &&
+          rc.HEAP_CLASS_OF(obj) == rc.numeric_c.rb_cFloat &&
+          rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_EQ)) {
+        var a:Number = RFloat(recv).float_value;
+        var b:Number = RFloat(obj).float_value;
+
+        if (isNaN(a) || isNaN(b)) {
+          val = rc.Qfalse;
+        }
+        else if (a == b) {
+          val = rc.Qtrue;
+        }
+        else {
+          val = rc.Qfalse;
+        }
+
+      }
+      else if (rc.HEAP_CLASS_OF(recv) == rc.string_c.rb_cString &&
+               rc.HEAP_CLASS_OF(obj) == rc.string_c.rb_cString &&
+               rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_EQ)) {
+        val = rc.string_c.rb_str_equal(recv, obj);
+      }
+      else {
+        var mn:Node = rc.vm_insnhelper_c.vm_method_search(Id_c.idEq, rc.CLASS_OF(recv), ic);
+        if (check_cfunc(mn, rc.object_c.rb_obj_equal)) {
+          return recv == obj ? rc.Qtrue : rc.Qfalse;
+        }
+      }
+    }
+
+    return val;
   }
 
 }

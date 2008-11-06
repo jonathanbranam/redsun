@@ -112,54 +112,54 @@ public class Vm_method_c
     }
   }
 
+  // vm_mehod.c:1049
+  public function
+  rb_method_basic_definition_p(klass:RClass, id:int):Boolean
+  {
+    var node:Node = rb_method_node(klass, id);
+    if (node && (node.nd_noex & Node.NOEX_BASIC)) {
+      return true;
+    }
+    return false;
+  }
 
   public function
   rb_obj_respond_to(obj:Value, id:int, priv:Boolean):Boolean
   {
-    return true;
-    // TODO: @skipped
-    /*
-    var klass:RClass = CLASS_OF(obj);
+    var klass:RClass = rc.CLASS_OF(obj);
 
-    if (rb_method_basic_definition_p(klass, idRespond_to)) {
+    if (rb_method_basic_definition_p(klass, rc.id_c.idRespond_to)) {
       return rb_method_boundp(klass, id, !priv);
     } else {
-      var args:Array = new Array();
+      var args:StackPointer = new StackPointer();
       var n:int = 0;
-      args[n++] = ID2SYM(id);
+      args.set_at(n++, rc.ID2SYM(id));
       if (priv) {
-        args[n++] = Qtrue;
+        args.set_at(n++, rc.Qtrue);
       }
-      return RTEST(rb_funcall2(obj, idRespond_to, n, args));
+      return rc.RTEST(rc.vm_eval_c.rb_funcall2(obj, rc.id_c.idRespond_to, n, args));
     }
-    */
   }
 
-  public function rb_respond_to(obj:Value, id:int):Boolean {
+  public function
+  rb_respond_to(obj:Value, id:int):Boolean
+  {
     return rb_obj_respond_to(obj, id, false);
   }
 
   public function obj_respond_to(argc:int, argv:StackPointer, obj:Value):Value {
-    return rc.Qtrue;
-    // TODO: @skipped
-    /*
     var mid:Value;
     var priv:Value;
     var id:int;
 
-    var midRef:ByRef = new ByRef();
-    var privRef:ByRef = new ByRef();
-
-    rb_scan_args(argc, argv, "11", midRef, privRef);
-    mid = midRef.v;
-    priv = privRef.v;
-    id = rb_to_id(mid);
-    if (rb_method_boundp(CLASS_OF(obj), id, !RTEST(priv))) {
-      return Qtrue;
-    } else {
-      return Qfalse;
+    //rb_scan_args(argc, argv, "11", midRef, privRef);
+    mid = argv.get_at(0);
+    priv = argv.get_at(1);
+    id = rc.string_c.rb_to_id(mid);
+    if (rb_method_boundp(rc.CLASS_OF(obj), id, !rc.RTEST(priv))) {
+      return rc.Qtrue;
     }
-    */
+    return rc.Qfalse;
   }
 
   // vm_method.c:192
@@ -231,6 +231,21 @@ public class Vm_method_c
     // TODO: @skipped
     // check method cache
     return rb_get_method_body(klass, id, null);
+  }
+
+  // vm_method.c:415
+  public function
+  rb_method_boundp(klass:RClass, id:int, ex:Boolean):Boolean
+  {
+    var method:Node;
+
+    if ((method = rb_method_node(klass, id)) != null) {
+      if (ex && (method.nd_noex & Node.NOEX_PRIVATE)) {
+        return false;
+      }
+      return true;
+    }
+    return false;
   }
 
   // vm_method.c:429
