@@ -271,6 +271,7 @@ public class Class_c
   include_class_new(module:RClass, super_class:RClass):RClass
   {
     var klass:RClass = new RClass(null, super_class, rc.object_c.rb_cClass);
+    klass.flags = Value.T_ICLASS;
 
     if (module.BUILTIN_TYPE() == Value.T_ICLASS) {
       module = module.klass;

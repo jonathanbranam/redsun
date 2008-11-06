@@ -95,6 +95,8 @@ public class Id_c
   public function
   Init_id():void
   {
+    rc.parse_y.register_symid(idRespond_to, "respond_to?", rc.parse_y.rb_usascii_encoding());
+
     // TODO: @skipped many ids
     id_core_set_method_alias = rc.parse_y.rb_intern("core#set_method_alias");
     id_core_set_variable_alias = rc.parse_y.rb_intern("core#set_variable_alias");

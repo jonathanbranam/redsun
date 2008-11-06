@@ -453,11 +453,13 @@ public class RubyCore
   {
     rb_cFlashObject = class_c.rb_define_class("FlashObject", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashObject, "method_missing", fo_method_missing, -1);
+    class_c.rb_define_method(rb_cFlashObject, "responds_to?", fo_responds_to, 1);
     class_c.rb_define_method(rb_cFlashObject, "on", fo_on, 1);
 
     rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashClass, "new", fc_new_obj, -1);
     class_c.rb_define_method(rb_cFlashClass, "method_missing", fo_method_missing, -1);
+    class_c.rb_define_method(rb_cFlashClass, "responds_to?", fo_responds_to, 1);
 
     rb_mFlash = class_c.rb_define_module("Flash");
     rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");
@@ -537,6 +539,29 @@ public class RubyCore
     }
 
     return Qnil;
+  }
+
+  public function
+  fo_responds_to(argc:int, argv:StackPointer, recv:Value):Value
+  {
+    var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
+    var method_name:String = parse_y.rb_id2name(RSymbol(argv.get_at(0)).id);
+    if (method_name.charAt(method_name.length-1) == "=") {
+      method_name = method_name.substr(0, method_name.length-1);
+      try {
+        var v:* = flash_obj[method_name]
+      } catch (e:Error) {
+        return Qfalse;
+      }
+      return Qtrue;
+    }
+    try {
+      var val:* = flash_obj[method_name];
+    } catch (e:Error) {
+      return Qfalse;
+    }
+
+    return Qtrue;
   }
 
   public function

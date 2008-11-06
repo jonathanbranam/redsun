@@ -350,7 +350,6 @@ public class RubyFrame
     }
     //*/
 
-
     mn = rc.vm_insnhelper_c.vm_method_search(id, klass, ic);
     // TODO: @fix method_missing is not being called here.
 
@@ -976,7 +975,7 @@ public class RubyFrame
       // other
       reg_sp.push(recv);
       reg_sp.push(obj);
-      // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
+      // CALL_SIMPLE_METHOD(1, Id_c.idPLUS, recv);
       var klass:RClass = rc.CLASS_OF(recv);
       var id:int = Id_c.idPLUS;
       //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));

@@ -16,8 +16,8 @@ public class Vm_method_c
 
   public function Init_eval_method():void {
     // TODO: @skipped
+    rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "respond_to?", obj_respond_to, -1);
     /*
-    class_c.rb_define_method(rb_mKernel, "respond_to?", obj_respond_to, -1);
 
     class_c.rb_define_private_method(rb_cModule, "remove_method", rb_mod_remove_method, -1);
     class_c.rb_define_private_method(rb_cModule, "undef_method", rb_mod_undef_method, -1);

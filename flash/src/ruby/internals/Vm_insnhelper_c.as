@@ -421,9 +421,9 @@ public class Vm_insnhelper_c
       cfp.method_class = klass;
 
       //reg_cfp.sp -= num + 1;
-      //var argv:Array = reg_cfp.sp.slice(reg_cfp.sp.length-num, reg_cfp.sp.length);
-      var argv:StackPointer = reg_cfp.sp.clone_from_top(num);
       reg_cfp.sp.popn(num+1);
+      // call_cfunc(... reg_cfp->sp + 1)
+      var argv:StackPointer = reg_cfp.sp.clone_down_stack(1);
 
       val = call_cfunc(mn.nd_cfnc, recv, mn.nd_argc, num, argv);
 
