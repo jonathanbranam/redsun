@@ -824,6 +824,68 @@ public class RubyFrame
     reg_sp.push(val);
   }
 
+  // insns.def:1391
+  public function
+  opt_mult():void
+  {
+    var obj:Value = reg_sp.pop();
+    var recv:Value = reg_sp.pop();
+    var val:Value;
+    var normal_dispatch:Boolean = true;
+
+    if (rc.FIXNUM_2_P(recv, obj) &&
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_DIV)) {
+      var a:int, b:int, c:int;
+
+      a = rc.FIX2LONG(recv);
+      if (a == 0) {
+        val = recv;
+      }
+      else {
+        b = rc.FIX2LONG(obj);
+        c = a * b;
+
+        if (true) { //rc.numeric_c.FIXABLE(c) && c / a == b) {
+          val = rc.numeric_c.INT2FIX(c);
+        }
+        else {
+          // TODO: @skipped bignum support
+          //val = rb_big_mul();
+        }
+      }
+      normal_dispatch = false;
+    }
+    else if (!rc.SPECIAL_CONST_P(recv) && !rc.SPECIAL_CONST_P(obj)) {
+      if (rc.HEAP_CLASS_OF(recv) == rc.numeric_c.rb_cFloat &&
+          rc.HEAP_CLASS_OF(obj) == rc.numeric_c.rb_cFloat &&
+          rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_MULT)) {
+        val = rc.DOUBLE2NUM(RFloat(recv).float_value*RFloat(obj).float_value);
+        normal_dispatch = false;
+      }
+    }
+    if (normal_dispatch) {
+      reg_sp.push(recv);
+      reg_sp.push(obj);
+      // CALL_SIMPLE_METHOD(1, Id_c.idMINUS, recv);
+      var klass:RClass = rc.CLASS_OF(recv);
+      var id:int = Id_c.idMULT;
+      //CALL_METHOD(num, 0, 0, id, rb_method_node(klass, id), recv, rc.CLASS_OF(recv));
+      var v:Value = rc.vm_insnhelper_c.vm_call_method(th, reg_cfp, 1, null, 0,
+                                                      id,
+                                                      rc.vm_method_c.rb_method_node(klass, id),
+                                                      recv, rc.CLASS_OF(recv));
+      if (v == rc.Qundef) {
+        RESTORE_REGS();
+        return;
+      } else {
+        val = v;
+      }
+    }
+    reg_sp.push(val);
+
+  }
+
+
   // insns.def:1444
   public function
   opt_div():void

@@ -222,8 +222,7 @@ public class Class_c
     }
     var module:RClass = RClass(module_val);
 
-    // TODO: @skipped
-    // OBJ_INFECT(klass, module);
+    rc.OBJ_INFECT(klass, module);
     c = klass;
     while (module) {
       var superclass_seen:Boolean = false;
@@ -289,9 +288,8 @@ public class Class_c
       klass.klass = module;
       klass.name = module.name+"IncludeClass";
     }
-    // TODO: @skipped
-    // OBJ_INFECT(klass, module);
-    // OBJ_INFECT(klass, module);
+    rc.OBJ_INFECT(klass, module);
+    rc.OBJ_INFECT(klass, module);
 
     return klass;
   }

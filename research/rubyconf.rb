@@ -28,18 +28,27 @@ class ValidationManager
   def validate()
     props = @props
     @props = []
-    #puts "validate #{props.length} objects"
     props.each do |o|
-      o.commitProperties()
+      o.commit_properties() if o.respond_to? :commit_properties
+    end
+    size = @size
+    @size = []
+    size.each do |o|
+      o.measure() if o.respond_to? :measure
+    end
+    display = @display
+    @display = []
+    display.each do |o|
+      o.update_display() if o.respond_to? :update_display
     end
   end
-  def self.invalidateProperties(o)
+  def self.invalidate_properties(o)
     @@vm.props << o
   end
-  def self.invalidateSize(o)
+  def self.invalidate_size(o)
     @@vm.size << o
   end
-  def self.invalidateDisplay(o)
+  def self.invalidate_display(o)
     @@vm.display << o
   end
 end
@@ -47,10 +56,38 @@ end
 @vm = ValidationManager.new
 
 module PropValidator
-  def invalidateProperties()
-    ValidationManager.invalidateProperties(self)
+  def invalidate_properties()
+    ValidationManager.invalidate_properties(self)
   end
-  def commitProperties()
+  def commit_properties()
+  end
+end
+
+module SizeInvalidation
+  def invalidate_size()
+    ValidationManager.invalidate_size(self)
+  end
+  def width=(w)
+    super
+    invalidate_size()
+  end
+  def height=(h)
+    super
+    invalidate_size()
+  end
+  def measure()
+  end
+end
+
+module DisplayInvalidation
+  def invalidate_display()
+    ValidationManager.invalidate_display(self)
+  end
+  def invalidate_size()
+    super
+    invalidate_display()
+  end
+  def update_display()
   end
 end
 
@@ -133,7 +170,7 @@ AIRWindow.on :windowResize do |e|
 end
 
 sl1 = Slide.new
-sl1.invalidateProperties()
+sl1.invalidate_properties()
 
 sl2 = Slide.new
 
@@ -172,15 +209,17 @@ end
 module PercentLayout
   attr_accessor :percent_width, :percent_height
   attr_accessor :explicit_width, :explicit_height
+  def self.included(k)
+    k.alias_method :super_width=, :width=
+    k.alias_method :super_height=, :height=
+  end
   def set_size(width, height)
-    super.width = width
-    super.height = height
+    self.super_width = width
+    self.super_height = height
   end
   def width=(width)
-    @explicit_width = width
-    #super.width = width
-    #@do.width = width
     super
+    @explicit_width = width
   end
 end
 
@@ -230,18 +269,26 @@ class HBox
       total_percent += pw if pw
       total_width += w if not pw and w
     end
-=begin
-    percent_scale = total_percent/100
+    percent_scale = total_percent/100.00001
     remaining_width = width
     percent_width = width - total_width
+    puts "HBox pscale #{percent_scale}"
+    # use up explicit space first
+    objects.each do |o|
+      pw = o.percent_width if o.respond_to? :percent_width
+      w = o.explicit_width || 0 if o.respond_to? :explicit_width
+      if not pw
+        o.set_size(w, o.height)
+        remaining_width -= w
+      end
+    end
     objects.each do |o|
       pw = o.percent_width if o.respond_to? :percent_width
       w = o.explicit_width || 0 if o.respond_to? :explicit_width
       if pw
-        o.set_size(pw*percent_scale, o.height)
+        o.set_size(pw*percent_scale/100.00001*remaining_width, o.height)
       end
     end
-=end
   end
 end
 
@@ -249,6 +296,8 @@ class Canvas
   attr_accessor :sprite
   include DisplayObjectPassthrough
   include PercentLayout
+  include SizeInvalidation
+  include DisplayInvalidation
   def initialize
     @sprite = Flash::Display::Sprite.new
     @do = @sprite
@@ -258,12 +307,22 @@ end
 show.new_slide do |slide|
   l = HBox.new
   left = Canvas.new
-  #left.percent_width = 50
-  circle({:x=>150, :y=>180, :radius =>80, :style=>blue }).draw(left.sprite)
+  left.percent_width = 50
+  def left.update_display
+    circle({:x=>50, :y=>80, :radius =>self.width, :style=>red }).draw(left.sprite)
+  end
+  left.invalidate_display
+  #left.width = 100
+
   right = Text.new
   right.text = "Test Text"
-  #right.percent_width = 50
-  #l.layout([left,right], 200)
+  right.x = 100
+  #right.width = 100
+  right.percent_width = 50
+
+  slide.sprite.addChild(left.sprite)
+  slide.sprite.addChild(right.text_field)
+  l.layout([left,right], 200)
   #slide.draw(circle ({:x=>150, :y=>180, :radius =>80, :style=>blue }))
   #c.draw(slide.sprite)
 end

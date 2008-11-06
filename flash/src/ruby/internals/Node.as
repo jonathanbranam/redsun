@@ -184,8 +184,9 @@ public class Node extends Value
   public function get nd_stts():Node { return u1; }
 
   public function get nd_oid():int { return u1; }
-  public function get nd_cnt():int { return u2; }
-  public function get nd_tbl():Array { return u3; }
+  public function get nd_cnt():int { return u3; }
+  public function set nd_cnt(v:int):void { u3 = v; }
+  public function get nd_tbl():Array { return u1; }
 
   public function get nd_recv():Node { return u1; }
   public function get nd_mid():int   { return u2; }

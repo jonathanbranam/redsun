@@ -26,7 +26,7 @@ public class Vm_c
 
   protected var ruby_vm_global_state_version:int = 1;
   public var ruby_vm_redefined_flag:uint = 0;
-
+  public var vm_opt_method_table:Object;
 
   public function Init_VM():void
   {
@@ -98,16 +98,6 @@ public class Vm_c
   rb_vm_change_state():void
   {
     INC_VM_STATE_VERSION();
-  }
-
-  // vm.c:917
-  protected function
-  vm_init_redefined_flag():void
-  {
-    // create a bunch of operator related things
-
-    //vm_opt_method_table = new Object();
-
   }
 
   public function
@@ -215,6 +205,18 @@ public class Vm_c
 
     vm.top_self = rc.object_c.rb_obj_alloc(rc.object_c.rb_cObject);
     rc.class_c.rb_define_singleton_method(rb_vm_top_self(), "to_s", main_to_s, 0);
+  }
+
+  // vm.c:894
+  public function
+  rb_vm_check_redefinition_opt_method(node:Node):void
+  {
+    var bop:int;
+
+    if (vm_opt_method_table[node] != undefined) {
+      bop = vm_opt_method_table[node];
+      ruby_vm_redefined_flag |= bop;
+    }
   }
 
   // vm.c:1943
@@ -888,6 +890,39 @@ public class Vm_c
   RUBY_VM_GET_BLOCK_PTR_IN_CFP(cfp:RbControlFrame):RbBlock
   {
     return cfp;
+  }
+
+  // vm.c:904
+  public function
+  add_opt_method(klass:RClass, mid:int, bop:int):void
+  {
+    var node:Node;
+    if (klass.m_tbl[mid] != undefined) {
+      node = klass.m_tbl[mid];
+      if (Node(Node(node.nd_body).nd_body).nd_type() == Node.NODE_CFUNC) {
+        vm_opt_method_table[node] = bop;
+      }
+    }
+    else {
+      rc.error_c.rb_bug("undefined optimized method: " + rc.parse_y.rb_id2name(mid));
+    }
+  }
+
+  // vm.c:917
+  public function
+  vm_init_redefined_flag():void
+  {
+    var mid:int;
+    var bop:int;
+
+    vm_opt_method_table = new Dictionary();
+
+    rc.error_c.rb_warn("redifined tracking not implemented");
+    return;
+
+    mid = Id_c.idPLUS;
+    bop = RbVm.BOP_PLUS;
+    add_opt_method(rc.numeric_c.rb_cFixnum, mid, bop);
   }
 
 

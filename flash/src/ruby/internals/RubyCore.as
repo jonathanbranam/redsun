@@ -683,7 +683,7 @@ public class RubyCore
   }
 
   // node.h
-  public function NEW_FBODY(n:Value,i:Value):Node {
+  public function NEW_FBODY(n:Value,i:int):Node {
     return NEW_NODE(Node.NODE_FBODY, i, n, null);
   }
 

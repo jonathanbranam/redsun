@@ -78,6 +78,34 @@ public class Numeric_c
     return rc.string_c.rb_str_new(RInt(x).value.toString(base));
   }
 
+  // numeric.c:517
+  public function
+  flo_to_s(flt:RFloat):Value
+  {
+    // TODO: investigate skipped stuff
+    return rc.string_c.rb_str_new(flt.float_value.toString());
+  }
+
+  // numeric.c:623
+  public function
+  flo_mul(x:RFloat, y:Value):Value
+  {
+    switch (rc.TYPE(y)) {
+      case Value.T_FIXNUM:
+        return rc.DOUBLE2NUM(x.float_value*Number(rc.FIX2LONG(y)));
+      case Value.T_BIGNUM:
+        rc.error_c.rb_bug("bignum not implemented");
+        break;
+      case Value.T_FLOAT:
+        return rc.DOUBLE2NUM(x.float_value*RFloat(y).float_value);
+      default:
+        rc.error_c.rb_bug("coerce not implemented");
+        break;
+        //return rb_num_coerce_bin(x, y, "*");
+    }
+    return rc.Qnil;
+  }
+
   // numeric.c:2209
   public function
   fixdivmod(x:int, y:int, divp:ByRef, modp:ByRef):void
@@ -106,6 +134,42 @@ public class Numeric_c
     }
     if (divp) divp.v = div;
     if (modp) modp.v = mod;
+  }
+
+  // numeric.c:2163
+  public function
+  fix_mul(x:RInt, y:Value):Value
+  {
+    if (rc.FIXNUM_P(y)) {
+      var a:int, b:int;
+      //var d:int;
+      var c:int;
+      var r:Value;
+
+      // TODO: @skipped bignum, range checking
+
+      a = rc.FIX2LONG(x);
+      b = rc.FIX2LONG(y);
+
+      c = a * b;
+      r = INT2FIX(c);
+
+      if (a == 0) return x;
+      // TODO: @skipped bignum test
+      return r;
+    }
+    switch (rc.TYPE(y)) {
+      case Value.T_BIGNUM:
+        rc.error_c.rb_bug("bignum not implemented");
+        break;
+      case Value.T_FLOAT:
+        return rc.DOUBLE2NUM(Number(rc.FIX2LONG(x)) * RFloat(y).float_value);
+      default:
+        rc.error_c.rb_bug("coerce not implemented");
+        break;
+        //return rb_num_coerce_bin(x, y, "*");
+    }
+    return rc.Qnil;
   }
 
   // numeric.c:2264
@@ -163,8 +227,12 @@ public class Numeric_c
     rb_eFloatDomainError = rc.class_c.rb_define_class("FloatDomainError", rc.error_c.rb_eRangeError);
 
     rc.class_c.rb_define_method(rb_cFixnum, "to_s", fix_to_s, -1);
+    rc.class_c.rb_define_method(rb_cFloat, "to_s", flo_to_s, 0);
     rc.class_c.rb_define_method(rb_cFixnum, "/", fix_div, 1);
     rc.class_c.rb_define_method(rb_cFloat, "/", flo_div, 1);
+
+    rc.class_c.rb_define_method(rb_cFixnum, "*", fix_mul, 1);
+    rc.class_c.rb_define_method(rb_cFloat, "*", flo_mul, 1);
   }
 
 }

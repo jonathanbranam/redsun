@@ -17,11 +17,11 @@ public class Vm_method_c
   public function Init_eval_method():void {
     // TODO: @skipped
     rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "respond_to?", obj_respond_to, -1);
+    rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "alias_method", rb_mod_alias_method, 2);
     /*
 
     class_c.rb_define_private_method(rb_cModule, "remove_method", rb_mod_remove_method, -1);
     class_c.rb_define_private_method(rb_cModule, "undef_method", rb_mod_undef_method, -1);
-    class_c.rb_define_private_method(rb_cModule, "alias_method", rb_mod_alias_method, 2);
     class_c.rb_define_private_method(rb_cModule, "public", rb_mod_public, -1);
     class_c.rb_define_private_method(rb_cModule, "protected", rb_mod_protected, -1);
     class_c.rb_define_private_method(rb_cModule, "private", rb_mod_private, -1);
@@ -91,7 +91,7 @@ public class Vm_method_c
     var body:Node;
 
     if (node) {
-      body = rc.NEW_FBODY(rc.NEW_METHOD(node, klass, rc.NOEX_WITH_SAFE(noex)), null);
+      body = rc.NEW_FBODY(rc.NEW_METHOD(node, klass, rc.NOEX_WITH_SAFE(noex)), 0);
     } else {
       body = null;
     }
@@ -288,6 +288,75 @@ public class Vm_method_c
     if (write) {
       rb_add_method(klass, rc.parse_y.rb_id_attrset(id), rc.NEW_ATTRSET(attriv), noex);
     }
+  }
+
+  // vm_method:727
+  public function
+  rb_alias(klass:RClass, name:int, def:int):void
+  {
+    var orig_fbody:Node, node:Node;
+    var singleton:Value;
+    var data:*;
+
+    // TODO: @skipped frozen check
+    //rc.eval_c.rb_frozen_class_p(klass);
+    if (klass == rc.object_c.rb_cObject) {
+      //rb_secure(4);
+    }
+    orig_fbody = search_method(klass, def, null);
+    if (!orig_fbody || !orig_fbody.nd_body) {
+      if (rc.TYPE(klass) == Value.T_MODULE) {
+        orig_fbody = search_method(rc.object_c.rb_cObject, def, null);
+      }
+    }
+    if (!orig_fbody || !orig_fbody.nd_body) {
+      // TODO: @skipped print undef
+      rc.error_c.rb_bug("undefined method");
+      //rb_print_undef(klass, def, null);
+    }
+    if (klass.flags & Value.FL_SINGLETON) {
+      singleton = rc.variable_c.rb_iv_get(klass, "__attached__");
+    }
+
+    orig_fbody.nd_cnt = orig_fbody.nd_cnt + 1;
+
+    if (klass.iv_tbl[name] != undefined) {
+      data = klass.iv_tbl[name];
+      node = data;
+      if (node) {
+        if (rc.RTEST(rc.ruby_verbose()) && node.nd_cnt == 0 && node.nd_body) {
+          rc.error_c.rb_warning("discarding old "+rc.parse_y.rb_id2name(name));
+        }
+        if (Node(Node(node.nd_body).nd_body).nd_type() == Node.NODE_CFUNC) {
+          rc.vm_c.rb_vm_check_redefinition_opt_method(node);
+        }
+      }
+    }
+
+    var orig_nd_body:Node = orig_fbody.nd_body;
+    klass.m_tbl[name] = rc.NEW_FBODY(
+        rc.NEW_METHOD(orig_nd_body.nd_body, orig_nd_body.nd_clss,
+                      rc.NOEX_WITH_SAFE(orig_nd_body.nd_noex)), def);
+
+    // TODO: @skipped method caching
+    //rb_clear_cache_by_id(name);
+
+    if (!ruby_running()) return;
+
+    if (singleton != null) {
+      rc.vm_eval_c.rb_funcall(singleton, singleton_added, 1, rc.ID2SYM(name));
+    }
+    else {
+      rc.vm_eval_c.rb_funcall(klass, added, 1, rc.ID2SYM(name));
+    }
+  }
+
+  // vm_method.c:805
+  public function
+  rb_mod_alias_method(mod:RClass, newname:Value, oldname:Value):Value
+  {
+    rb_alias(mod, rc.string_c.rb_to_id(newname), rc.string_c.rb_to_id(oldname));
+    return mod;
   }
 
 
