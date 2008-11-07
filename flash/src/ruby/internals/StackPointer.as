@@ -31,12 +31,11 @@ public class StackPointer extends Value
     return (stack == other.stack && index == other.index);
   }
 
-  public function inc_index():void {
-    index++;
-    //trace("StackPointer inc_index " + index);
+  public function inc(n:int=1):void {
+    index += n;
   }
 
-  public function dec(n:int):void {
+  public function dec(n:int=1):void {
     index -= n;
   }
 

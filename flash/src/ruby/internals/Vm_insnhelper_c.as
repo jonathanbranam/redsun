@@ -82,7 +82,7 @@ public class Vm_insnhelper_c
 
     for (i = 0; i < local_size; i++) {
       sp.set_top(rc.Qnil);
-      sp.inc_index();
+      sp.inc();
       // *sp = Qnil;
       // sp++;
     }
@@ -834,6 +834,73 @@ public class Vm_insnhelper_c
 
     idp.v = id;
     klassp.v = klass;
+  }
+
+  // vm_insnshelper.c:1325
+  public function
+  vm_expandarray(cfp:RbControlFrame, ary:Value, num:int, flag:int):void
+  {
+    var is_splat:Boolean = (flag & 0x01) != 0;
+    var space_size:int = num + (is_splat ? 1 : 0)
+    var base:StackPointer = cfp.sp.clone();
+    var ptr:Array;
+    var tmp_ary:Value;
+    var len:int;
+    var i:int = 0;
+
+    if (rc.TYPE(ary) != Value.T_ARRAY) {
+      ary = rc.array_c.rb_ary_to_ary(ary);
+    }
+
+    cfp.sp.inc(space_size);
+
+    tmp_ary = ary;
+    ptr = RArray(ary).array;
+    len = RArray(ary).len;
+
+    if (flag & 0x02) {
+      // post: ..., nil, ary[-1], ..., ary[0..-num] # top
+      var j:int;
+
+      if (len < num) {
+        for (i = 0; i < num-len; i++) {
+          base.set_top(rc.Qnil);
+          base.inc();
+        }
+      }
+      for (j = 0; i < num; i++, j++) {
+        var v:Value = ptr[len - j - 1];
+        base.set_top(v);
+        base.inc();
+      }
+      if (is_splat) {
+        base.set_top(rc.array_c.rb_ary_new4(len - j, new StackPointer(ptr)));
+      }
+    }
+    else {
+      // normal: ary[num..-1], ary[num-2], ary[num-3], ..., ary[0] # top
+      var bptr:StackPointer = base.clone_down_stack(space_size-1);
+
+      for (i = 0; i < num; i++) {
+        if (len <= i) {
+          for (; i < num; i++) {
+            bptr.set_top(rc.Qnil);
+            bptr.dec();
+          }
+          break;
+        }
+        bptr.set_top(ptr[i]);
+        bptr.dec();
+      }
+      if (is_splat) {
+        if (num > len) {
+          bptr.set_top(rc.array_c.rb_ary_new());
+        }
+        else {
+          bptr.set_top(rc.array_c.rb_ary_new4(len - num, new StackPointer(ptr, num)));
+        }
+      }
+    }
   }
 
   // vm_insnhelper.c:1364

@@ -8,6 +8,7 @@ import mx.core.Window;
 import mx.events.AIREvent;
 import mx.events.FlexEvent;
 
+import ruby.internals.RClass;
 import ruby.internals.RubyCore;
 import ruby.internals.Value;
 
@@ -44,6 +45,11 @@ public class PresoWindow extends Window
     rc.variable_c.rb_define_global_const("AIRWindow", this_val);
     rc.variable_c.rb_define_global_const("Document", this_val);
     rc.variable_c.rb_define_const(rc.rb_mFlashDisplay, "Screen", rc.wrap_flash_class(Screen));
+
+    var rb_mMx:RClass = rc.class_c.rb_define_module("Mx");
+    var rb_mMxCore:RClass = rc.class_c.rb_define_module_under(rb_mMx, "Core");
+    rc.variable_c.rb_const_set(rb_mMxCore, rc.parse_y.rb_intern("UIComponent"), rc.wrap_flash_class(UIComponent));
+
     //variable_c.rb_const_set(rb_mFlashDisplay, parse_y.rb_intern("Sprite"), wrap_flash_class(Sprite));
     rc.run(bytecode, fullUIC);
   }

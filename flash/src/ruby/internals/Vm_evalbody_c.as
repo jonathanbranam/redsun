@@ -79,6 +79,9 @@ public class Vm_evalbody_c
         if (instruction == "trace") {
           continue;
         }
+        if (instruction == "throw") {
+          instruction = "rthrow";
+        }
 
         //trace("eval loop: cfp: " + th.cfp_stack.length+" sp:"+th.cfp.sp.index + " bp:"+th.cfp.bp.index + "; " + insn);
 

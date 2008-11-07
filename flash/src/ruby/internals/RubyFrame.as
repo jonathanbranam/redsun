@@ -56,7 +56,7 @@ public class RubyFrame
     for (i = 0; i < n; i++) {
       reg_sp.set_at(i, sp.get_at(i));
     }
-    reg_sp.inc_index();
+    reg_sp.inc();
   }
 
   // insns.def:670
@@ -607,9 +607,8 @@ public class RubyFrame
   public function
   expandarray(num:int, flag:uint):void
   {
-    var ary:Value = reg_sp.topn(0);
-    rc.error_c.rb_bug("expandarray not implemented");
-    //vm_expandarray(reg_cfp, ary, num, flag);
+    var ary:Value = reg_sp.pop();
+    rc.vm_insnhelper_c.vm_expandarray(reg_cfp, ary, num, flag);
   }
 
   // insns:def:493
