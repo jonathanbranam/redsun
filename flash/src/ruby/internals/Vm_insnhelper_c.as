@@ -57,7 +57,7 @@ public class Vm_insnhelper_c
         cref = dfp.get_at(-1);
         break;
       }
-      dfp = StackPointer(GET_PREV_DFP(dfp));
+      dfp = GET_PREV_DFP(dfp);
     }
 
     if (cref == null) {

@@ -527,7 +527,7 @@ public class Vm_c
   ENV_IN_HEAP_P(th:RbThread, env:StackPointer):Boolean
   {
     if (th.stack.stack != env.stack) {
-      return false;
+      return true;
     }
     else {
       return !(th.stack.index < env.index && env.index < (th.stack.index + th.stack_size));
@@ -570,21 +570,22 @@ public class Vm_c
 
     if (!envptr.equals(endptr)) {
       var penvptr:StackPointer = envptr.get_at(0);
+      penvptr = penvptr.clone();
       var pcfp:RbControlFrame = cfp;
 
       if (ENV_IN_HEAP_P(th, penvptr)) {
         penvval = ENV_VAL(penvptr);
       }
       else {
-        while (pcfp.dfp != penvptr) {
+        while (!pcfp.dfp.equals(penvptr)) {
           pcfp = RUBY_VM_PREVIOUS_CONTROL_FRAME(th, pcfp);
           if (pcfp.dfp == null) {
             rc.error_c.rb_bug("invalid dfp");
           }
         }
-        penvval = vm_make_env_each(th, pcfp, penvptr, endptr);
+        penvval = vm_make_env_each(th, pcfp, penvptr.clone(), endptr.clone());
         cfp.lfp = pcfp.lfp.clone();
-        envptr = pcfp.dfp.clone();
+        envptr.set_top(pcfp.dfp.clone());
       }
     }
 
@@ -605,7 +606,11 @@ public class Vm_c
     env.prev_envval = penvval;
 
     for (i = 0; i <= local_size; i++) {
-      env.env.set_at(i, envptr.get_at(-local_size + i));
+      var d:* = envptr.get_at(-local_size + i);
+      if (d is StackPointer) {
+        d = StackPointer(d).clone();
+      }
+      env.env.set_at(i, d);
       // Some removed code here
     }
 
@@ -615,9 +620,9 @@ public class Vm_c
     nenvptr.set_at(2, penvval);               // frame prev env object
 
     // reset lfp/dfp in cfp
-    cfp.dfp = nenvptr;
+    cfp.dfp = nenvptr.clone();
     if (envptr.equals(endptr)) {
-      cfp.lfp = nenvptr;
+      cfp.lfp = nenvptr.clone();
     }
 
     // as Binding

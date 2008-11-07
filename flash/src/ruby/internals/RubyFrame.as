@@ -220,7 +220,6 @@ public class RubyFrame
   leave():void
   {
     var val:Value = reg_sp.pop();
-    //trace("leave retval: " + val);
     if (!reg_sp.equals(reg_cfp.bp)) {
       rc.error_c.rb_bug("Stack consistency error (sp: "+reg_sp+", bp: " +reg_cfp.bp +")");
     }
@@ -228,6 +227,7 @@ public class RubyFrame
     rc.vm_insnhelper_c.vm_pop_frame(th);
     RESTORE_REGS();
     reg_sp.push(val);
+    //trace("leave sp: " + reg_sp.index + " lfp: " + reg_cfp.lfp.index);
   }
 
   // insns.def:1077
@@ -344,7 +344,8 @@ public class RubyFrame
     klass = rc.CLASS_OF(recv);
 
     /*
-    trace("send "+op_str+" to " + (klass ? klass.name : "?") + " with " + op_argc+ " ops");
+    trace("send "+op_str+" to " + (klass ? klass.name : "?") + " with " + op_argc+ " ops" +
+            " sp: "+reg_sp.index+ " bp: "+reg_cfp.bp.index + " lfp: " + reg_cfp.lfp.index);
     for (var o:int = op_argc-1; o >= 0; o--) {
       trace("       op "+(op_argc-o)+": " + reg_sp.topn(o));
     }

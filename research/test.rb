@@ -1,17 +1,34 @@
 
+Val1 = "val1"
+Val2 = "val2"
 
-fe = Flash::Events
+class A
+  attr_accessor :r
+  def initialize
+    @r = []
+  end
+  def boo(&r)
+    @r << r
+  end
+end
 
-puts "Flash::Events => #{fe}"
+def blah1
+  a = A.new
+  yield a
+  a.r[0].call("hi")
+  a.r[1].call("hi")
+end
 
-puts "Flash::Events.name => #{Flash::Events.name}"
-
-puts "Flash::Events::Event => #{Flash::Events::Event}"
-
-evt = Flash::Events::Event.new "keyDown"
-
-puts "event: #{evt} #{evt.type} #{evt.bubbles}"
-
-puts "Flash.name => #{Flash.name}"
-
-puts "Flash::Display.name => #{Flash::Display.name}"
+blah1 do |a|
+  val1 = "val1"
+  val2 = "val2"
+  a.boo do |m|
+    puts "msg: #{m}"
+    puts "Val1: #{Val1} Val2: #{Val2}"
+  end
+  a.boo do |m2|
+    puts "msg2: #{m2}"
+    puts "Val1: #{Val1} Val2: #{Val2}"
+  end
+  puts "val1: #{val1} val2: #{val2}"
+end

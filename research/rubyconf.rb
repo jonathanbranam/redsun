@@ -33,11 +33,13 @@ show.new_slide do |slide|
   left, right = slide.split_horizontal 30
   left.render do |s|
     rectangle({:x=>0, :y=>80, :width=>60,
-                :height=>20, :style=>Red }).draw(s)
+                :height=>20, :style=>Red }).draw(s.sprite)
     circle({:x=>150, :y=>80, 
-             :radius=>60, :style=>Blue }).draw(s)
+             :radius=>60, :style=>Blue }).draw(s.sprite)
   end
-  right.ruby_code =<<HERE
+  puts "right: #{right}"
+  right.render do |s|
+    s.ruby_code =<<HERE
 show.new_slide do |slide|
   left, right = slide.split_horizontal 30
   left.render do |s|
@@ -49,6 +51,7 @@ show.new_slide do |slide|
   right.html_text = 'Infinite recursion'
 end
 HERE
+  end
 end
 
 show.start

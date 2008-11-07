@@ -61,17 +61,25 @@ class SlideShow
     next_slide
     self
   end
+  def next_part
+    next_slide unless @slide and @slide.next_part
+  end
+  def prev_part
+    prev_slide unless @slide and @slide.prev_part
+  end
   def next_slide
     @frame.remove_child(@cur_frame) if @cur_frame
     @cur_frame = nil
     @index = @index + 1 if @index < @slides.length
     @cur_frame = Flash::Display::Sprite.new
     if @index < @slides.length
-      sl = @slides[@index]
-      sl.parent = @cur_frame
+      @slide = @slides[@index]
+      @slide.show
+      @slide.parent = @cur_frame
     else
-      sl = @end
-      sl.parent = @cur_frame
+      @slide = @end
+      @slide.show
+      @slide.parent = @cur_frame
     end
     @frame.add_child(@cur_frame)
     self
@@ -79,12 +87,14 @@ class SlideShow
   def prev_slide
     @frame.remove_child(@cur_frame) if @cur_frame
     @cur_frame = nil
+    @slide = nil
     @index = @index - 1 if @index > 0
     return if @index >= @slides.length
     return if @index < 0
     @cur_frame = Flash::Display::Sprite.new
-    sl = @slides[@index]
-    sl.parent = @cur_frame
+    @slide = @slides[@index]
+    @slide.show
+    @slide.parent = @cur_frame
     @frame.add_child(@cur_frame)
     self
   end
@@ -100,18 +110,9 @@ HERE
 SlideSS = Flash::Text::StyleSheet.new
 SlideSS.parseCSS(SlideCSS)
 
-class Slide < Canvas
-  attr_accessor :layout, :children
+class SlidePart < Canvas
+  attr_accessor :parent_slide
   include PropValidator
-  #include DisplayObjectPassthrough
-  def parent=(v)
-    v.add_child(sprite)
-  end
-  def initialize
-    super
-    # @sprite = Flash::Display::Sprite.new
-    # @do = @sprite
-  end
   def commitProperties()
   end
   def draw(obj)
@@ -152,21 +153,60 @@ class Slide < Canvas
   def text()
     @text
   end
-  def render()
-    yield @sprite
+  def render(&r)
+    @parts << r if @parent_slide == self
+    me = self
+    @parent_slide.render { r.call(me) } unless @parent_slide == self
+  end
+end
+
+class Slide < SlidePart
+  attr_accessor :layout, :children, :parts, :part_index
+  def parent=(v)
+    v.add_child(sprite)
+  end
+  def initialize
+    super
+    @children = []
+    @parts = []
+    @part_index = -1
+    @parent_slide = self
+  end
+  def show
+    @part_index = -1
+    next_part
   end
   def split_horizontal(perc)
     perc = (perc || 50).to_f/100
-    left = Slide.new
+    left = SlidePart.new
+    left.parent_slide = self
     left.width = self.width.to_f*perc
     left.height = self.height.to_f*perc
-    right = Slide.new
+    right = SlidePart.new
+    right.parent_slide = self
     right.x = left.width
     right.width = self.width.to_f*(1-perc)
     right.height = self.height.to_f*(1-perc)
     @sprite.add_child(left.sprite)
     @sprite.add_child(right.sprite)
+    @children << left
+    @children << right
     [left, right]
+  end
+  def next_part
+    puts "next_part #{@part_index} #{@parts.length}"
+    if @parts[@part_index+1]
+      @part_index = @part_index+1
+      @part = @parts[@part_index]
+      puts "next_part: #{@part}"
+      @part.call(self)
+      true
+    else
+      false
+    end
+  end
+  def prev_part
+    false
   end
 end
 
@@ -207,7 +247,7 @@ class SlideShow
 
     # NOTE: Avoiding return from block which generates throw bytecode
     @parent.on :key_down do |e|
-      #puts "key code #{e.key_code}"
+      puts "key code #{e.key_code}"
       done = false
       if e.key_code == 37 and e.command_key
         first_slide
@@ -220,8 +260,10 @@ class SlideShow
         end
       end
       if not done
-        next_slide if e.key_code == 39 or e.key_code == 13 or e.key_code == 32
-        prev_slide if e.key_code == 37
+        prev_slide if e.key_code == 38
+        next_slide if e.key_code == 40
+        next_part if e.key_code == 39 or e.key_code == 13 or e.key_code == 32
+        prev_part if e.key_code == 37
         exit_fullscreen_or_close if e.key_code == 27 or e.key_code == 81
         toggle_fullscreen if e.key_code == 70
       end
