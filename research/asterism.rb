@@ -11,11 +11,11 @@ class Rectangle
   attr_accessor :x, :y, :width, :height
   include Drawable
   def draw_commands(sprite)
-    sprite.graphics.moveTo(@x,@y)
-    sprite.graphics.lineTo(@x+@width,@y)
-    sprite.graphics.lineTo(@x+@width,@y+@height)
-    sprite.graphics.lineTo(@x,@y+@height)
-    sprite.graphics.lineTo(@x,@y)
+    sprite.graphics.move_to(@x,@y)
+    sprite.graphics.line_to(@x+@width,@y)
+    sprite.graphics.line_to(@x+@width,@y+@height)
+    sprite.graphics.line_to(@x,@y+@height)
+    sprite.graphics.line_to(@x,@y)
   end
 end
 
@@ -26,7 +26,7 @@ class Circle
     @radius = v/2
   end
   def draw_commands(sprite)
-    sprite.graphics.drawCircle(@x, @y, @radius)
+    sprite.graphics.draw_circle(@x, @y, @radius)
   end
 end
 
@@ -63,11 +63,11 @@ module Style
     @fill_alpha = 1
   end
   def begin_style(sprite)
-    sprite.graphics.lineStyle(@line_thickness, @line_color, @line_alpha)
-    sprite.graphics.beginFill(@fill_color, @fill_alpha) if @fill
+    sprite.graphics.line_style(@line_thickness, @line_color, @line_alpha)
+    sprite.graphics.begin_fill(@fill_color, @fill_alpha) if @fill
   end
   def end_style(sprite)
-    sprite.graphics.endFill() if @fill
+    sprite.graphics.end_fill() if @fill
   end
   def clone
     ns = self.class.new

@@ -4,13 +4,13 @@ require "research/asterism.rb"
 
 puts "Found #{Flash::Display::Screen.screens.length} screens."
 
-ms = Flash::Display::Screen.mainScreen
+ms = Flash::Display::Screen.main_screen
 puts "Screen: #{ms.bounds.left} to #{ms.bounds.right} and #{ms.bounds.top} to #{ms.bounds.bottom}"
 
-AIRWindow.nativeWindow.x = ms.bounds.x
-AIRWindow.nativeWindow.y = ms.bounds.y
-AIRWindow.nativeWindow.width = 300 || ms.bounds.width
-AIRWindow.nativeWindow.height = 300 || ms.bounds.height
+AIRWindow.native_window.x = ms.bounds.x
+AIRWindow.native_window.y = ms.bounds.y
+AIRWindow.native_window.width = 300 || ms.bounds.width
+AIRWindow.native_window.height = 300 || ms.bounds.height
 
 
 include Geometry
@@ -39,6 +39,7 @@ class ValidationManager
     display = @display
     @display = []
     display.each do |o|
+      puts "Updating display for #{o}."
       o.update_display() if o.respond_to? :update_display
     end
   end
@@ -95,7 +96,7 @@ class SlideShow
   attr_accessor :frame, :slides, :index, :end
   def initialize(parent)
     @frame = Flash::Display::Sprite.new
-    parent.addChild(@frame)
+    parent.add_child(@frame)
     @slides = []
     @cur_frame = nil
     @end = Slide.new
@@ -112,8 +113,16 @@ class SlideShow
     @index = -1
     next_slide
   end
+  def first_slide
+    @index = -1
+    next_slide
+  end
+  def last_slide
+    @index = @slides.length
+    next_slide
+  end
   def next_slide
-    @frame.removeChild(@cur_frame) if @cur_frame
+    @frame.remove_child(@cur_frame) if @cur_frame
     @cur_frame = nil
     @index = @index + 1 if @index < @slides.length
     @cur_frame = Flash::Display::Sprite.new
@@ -124,10 +133,10 @@ class SlideShow
       sl = @end
       sl.parent = @cur_frame
     end
-    @frame.addChild(@cur_frame)
+    @frame.add_child(@cur_frame)
   end
   def prev_slide
-    @frame.removeChild(@cur_frame) if @cur_frame
+    @frame.remove_child(@cur_frame) if @cur_frame
     @cur_frame = nil
     @index = @index - 1 if @index > 0
     return if @index >= @slides.length
@@ -135,7 +144,7 @@ class SlideShow
     @cur_frame = Flash::Display::Sprite.new
     sl = @slides[@index]
     sl.parent = @cur_frame
-    @frame.addChild(@cur_frame)
+    @frame.add_child(@cur_frame)
   end
 end
     
@@ -144,7 +153,7 @@ class Slide
   attr_accessor :layout, :children, :sprite
   include PropValidator
   def parent=(v)
-    v.addChild(sprite)
+    v.add_child(sprite)
   end
   def initialize
     @sprite = Flash::Display::Sprite.new
@@ -159,13 +168,13 @@ end
 
 
 top = Flash::Display::Sprite.new
-scale = AIRWindow.nativeWindow.width/200.1/2
-TopSprite.addChild(top)
+scale = AIRWindow.native_window.width/200.1/2
+TopSprite.add_child(top)
 top.scaleX = top.scaleY = scale
 
 AIRWindow.on :windowResize do |e|
-  scale = e.afterBounds.width/200.1/2
-  #puts "#{e.afterBounds.width} x #{e.afterBounds.height} scale: #{scale}" 
+  scale = e.after_bounds.width/200.1/2
+  #puts "#{e.after_bounds.width} x #{e.after_bounds.height} scale: #{scale}" 
   top.scaleX = top.scaleY = scale
 end
 
@@ -180,7 +189,7 @@ show.add(sl1)
 show.add(sl2)
 
 #sp = Flash::Display::Sprite.new
-#sl1.addChild(sp)
+#sl1.add_child(sp)
 
 sp = sl1.sprite
 red=DrawStyle.new
@@ -224,7 +233,7 @@ module PercentLayout
 end
 
 module DisplayObjectPassthrough
-  def parent=(v)  v.addChild(@do); end
+  def parent=(v)  v.add_child(@do); end
   def parent()    @do.parent;      end
   def text=(v)    @do.text = v;    end
   def text()      @do.text;        end
@@ -238,6 +247,13 @@ module DisplayObjectPassthrough
   def height()    @do.height;      end
 end
 
+module SizeBlock
+  def width=(w)   @width = w;      end
+  def width()     @width;          end
+  def height=(h)  @height = h;     end
+  def height()    @height;         end
+end
+
 class Text
   attr_accessor :text_field
   include DisplayObjectPassthrough
@@ -245,6 +261,7 @@ class Text
   def initialize
     @text_field = Flash::Text::TextField.new
     @do = @text_field
+    @text_field.selectable = false
   end
 end
 
@@ -253,7 +270,7 @@ tf.x = 200
 tf.y = 0
 tf.width = 200
 tf.height = 400
-sl1.sprite.addChild(tf.text_field)
+sl1.sprite.add_child(tf.text_field)
 tf.text = "def Circle\n  def draw(sprite)\n  end\nend"
 
 c = circle ({:x=>50, :y=>80, :radius =>30, :style=>blue })
@@ -295,6 +312,7 @@ end
 class Canvas
   attr_accessor :sprite
   include DisplayObjectPassthrough
+  include SizeBlock
   include PercentLayout
   include SizeInvalidation
   include DisplayInvalidation
@@ -309,7 +327,14 @@ show.new_slide do |slide|
   left = Canvas.new
   left.percent_width = 50
   def left.update_display
-    circle({:x=>50, :y=>80, :radius =>self.width, :style=>red }).draw(left.sprite)
+    puts "Updating left display"
+    red=DrawStyle.new
+    red.line_thickness = 2
+    red.line_color = 0
+    red.line_alpha = 1
+    red.fill = true
+    red.fill_color = 0xFF5522
+    circle({:x=>50, :y=>80, :radius =>50, :style=>red }).draw(@sprite)
   end
   left.invalidate_display
   #left.width = 100
@@ -320,8 +345,8 @@ show.new_slide do |slide|
   #right.width = 100
   right.percent_width = 50
 
-  slide.sprite.addChild(left.sprite)
-  slide.sprite.addChild(right.text_field)
+  slide.sprite.add_child(left.sprite)
+  slide.sprite.add_child(right.text_field)
   l.layout([left,right], 200)
   #slide.draw(circle ({:x=>150, :y=>180, :radius =>80, :style=>blue }))
   #c.draw(slide.sprite)
@@ -329,19 +354,51 @@ end
 
 etf = Text.new
 etf.text = "END"
-show.end.sprite.addChild(etf.text_field)
+show.end.sprite.add_child(etf.text_field)
 
 show.start
 
-on :keyDown do |e|
-  #puts "key code #{e.keyCode}"
-  show.next_slide if e.keyCode == 39
-  show.prev_slide if e.keyCode == 37
-  AIRWindow.close if e.keyCode == 27
+@was_fullscreen = false
+def toggle_fullscreen
+  if (TopSprite.stage.display_state == "fullScreen" or
+      TopSprite.stage.display_state == "fullScreenInteractive") then
+    @was_fullscreen = false
+    TopSprite.stage.display_state = "normal"
+  else
+    @was_fullscreen = true
+    TopSprite.stage.display_state = "fullScreenInteractive"
+  end
 end
 
-AIRWindow.on :windowActivate do |e|
-  TopSprite.setFocus()
+def exit_fullscreen_or_close
+  # stage.display_state has already changed before :key_down of ESC
+  AIRWindow.close if not @was_fullscreen
+  @was_fullscreen = false
 end
 
-TopSprite.setFocus()
+on :key_down do |e|
+  puts "key code #{e.key_code}"
+  done = false
+  if e.key_code == 37 and e.command_key
+    show.first_slide
+    done = true
+  end
+  if not done
+    if e.key_code == 39 and e.command_key
+      show.last_slide
+      done = true
+    end
+  end
+  if not done
+    show.next_slide if e.key_code == 39 or e.key_code == 13 or e.key_code == 32
+    show.prev_slide if e.key_code == 37
+    exit_fullscreen_or_close if e.key_code == 27
+    toggle_fullscreen if e.key_code == 70
+  end
+end
+
+AIRWindow.on :window_activate do |e|
+  TopSprite.set_focus()
+end
+
+TopSprite.set_focus()

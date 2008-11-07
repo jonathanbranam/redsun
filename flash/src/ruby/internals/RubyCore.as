@@ -178,7 +178,17 @@ public class RubyCore
     var top:EventDispatcher;
     var docval:Value = variable_c.rb_const_get(object_c.rb_cObject, parse_y.rb_intern("TopSprite"));
     top = RData(docval).data;
+
     var str:RString = string_c.rb_obj_as_string(event_name);
+    var event_type:String = str.string;
+    var at:int = event_type.indexOf("_");
+    while (at != -1) {
+      event_type = event_type.substr(0, at) +
+                    event_type.charAt(at+1).toUpperCase() +
+                    event_type.substr(at+2);
+
+      at = event_type.indexOf("_", at);
+    }
 
     var rc:RubyCore = this;
     var th:RbThread = rc.GET_THREAD();
@@ -199,7 +209,7 @@ public class RubyCore
     }
     //orig_argv.set_at(iseq.arg_block, blockval); // Proc or nil
 
-    top.addEventListener(str.string, function (e:Event):void {
+    top.addEventListener(event_type, function (e:Event):void {
       rc.bare_block_call(blockval, rc.wrap_flash_obj(e));
     });
 
@@ -518,6 +528,15 @@ public class RubyCore
     var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
     var method_name:String = parse_y.rb_id2name(RSymbol(argv.get_at(0)).id);
     var attr_set:Boolean = false;
+    var i:int;
+    var at:int = method_name.indexOf("_");
+    while (at != -1) {
+      method_name = method_name.substr(0, at) +
+                    method_name.charAt(at+1).toUpperCase() +
+                    method_name.substr(at+2);
+
+      at = method_name.indexOf("_", at);
+    }
     if (method_name.charAt(method_name.length-1) == "=" && argc == 2) {
       method_name = method_name.substr(0, method_name.length-1);
       flash_obj[method_name] = convert_to_as3(argv.get_at(1));
