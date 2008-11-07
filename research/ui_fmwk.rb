@@ -96,8 +96,6 @@ end
 module DisplayObjectPassthrough
   def parent=(v)  v.add_child(@do); end
   def parent()    @do.parent;      end
-  def text=(v)    @do.text = v;    end
-  def text()      @do.text;        end
   def x=(v)       @do.x = v;       end
   def x()         @do.x;           end
   def y=(v)       @do.y = v;       end
@@ -106,6 +104,13 @@ module DisplayObjectPassthrough
   def width()     @do.width;       end
   def height=(v)  @do.height = v;  end
   def height()    @do.height;      end
+end
+
+module TextFieldPassthrough
+  def text=(v)       @do.text = v;         end
+  def text()         @do.text;             end
+  def html_text=(v)  @do.html_text = v;    end
+  def html_text()    @do.html_text;        end
 end
 
 module SizeBlock
@@ -118,12 +123,19 @@ end
 class Text
   attr_accessor :text_field
   include DisplayObjectPassthrough
+  include TextFieldPassthrough
   include PercentLayout
   def initialize
     @text_field = Flash::Text::TextField.new
     @do = @text_field
     @text_field.selectable = false
     @text_field.text_color = 0xFFFFFF
+    self.font = "Courier New"
+  end
+  def font=(font_name)
+    format = Flash::Text::TextFormat.new
+    format.font = font_name
+    @text_field.set_text_format(format)
   end
 end
 

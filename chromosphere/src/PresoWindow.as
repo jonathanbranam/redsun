@@ -44,7 +44,7 @@ public class PresoWindow extends Window
     var this_val:Value = rc.wrap_flash_obj(this);
     rc.variable_c.rb_define_global_const("AIRWindow", this_val);
     rc.variable_c.rb_define_global_const("Document", this_val);
-    rc.variable_c.rb_define_const(rc.rb_mFlashDisplay, "Screen", rc.wrap_flash_class(Screen));
+    //rc.variable_c.rb_define_const(rc.rb_mFlashDisplay, "Screen", rc.wrap_flash_class(Screen));
 
     var rb_mMx:RClass = rc.class_c.rb_define_module("Mx");
     var rb_mMxCore:RClass = rc.class_c.rb_define_module_under(rb_mMx, "Core");

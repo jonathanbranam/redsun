@@ -106,6 +106,99 @@ public class Numeric_c
     return rc.Qnil;
   }
 
+  // numeric.c:951
+  public function
+  flo_gt(x:RFloat, y:Value):Value
+  {
+    var a:Number, b:Number;
+
+    a = x.float_value;
+    switch (rc.TYPE(y)) {
+      case Value.T_FIXNUM:
+        b = Number(rc.FIX2LONG(y));
+        break;
+
+      case Value.T_BIGNUM:
+        rc.error_c.rb_bug("bignum not implemented");
+        break;
+
+      case Value.T_FLOAT:
+        b = RFloat(y).float_value;
+        if (isNaN(b)) return rc.Qfalse;
+        break;
+
+      default:
+        rc.error_c.rb_bug("coercion not implemented");
+        break;
+    }
+    if (isNaN(a)) return rc.Qfalse;
+    return (a > b) ? rc.Qtrue : rc.Qfalse;
+  }
+
+  // numeric.c:1020
+  public function
+  flo_lt(x:RFloat, y:Value):Value
+  {
+    var a:Number, b:Number;
+
+    a = x.float_value;
+    switch (rc.TYPE(y)) {
+      case Value.T_FIXNUM:
+        b = Number(rc.FIX2LONG(y));
+        break;
+
+      case Value.T_BIGNUM:
+        rc.error_c.rb_bug("bignum not implemented");
+        break;
+
+      case Value.T_FLOAT:
+        b = RFloat(y).float_value;
+        if (isNaN(b)) return rc.Qfalse;
+        break;
+
+      default:
+        rc.error_c.rb_bug("coercion not implemented");
+        break;
+    }
+    if (isNaN(a)) return rc.Qfalse;
+    return (a < b) ? rc.Qtrue : rc.Qfalse;
+  }
+
+  // numeric.c:1113
+  public function
+  flo_to_f(num:RFloat):Value
+  {
+    return num;
+  }
+
+  // numeric.c:2125
+  public function
+  fix_minus(x:RInt, y:Value):Value
+  {
+    if (rc.FIXNUM_P(y)) {
+      var a:int, b:int, c:int;
+      var r:Value;
+
+      a = rc.FIX2LONG(x);
+      b = rc.FIX2LONG(y);
+      c = a - b;
+      r = INT2FIX(c);
+
+      return r;
+    }
+    switch (rc.TYPE(y)) {
+      case Value.T_BIGNUM:
+        rc.error_c.rb_bug("bignum not implemented");
+        break;
+      case Value.T_FLOAT:
+        return rc.DOUBLE2NUM(Number(rc.FIX2LONG(x)) - RFloat(y).float_value);
+      default:
+        rc.error_c.rb_bug("coerce number not implemented");
+        break;
+    }
+    return rc.Qnil;
+  }
+
   // numeric.c:2209
   public function
   fixdivmod(x:int, y:int, divp:ByRef, modp:ByRef):void
@@ -215,6 +308,17 @@ public class Numeric_c
     return fix_divide(x, y, '/');
   }
 
+  // numeric.c:2851
+  public function
+  fix_to_f(num:Value):Value
+  {
+    var val:Number;
+
+    val = Number(rc.FIX2LONG(num));
+
+    return rc.DOUBLE2NUM(val);
+  }
+
   public function
   Init_Numeric():void
   {
@@ -233,6 +337,14 @@ public class Numeric_c
 
     rc.class_c.rb_define_method(rb_cFixnum, "*", fix_mul, 1);
     rc.class_c.rb_define_method(rb_cFloat, "*", flo_mul, 1);
+
+    rc.class_c.rb_define_method(rb_cFixnum, "to_f", fix_to_f, 0);
+    rc.class_c.rb_define_method(rb_cFloat, "to_f", flo_to_f, 0);
+
+    rc.class_c.rb_define_method(rb_cFloat, ">", flo_gt, 1)
+    rc.class_c.rb_define_method(rb_cFloat, "<", flo_lt, 1)
+
+    rc.class_c.rb_define_method(rb_cFixnum, "-", fix_minus, 1);
   }
 
 }

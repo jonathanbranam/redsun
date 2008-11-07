@@ -1,9 +1,17 @@
 
 
-def mret()
-  ["a", "b"]
-end
+fe = Flash::Events
 
-a,b = mret
+puts "Flash::Events => #{fe}"
 
-puts "Should be a: #{a}, b: #{b}"
+puts "Flash::Events.name => #{Flash::Events.name}"
+
+puts "Flash::Events::Event => #{Flash::Events::Event}"
+
+evt = Flash::Events::Event.new "keyDown"
+
+puts "event: #{evt} #{evt.type} #{evt.bubbles}"
+
+puts "Flash.name => #{Flash.name}"
+
+puts "Flash::Display.name => #{Flash::Display.name}"

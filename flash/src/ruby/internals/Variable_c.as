@@ -32,6 +32,16 @@ public class Variable_c
     klass.name = rc.parse_y.rb_id2name(id);
   }
 
+  // variable.c:173
+  public function
+  rb_mod_name(mod:RClass):Value
+  {
+    var path:Value = classname(mod);
+
+    if (!rc.NIL_P(path)) return rc.string_c.rb_str_dup(RString(path));
+    return path;
+  }
+
   // variable.c:1654
   public function rb_const_defined(klass:RClass, id:int):Boolean {
     return rb_const_defined_0(klass, id, false, true);

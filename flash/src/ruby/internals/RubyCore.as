@@ -3,13 +3,11 @@ package ruby.internals
 import com.adobe.serialization.json.JSONDecoder;
 
 import flash.display.DisplayObject;
-import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.EventDispatcher;
 import flash.events.TimerEvent;
-import flash.text.TextField;
-import flash.text.TextFormat;
 import flash.utils.Timer;
+import flash.utils.getDefinitionByName;
 
 /**
  * Class for core ruby methods.
@@ -464,8 +462,6 @@ public class RubyCore
   }
 
   public var rb_mFlash:RClass;
-  public var rb_mFlashDisplay:RClass;
-  public var rb_mFlashText:RClass;
 
   public function
   init_flash_classes():void
@@ -481,11 +477,15 @@ public class RubyCore
     class_c.rb_define_method(rb_cFlashClass, "responds_to?", fo_responds_to, 1);
 
     rb_mFlash = class_c.rb_define_module("Flash");
+    class_c.rb_define_singleton_method(rb_mFlash, "const_missing", fc_const_missing, 1);
+
+    /*
     rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");
     variable_c.rb_const_set(rb_mFlashDisplay, parse_y.rb_intern("Sprite"), wrap_flash_class(Sprite));
     rb_mFlashText = class_c.rb_define_module_under(rb_mFlash, "Text");
     variable_c.rb_const_set(rb_mFlashText, parse_y.rb_intern("TextField"), wrap_flash_class(TextField));
     variable_c.rb_const_set(rb_mFlashText, parse_y.rb_intern("TextFormat"), wrap_flash_class(TextFormat));
+    */
 
   }
 
@@ -494,8 +494,8 @@ public class RubyCore
   {
     var flash_class:Class = vm_c.GetCoreDataFromValue(recv);
     var retval:*;
-    if (argc > 1) {
-      var as3_args:Array = convert_array_to_as3(argc-1, argv.clone_down_stack(1));
+    if (argc > 0) {
+      var as3_args:Array = convert_array_to_as3(argc, argv);
       switch (as3_args.length) {
         case 1:
           retval = new flash_class(as3_args[0]);
@@ -530,6 +530,60 @@ public class RubyCore
       retval = new flash_class();
     }
     return convert_to_ruby_value(retval);
+  }
+
+  protected function
+  lowcase_first(str:String):String
+  {
+    return str.charAt().toLowerCase() + str.substr(1);
+  }
+
+  protected function
+  to_flash_class_name(str:String):String
+  {
+    var class_name:String = "";
+    var last_pos:int = 0;
+    var colon:int = str.indexOf("::");
+    while (colon != -1) {
+      if (class_name.length > 0) {
+        class_name += ".";
+      }
+      class_name += lowcase_first(str.substring(last_pos, colon));
+      last_pos = colon+2
+
+      colon = str.indexOf("::", last_pos);
+    }
+    if (class_name.length > 0) {
+      class_name += "."
+    }
+    class_name += str.substr(last_pos);
+    return class_name;
+  }
+
+  public function
+  fc_const_missing(recv:RClass, name:RSymbol):Value
+  {
+    var mod_name:RString = RString(vm_eval_c.rb_funcall(recv, parse_y.rb_intern("name"), 0));
+
+    var this_name:String = parse_y.rb_id2name(SYM2ID(name));
+    var flash_class_name:String = to_flash_class_name(mod_name.string+"::"+this_name);
+
+    var o:Object;
+    try {
+      o = getDefinitionByName(flash_class_name);
+    } catch (e:Error) {
+      o = null;
+    }
+
+    if (o == null) {
+      // if null, then define a new module with this name to represent a namespace
+      var ns:RClass = class_c.rb_define_module_under(recv, this_name);
+      class_c.rb_define_singleton_method(ns, "const_missing", fc_const_missing, 1);
+      return ns;
+    } else {
+      return wrap_flash_class(Class(o));
+    }
+    return Qnil;
   }
 
   public function
@@ -732,13 +786,13 @@ public class RubyCore
 
   // ruby.h:802
   public function OBJ_TAINTED(x:Value):Boolean
-  { return (x.flags & Value.FL_TAINT) != 0; }
+  { return FL_TEST(x, Value.FL_TAINT); }
   public function OBJ_TAINT(x:Value):void
-  { x.flags |= Value.FL_TAINT; }
+  { FL_SET(x, Value.FL_TAINT); }
   public function OBJ_UNTRUSTED(x:Value):Boolean
-  { return (x.flags & Value.FL_UNTRUSTED) != 0; }
+  { return FL_TEST(x, Value.FL_UNTRUSTED); }
   public function OBJ_UNRUST(x:Value):void
-  { x.flags |= Value.FL_UNTRUSTED; }
+  { FL_SET(x, Value.FL_UNTRUSTED); }
   public function OBJ_INFECT(x:Value, s:Value):void
   {
     if (FL_ABLE(x) && FL_ABLE(s)) {
@@ -747,9 +801,9 @@ public class RubyCore
   }
 
   public function OBJ_FROZEN(x:Value):Boolean
-  { return (x.flags & Value.FL_FREEZE) != 0; }
+  { return FL_TEST(x, Value.FL_FREEZE); }
   public function OBJ_FREEZE(x:Value):void
-  { x.flags |= Value.FL_FREEZE; }
+  { FL_SET(x, Value.FL_FREEZE); }
 
   // eval_safe.c:19
   public function
@@ -1164,9 +1218,17 @@ public class RubyCore
   }
 
   public function
-  FL_TEST(v:Value, flag:uint):Boolean
+  FL_TEST(x:Value, flag:uint):Boolean
   {
-    return (v.flags & flag) != 0
+    return FL_ABLE(x) ? ((x.flags & flag) != 0) : false;
+  }
+
+  public function
+  FL_SET(x:Value, flag:int):void
+  {
+    if (FL_ABLE(x)) {
+      x.flags |= flag;
+    }
   }
 
 }

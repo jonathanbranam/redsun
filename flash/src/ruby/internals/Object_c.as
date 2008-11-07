@@ -94,6 +94,8 @@ public class Object_c
     rc.class_c.rb_define_method(rb_cClass, "allocate", rb_obj_alloc, 0);
     rc.class_c.rb_define_method(rb_cClass, "new", rb_class_new_instance, -1);
 
+    rc.class_c.rb_define_method(rb_cModule, "name", rc.variable_c.rb_mod_name, 0); // in variable.c
+
     rc.class_c.rb_define_private_method(rb_cModule, "attr", rb_mod_attr, -1);
     rc.class_c.rb_define_private_method(rb_cModule, "attr_reader", rb_mod_attr_reader, -1);
     rc.class_c.rb_define_private_method(rb_cModule, "attr_writer", rb_mod_attr_writer, -1);
