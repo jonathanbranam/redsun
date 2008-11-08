@@ -20,8 +20,8 @@ class SlideShow
   def initialize(parent)
     @width = 1024
     @height = 768
-    @h_pad = 5
-    @v_pad = 5
+    @h_pad = 50
+    @v_pad = 50
     @parent = parent
     @frame = Flash::Display::Sprite.new
     @parent.add_child(@frame)
@@ -47,8 +47,7 @@ class SlideShow
     self
   end
   def new_slide(&b)
-    slide = Slide.new
-    setup_slide(slide)
+    slide = setup_slide(Slide.new)
     slide.instance_exec(&b)
     add(slide)
   end
@@ -62,11 +61,11 @@ class SlideShow
     self
   end
   def next_part
-    @parent.set_focus()
+    @parent.set_focus
     next_slide unless @slide and @slide.next_part
   end
   def prev_part
-    @parent.set_focus()
+    @parent.set_focus
     prev_slide unless @slide and @slide.prev_part
   end
   def next_slide
@@ -105,7 +104,7 @@ end
 CodeCSS = <<HERE
 code {
   font-family: Consolas;
-  font-size: 20;
+  font-size: 28;
 }
 h1 {
   text-align: center;
@@ -125,13 +124,17 @@ h1 {
 body {
   font-size: 30;
 }
+li {
+  font-size: 50;
+}
+
 
 HERE
 
 SlideSS = Flash::Text::StyleSheet.new
 SlideSS.parseCSS(CodeCSS)
 
-class SlidePart < Canvas
+class SubSlide < Canvas
   attr_accessor :parent_slide
   include PropValidator
   def commitProperties()
@@ -153,11 +156,14 @@ class SlidePart < Canvas
       @text.width = self.width
       @text.height = self.height
       @text.text_field.style_sheet = SlideSS
-      @sprite.add_child(@text.text_field)
+      @text.parent = self
     end
   end
   def prettify_ruby_code(ht)
     "<code>#{ht}</code>"
+  end
+  def ruby_code
+    html_text
   end
   def html_text
     if @text
@@ -182,13 +188,18 @@ class SlidePart < Canvas
     @text
   end
   def render(&r)
-    @parts << r if @parent_slide == self
-    me = self
-    @parent_slide.render { self.instance_exec(&r)  } unless @parent_slide == self
+    if @parent_slide == self
+      @parts << r
+    else
+      me = self
+      @parent_slide.render do 
+        me.instance_exec(&r)
+      end
+    end
   end
 end
 
-class Slide < SlidePart
+class Slide < SubSlide
   attr_accessor :layout, :children, :parts, :part_index
   def parent=(v)
     v.add_child(sprite)
@@ -204,32 +215,30 @@ class Slide < SlidePart
     @part_index = -1
     next_part
   end
-  def new_slide_part
-    p = SlidePart.new
+  def new_sub_slide
+    p = SubSlide.new
     p.parent_slide = self
-    @sprite.add_child(p.sprite)
+    p.parent = self
     @children << p
     p
   end
   def split_horizontal(perc)
     perc = (perc || 50).to_f/100
-    left = new_slide_part
+    left = new_sub_slide
     left.width = self.width.to_f*perc
-    left.height = self.height.to_f*perc
-    right = new_slide_part
+    left.height = self.height
+    right = new_sub_slide
     right.x = left.width
     right.width = self.width.to_f*(1-perc)
-    right.height = self.height.to_f*(1-perc)
+    right.height = self.height
     [left, right]
   end
   def next_part
-    #puts "next_part #{@part_index} #{@parts.length}"
     if @parts[@part_index+1]
       @part_index = @part_index+1
       @part = @parts[@part_index]
-      #puts "next_part: #{@part}"
-      d = @part
-      self.instance_exec(&d)
+      #d = @part
+      self.instance_exec(&@part)
       true
     else
       false
@@ -258,14 +267,12 @@ class SlideShow
   def update_scale(win_width, win_height)
     slide_aspect_ratio = @width.to_f/@height
     screen_aspect_ratio = win_width.to_f/win_height
-    #puts "slide ar #{slide_aspect_ratio}, screen ar: #{screen_aspect_ratio}"
     if slide_aspect_ratio > screen_aspect_ratio
       scale = win_width.to_f/@width
     else
       scale = win_height.to_f/@height
     end
-    #puts "#{win_width} x #{win_height} scale: #{scale}" 
-    @frame.scaleX = @frame.scaleY = scale
+    @frame.scale_x = @frame.scale_y = scale
   end
 
   def start
@@ -277,10 +284,9 @@ class SlideShow
     @frame.graphics.end_fill()
     @frame.graphics.begin_fill(0xFFFFFF,0)
 
-
     @frame.graphics.line_style(5, 0xFFFFFF)
     @frame.graphics.begin_fill(0,0)
-    @frame.graphics.draw_rect(1,1,@width-2,@height-2)
+    @frame.graphics.draw_rect(1,1,@width-30,@height-2)
     @frame.graphics.end_fill()
 
     AIRWindow.on :window_resize do |e|
@@ -288,20 +294,29 @@ class SlideShow
     end
 
     @was_fullscreen = false
+    @ignore_keydown = false
 
     # NOTE: Avoiding return from block which generates throw bytecode
     @parent.on :key_down do |e|
       puts "key code #{e.key_code}"
       done = false
-      if e.key_code == 37 and e.command_key
+      if @ignore_keydown
+        done = true
+        if e.key_code == 192
+          @ignore_keydown = false
+        end
+      end
+      if not done and not @ignore_keydown and e.key_code == 192
+        @ignore_keydown = true
+        done = true
+      end
+      if not done and e.key_code == 37 and e.command_key
         first_slide
         done = true
       end
-      if not done
-        if e.key_code == 39 and e.command_key
-          last_slide
-          done = true
-        end
+      if not done and e.key_code == 39 and e.command_key
+        last_slide
+        done = true
       end
       if not done
         prev_slide if e.key_code == 38
@@ -314,10 +329,10 @@ class SlideShow
     end
 
     AIRWindow.on :window_activate do |e|
-      @parent.set_focus()
+      @parent.set_focus
     end
 
-    @parent.set_focus()
+    @parent.set_focus
 
     @index = -1
     next_slide

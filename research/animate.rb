@@ -10,8 +10,8 @@ tf.y = 50
 tf.selectable = false
 tfor = Flash::Text::TextFormat.new
 tfor.size = 25
-tf.setTextFormat(tfor)
-TopSprite.addChild(tf)
+tf.set_text_format(tfor)
+TopSprite.add_child(tf)
 wait(1)
 tf.x = tf.x- 50
 wait(1)

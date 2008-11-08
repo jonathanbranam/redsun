@@ -106,14 +106,14 @@ public class Proc_c
 
   // proc.c:431
   public function
-  rb_block_proc():Value
+  rb_block_proc(...args):Value
   {
     return proc_new(rb_cProc, false);
   }
 
   // proc.c:437
   public function
-  rb_block_lambda():Value
+  rb_block_lambda(...args):Value
   {
     return proc_new(rb_cProc, true);
   }
@@ -177,6 +177,7 @@ public class Proc_c
   {
     rb_cBinding = rc.class_c.rb_define_class("Binding", rc.object_c.rb_cObject);
     rc.class_c.rb_define_method(rb_cProc, "call", proc_call, -1);
+    rc.class_c.rb_define_method(rb_cProc, "[]", proc_call, -1);
   }
 
 }

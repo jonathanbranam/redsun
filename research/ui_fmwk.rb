@@ -93,7 +93,14 @@ module PercentLayout
 end
 
 module DisplayObjectPassthrough
-  def parent=(v)  v.add_child(@do); end
+  attr_accessor :do
+  def parent=(v)
+    if v.respond_to? :add_child
+      v.add_child(@do)
+    elsif v.respond_to? :do
+      v.do.add_child(@do)
+    end
+  end
   def parent()    @do.parent;      end
   def x=(v)       @do.x = v;       end
   def x()         @do.x;           end
@@ -103,6 +110,15 @@ module DisplayObjectPassthrough
   def width()     @do.width;       end
   def height=(v)  @do.height = v;  end
   def height()    @do.height;      end
+end
+
+module PosSizeHelper
+  def pos_size(props)
+    self.x = props[:x] if props[:x]
+    self.y = props[:y] if props[:y]
+    self.width = props[:width] if props[:width]
+    self.height = props[:height] if props[:height]
+  end
 end
 
 module TextFieldPassthrough
@@ -123,6 +139,7 @@ class Text
   attr_accessor :text_field
   include DisplayObjectPassthrough
   include TextFieldPassthrough
+  include PosSizeHelper
   include PercentLayout
   def initialize
     @text_field = Flash::Text::TextField.new
@@ -176,6 +193,7 @@ class Canvas
   include DisplayObjectPassthrough
   include SizeBlock
   include PercentLayout
+  include PosSizeHelper
   include SizeInvalidation
   include DisplayInvalidation
   def initialize

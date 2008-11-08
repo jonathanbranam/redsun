@@ -468,13 +468,13 @@ public class RubyCore
   {
     rb_cFlashObject = class_c.rb_define_class("FlashObject", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashObject, "method_missing", fo_method_missing, -1);
-    class_c.rb_define_method(rb_cFlashObject, "responds_to?", fo_responds_to, 1);
+    class_c.rb_define_method(rb_cFlashObject, "respond_to?", fo_respond_to, 1);
     class_c.rb_define_method(rb_cFlashObject, "on", fo_on, 1);
 
     rb_cFlashClass = class_c.rb_define_class("FlashClass", object_c.rb_cObject);
     class_c.rb_define_method(rb_cFlashClass, "new", fc_new_obj, -1);
     class_c.rb_define_method(rb_cFlashClass, "method_missing", fo_method_missing, -1);
-    class_c.rb_define_method(rb_cFlashClass, "responds_to?", fo_responds_to, 1);
+    class_c.rb_define_method(rb_cFlashClass, "respond_to?", fo_respond_to, 1);
 
     rb_mFlash = class_c.rb_define_module("Flash");
     class_c.rb_define_singleton_method(rb_mFlash, "const_missing", fc_const_missing, 1);
@@ -625,10 +625,30 @@ public class RubyCore
   }
 
   public function
-  fo_responds_to(argc:int, argv:StackPointer, recv:Value):Value
+  fo_respond_to(recv:Value, name:Value):Value
   {
     var flash_obj:Object = vm_c.GetCoreDataFromValue(recv);
-    var method_name:String = parse_y.rb_id2name(RSymbol(argv.get_at(0)).id);
+    var method_name:String;
+    switch (TYPE(name)) {
+      case Value.T_STRING:
+        method_name = RString(name).string;
+        break;
+      case Value.T_SYMBOL:
+        method_name = parse_y.rb_id2name(SYM2ID(name));
+        break;
+      default:
+        error_c.rb_bug("respond_to bad param");
+    }
+
+    var at:int = method_name.indexOf("_");
+    while (at != -1) {
+      method_name = method_name.substr(0, at) +
+                    method_name.charAt(at+1).toUpperCase() +
+                    method_name.substr(at+2);
+
+      at = method_name.indexOf("_", at);
+    }
+
     if (method_name.charAt(method_name.length-1) == "=") {
       method_name = method_name.substr(0, method_name.length-1);
       try {

@@ -1,6 +1,7 @@
 module Drawable
   attr_accessor :style
   def draw(sprite)
+    sprite = sprite.do if sprite.respond_to? :do
     @style.begin_style(sprite) if @style
     draw_commands(sprite)
     @style.end_style(sprite) if @style
@@ -110,7 +111,7 @@ geometry {
 }
 
 geometry {
-  cricle - square
+  circle - square
 }
 
 =end

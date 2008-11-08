@@ -1,11 +1,5 @@
 
 
-t = <<HERE
-blah
-blah
-blah
-HERE
+p = proc { puts 'From proc' }
 
-t.each_line do |s|
-  puts s
-end
+p.call
