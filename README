@@ -2,5 +2,18 @@ This is the Red Sun Ruby library. It can parse and write SWF files and can trans
 
 It works moderately well...
 
+The flash directory is the implementation of the Ruby VM in AS3. It is a
+Flex Builder 3 project directory that is pure Actionscript (not a Flex
+project).
+
+The chromosphere directory is an AIR application that can launch Ruby
+code in a new AIR Window for experimentation and learning.
+
+Chromosphere relies on a web server running on localhost that can compile
+Ruby source code into bytecode. It can be started by executing the following
+command from the root directory of Red Sun:
+
+ruby -Ilib -Iresearch lib/redsun/ramaze.rb
+
 (c) Jonathan Branam, 2008
 
