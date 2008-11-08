@@ -178,7 +178,7 @@ public class Vm_c
 
   // vm_.c:747
   public function
-  vm_cref_push(th:RbThread, klass:RClass, noex:int):Node
+  vm_cref_push(th:RbThread, klass:Value, noex:int):Node
   {
     var cfp:RbControlFrame = vm_get_ruby_level_caller_cfp(th, th.cfp);
     var cref:Node = rc.NEW_BLOCK(klass);
@@ -775,6 +775,14 @@ public class Vm_c
     return blockptr;
   }
 
+  // vm.c:494
+  public function
+  vm_yield_with_cref(th:RbThread, argc:int, argv:StackPointer, cref:Node):Value
+  {
+    var blockptr:RbBlock = check_block(th);
+    return invoke_block_from_c(th, blockptr, blockptr.self, argc, argv, null, cref);
+  }
+
   // vm.c:501
   public function
   vm_yield(th:RbThread, argc:int, argv:StackPointer):Value
@@ -922,7 +930,7 @@ public class Vm_c
 
     vm_opt_method_table = new Dictionary();
 
-    rc.error_c.rb_warn("redifined tracking not implemented");
+    rc.error_c.rb_warn("redefined basic op tracking not implemented");
     return;
 
     mid = Id_c.idPLUS;

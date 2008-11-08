@@ -1,7 +1,7 @@
 a = [1,1,1]
-TopSprite.graphics.lineStyle(a[0], a[1], a[2])
-TopSprite.graphics.beginFill(0x33AAEE)
-TopSprite.graphics.drawRect(5,5,105,105)
+TopSprite.graphics.line_style(a[0], a[1], a[2])
+TopSprite.graphics.begin_fill(0x33AAEE)
+TopSprite.graphics.draw_rect(5,5,105,105)
 
 tf = Flash::Text::TextField.new
 tf.text = "Hello!"

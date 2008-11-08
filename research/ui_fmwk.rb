@@ -23,7 +23,6 @@ class ValidationManager
     display = @display
     @display = []
     display.each do |o|
-      puts "Updating display for #{o}."
       o.update_display() if o.respond_to? :update_display
     end
   end

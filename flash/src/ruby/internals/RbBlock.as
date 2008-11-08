@@ -8,8 +8,15 @@ public class RbBlock extends Value
   public var block_iseq:RbISeq;
   public var proc:Value;
 
-  public function RbBlock()
+  public function RbBlock(copy:RbBlock=null)
   {
+    if (copy) {
+      this.self = copy.self;
+      this.lfp = copy.lfp.clone();
+      this.dfp = copy.dfp.clone();
+      this.block_iseq = copy.block_iseq;
+      this.proc = copy.proc;
+    }
   }
 
 }

@@ -164,6 +164,9 @@ public class Proc_c
 
     rb_cMethod = rc.class_c.rb_define_class("Method", rc.object_c.rb_cObject);
 
+    rc.class_c.rb_define_global_function("proc", rb_block_proc, 0);
+    //rc.class_c.rb_define_global_function("lambda", proc_lambda, 0);
+
     rb_cUnboundMethod = rc.class_c.rb_define_class("UnboundMethod", rc.object_c.rb_cObject);
 
   }

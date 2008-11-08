@@ -174,6 +174,24 @@ public class String_c
     return id;
   }
 
+  // string.c:929
+  public function
+  rb_str_plus(str1:Value, str2:Value):Value
+  {
+    var str3:Value;
+    var enc:String;
+
+    str2 = rb_string_value(str2);
+
+    str3 = rb_str_new(RString(str1).string+RString(str2).string);
+
+    if (rc.OBJ_TAINTED(str1) || rc.OBJ_TAINTED(str2)) {
+      rc.OBJ_TAINT(str3);
+    }
+
+    return str3;
+  }
+
   // string.c:1132
   public function
   rb_check_string_type(str:Value):Value
@@ -267,12 +285,51 @@ public class String_c
     return rc.Qfalse;
   }
 
+  // string.c:5139
+  public function
+  rb_str_each_line(argc:int, argv:StackPointer, str:Value):Value
+  {
+    var rs:String = "\n";
+    if (argc > 0) {
+      rs = RString(argv.get_at(0)).string;
+    }
+
+    var s:RString = rb_string_value(str);
+    var st:String = s.string;
+    var at:int = st.indexOf(rs);
+    var last_pos:int = 0;
+    var rs_len:int = rs.length;
+    var cur:String;
+    var yield_str:RString;
+
+    while (at != -1) {
+      cur = st.substring(last_pos, at+rs_len);
+      last_pos = at+rs_len;
+
+      yield_str = rb_str_new(cur);
+      rc.OBJ_INFECT(yield_str, str);
+      rc.vm_eval_c.rb_yield(yield_str);
+
+      at = st.indexOf(rs, last_pos);
+    }
+    cur = st.substring(last_pos);
+    if (cur.length > 0) {
+      yield_str = rb_str_new(cur);
+      rc.OBJ_INFECT(yield_str, str);
+      rc.vm_eval_c.rb_yield(yield_str);
+    }
+
+    return str;
+  }
+
   // string.c:6622
   public function
   Init_String():void
   {
     rb_cString = rc.class_c.rb_define_class("String", rc.object_c.rb_cObject);
 
+    rc.class_c.rb_define_method(rb_cString, "lines", rb_str_each_line, -1);
+    rc.class_c.rb_define_method(rb_cString, "each_line", rb_str_each_line, -1);
     // TODO: Lots of String methods
 
     rb_cSymbol = rc.class_c.rb_define_class("Symbol", rc.object_c.rb_cObject);

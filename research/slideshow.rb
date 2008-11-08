@@ -46,10 +46,10 @@ class SlideShow
     @slides << slide
     self
   end
-  def new_slide
+  def new_slide(&b)
     slide = Slide.new
     setup_slide(slide)
-    yield slide
+    slide.instance_exec(&b)
     add(slide)
   end
   def first_slide
@@ -62,9 +62,11 @@ class SlideShow
     self
   end
   def next_part
+    @parent.set_focus()
     next_slide unless @slide and @slide.next_part
   end
   def prev_part
+    @parent.set_focus()
     prev_slide unless @slide and @slide.prev_part
   end
   def next_slide
@@ -100,15 +102,34 @@ class SlideShow
   end
 end
 
-SlideCSS = <<HERE
-body {
+CodeCSS = <<HERE
+code {
   font-family: Consolas;
   font-size: 20;
 }
+h1 {
+  text-align: center;
+  font-size: 70;
+}
+.rt {
+  text-align: right;
+  font-size: 50;
+  margin-right: 90;
+}
+.lf {
+  text-align: left;
+  font-size: 50;
+  leading: -60;
+  margin-left: 90;
+}
+body {
+  font-size: 30;
+}
+
 HERE
 
 SlideSS = Flash::Text::StyleSheet.new
-SlideSS.parseCSS(SlideCSS)
+SlideSS.parseCSS(CodeCSS)
 
 class SlidePart < Canvas
   attr_accessor :parent_slide
@@ -136,11 +157,18 @@ class SlidePart < Canvas
     end
   end
   def prettify_ruby_code(ht)
-    ht
+    "<code>#{ht}</code>"
+  end
+  def html_text
+    if @text
+      @text.html_text
+    else
+      ""
+    end
   end
   def html_text=(ht)
     check_text
-    @text.html_text = "<body>#{ht}</body>"
+    @text.html_text = ht
   end
   def ruby_code=(ht)
     ht = prettify_ruby_code(ht)
@@ -156,7 +184,7 @@ class SlidePart < Canvas
   def render(&r)
     @parts << r if @parent_slide == self
     me = self
-    @parent_slide.render { r.call(me) } unless @parent_slide == self
+    @parent_slide.render { self.instance_exec(&r)  } unless @parent_slide == self
   end
 end
 
@@ -176,37 +204,53 @@ class Slide < SlidePart
     @part_index = -1
     next_part
   end
+  def new_slide_part
+    p = SlidePart.new
+    p.parent_slide = self
+    @sprite.add_child(p.sprite)
+    @children << p
+    p
+  end
   def split_horizontal(perc)
     perc = (perc || 50).to_f/100
-    left = SlidePart.new
-    left.parent_slide = self
+    left = new_slide_part
     left.width = self.width.to_f*perc
     left.height = self.height.to_f*perc
-    right = SlidePart.new
-    right.parent_slide = self
+    right = new_slide_part
     right.x = left.width
     right.width = self.width.to_f*(1-perc)
     right.height = self.height.to_f*(1-perc)
-    @sprite.add_child(left.sprite)
-    @sprite.add_child(right.sprite)
-    @children << left
-    @children << right
     [left, right]
   end
   def next_part
-    puts "next_part #{@part_index} #{@parts.length}"
+    #puts "next_part #{@part_index} #{@parts.length}"
     if @parts[@part_index+1]
       @part_index = @part_index+1
       @part = @parts[@part_index]
-      puts "next_part: #{@part}"
-      @part.call(self)
+      #puts "next_part: #{@part}"
+      d = @part
+      self.instance_exec(&d)
       true
     else
       false
     end
   end
   def prev_part
-    false
+    target_index = @part_index - 1
+    if target_index < 0
+       false
+    else
+      ns = Flash::Display::Sprite.new
+      if @sprite and @sprite.parent
+        p = @sprite.parent
+        p.remove_child(@sprite)
+        p.add_child(ns)
+      end
+      @sprite = ns
+      show
+      next_part until @part_index >= target_index
+      true
+    end
   end
 end
 
@@ -214,7 +258,7 @@ class SlideShow
   def update_scale(win_width, win_height)
     slide_aspect_ratio = @width.to_f/@height
     screen_aspect_ratio = win_width.to_f/win_height
-    puts "slide ar #{slide_aspect_ratio}, screen ar: #{screen_aspect_ratio}"
+    #puts "slide ar #{slide_aspect_ratio}, screen ar: #{screen_aspect_ratio}"
     if slide_aspect_ratio > screen_aspect_ratio
       scale = win_width.to_f/@width
     else

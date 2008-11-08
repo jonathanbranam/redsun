@@ -1018,7 +1018,7 @@ public class RubyFrame
     var val:Value;
 
     if (rc.FIXNUM_2_P(recv, obj) &&
-        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_MINUS)) {
+        rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_PLUS)) {
         var a:int, b:int, c:int;
 
         a = rc.FIX2LONG(recv);
@@ -1032,6 +1032,16 @@ public class RubyFrame
           rc.error_c.rb_bug("big number support not implemented");
           //val = rc.numeric_c.rb_big_minus(rb_int2big(a), rb_int2big(b));
         }
+    }
+    else if (rc.HEAP_CLASS_OF(recv) == rc.numeric_c.rb_cFloat &&
+             rc.HEAP_CLASS_OF(obj) == rc.numeric_c.rb_cFloat &&
+             rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_PLUS)) {
+      val = rc.DOUBLE2NUM(RFloat(recv).float_value + RFloat(obj).float_value);
+    }
+    else if (rc.HEAP_CLASS_OF(recv) == rc.string_c.rb_cString &&
+             rc.HEAP_CLASS_OF(obj) == rc.string_c.rb_cString &&
+             rc.BASIC_OP_UNREDEFINED_P(RbVm.BOP_PLUS)) {
+      val = rc.string_c.rb_str_plus(recv, obj);
     }
     else {
       // other

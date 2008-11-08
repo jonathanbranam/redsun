@@ -7,6 +7,15 @@ module Drawable
   end
 end
 
+class Line
+  attr_accessor :x, :y, :x2, :y2
+  include Drawable
+  def draw_commands(sprite)
+    sprite.graphics.move_to(@x,@y)
+    sprite.graphics.line_to(@x2,@y2)
+  end
+end
+
 class Rectangle
   attr_accessor :x, :y, :width, :height
   include Drawable
@@ -31,7 +40,16 @@ class Circle
 end
 
 module Geometry
-  def rectangle props
+  def line(props)
+    l = Line.new
+    l.x = props[:x]
+    l.y = props[:y]
+    l.x2 = props[:x2]
+    l.y2 = props[:y2]
+    l.style = props[:style]
+    l
+  end
+  def rectangle(props)
     r = Rectangle.new
     r.x = props[:x] || 0
     r.y = props[:y] || 0

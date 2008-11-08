@@ -17,7 +17,7 @@ public class Vm_eval_c
     //rc.class_c.rb_define_global_function("loop", rb_f_loop, 0);
 
     //rc.class_c.rb_define_method(rb_cBasicObject, "instance_eval", rb_obj_instance_eval, -1);
-    //rc.class_c.rb_define_method(rb_cBasicObject, "instance_exec", rb_obj_instance_exec, -1);
+    rc.class_c.rb_define_method(rc.object_c.rb_cBasicObject, "instance_exec", rb_obj_instance_exec, -1);
     //rc.class_c.rb_define_private_method(rb_cBasicObject, "method_missing", rb_method_missing, -1);
 
     rc.class_c.rb_define_method(rc.object_c.rb_cBasicObject, "__send__", rb_f_send, -1);
@@ -336,6 +336,44 @@ public class Vm_eval_c
     arg.argc = argc;
     arg.argv = argv;
     return rb_iterate(iterate_method, arg, bl_proc, data2);
+  }
+
+  // vm_eval.c:909
+  public function
+  yield_under(under:Value, self:Value, values:Value):Value
+  {
+    var th:RbThread = rc.GET_THREAD();
+    var block:RbBlock = new RbBlock();
+    var blockptr:RbBlock;
+    var cref:Node = rc.vm_c.vm_cref_push(th, under, Node.NOEX_PUBLIC);
+
+    if ((blockptr = th.cfp.lfp.get_at(0)) != null) {
+      block = new RbBlock(blockptr);
+      block.self = self;
+      th.cfp.lfp.set_at(0, block);
+    }
+
+    if (values == rc.Qundef) {
+      return rc.vm_c.vm_yield_with_cref(th, 0, null, cref);
+    }
+    else {
+      return rc.vm_c.vm_yield_with_cref(th, RArray(values).len, new StackPointer(RArray(values).array), cref);
+    }
+  }
+
+  // vm_eval.c:1040
+  public function
+  rb_obj_instance_exec(argc:int, argv:StackPointer, self:Value):Value
+  {
+    var klass:Value;
+
+    if (rc.SPECIAL_CONST_P(self)) {
+      klass = rc.Qnil;
+    }
+    else {
+      klass = rc.class_c.rb_singleton_class(self);
+    }
+    return yield_under(klass, self, rc.array_c.rb_ary_new4(argc, argv));
   }
 
 }
