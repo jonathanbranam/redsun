@@ -1,27 +1,31 @@
 
 module Drawer
   def draw
-    super
-    TopSprite.graphics.lineStyle(1,1,1)
-    TopSprite.graphics.beginFill(0x228833)
-    TopSprite.graphics.drawRect(5,5,105,105)
+    puts "Drawer#draw"
+    TopSprite.graphics.line_style(1,1,1)
+    TopSprite.graphics.begin_fill(0x228833)
+    TopSprite.graphics.draw_rect(5,5,105,105)
   end
 end
 
-class MyObj
+class MyClass
   def draw
-    puts "draw"
+    puts "MyClass#draw"
+    super
   end
   include Drawer
 end
 
-mo = MyObj.new
+mo = MyClass.new
 
 def mo.draw()
+  puts "mo#draw"
   super
-  puts "draw"
-
 end
 
 mo.draw()
+# will execute in this order:
+# mo#draw
+# MyClass#draw
+# Drawer#draw
 

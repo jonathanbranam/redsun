@@ -81,17 +81,19 @@ public class Error_c
   protected function
   rb_warn_m(self:Value, mesg:Value):Value
   {
-    // if (!NIL_P(ruby_verbose)) {
+    if (!rc.NIL_P(rc.ruby_verbose())) {
       trace(mesg);
       //trace(rb_default_rs);
-    // }
+     }
     return rc.Qnil;
   }
 
   public function
-  rb_raise(type:RClass, desc:String):void
+  rb_raise(exc:RClass, mesg:String):void
   {
-    throw new Error(type.toString() + desc);
+    var rstring:RString = rc.string_c.rb_str_new(mesg);
+    rc.eval_c.rb_exc_raise(rc.error_c.rb_exc_new3(exc, rstring));
+    //throw new Error(exc.toString() + mesg);
   }
 
   public function
@@ -191,6 +193,13 @@ public class Error_c
       }
       rc.error_c.rb_bug("unknown type 0x"+t.toString(16)+" (0x"+rc.TYPE(x).toString(16)+" given)");
     }
+  }
+
+  public function
+  rb_exc_new3(etype:RClass, str:Value):Value
+  {
+    str = rc.string_c.rb_string_value(str);
+    return rc.vm_eval_c.rb_funcall(etype, rc.parse_y.rb_intern("new"), 1, str);
   }
 
   // error.c:342

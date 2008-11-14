@@ -1,10 +1,10 @@
 a = [1,1,1]
 @color = 0xDD6622
-TopSprite.graphics.lineStyle(a[0], a[1], a[2])
-TopSprite.graphics.beginFill(@color)
+TopSprite.graphics.line_style(a[0], a[1], a[2])
+TopSprite.graphics.begin_fill(@color)
 
 p = {:x =>5, :y =>5, :width =>20, :height =>100}
-TopSprite.graphics.drawRect(p[:x], p[:y], p[:width], p[:height])
+TopSprite.graphics.draw_rect(p[:x], p[:y], p[:width], p[:height])
 
 class Text
   attr_accessor :tf
@@ -16,8 +16,8 @@ class Text
     @tf.selectable = false
     tfor = Flash::Text::TextFormat.new
     tfor.size = 25
-    @tf.setTextFormat(tfor)
-    TopSprite.addChild(@tf)
+    @tf.set_text_format(tfor)
+    TopSprite.add_child(@tf)
   end
   def x
     @tf.x
@@ -128,10 +128,10 @@ end
 a = A.new
 a.extend B
 a.a do |s|
-  Document.addChild(s)
-  s.graphics.lineStyle(1,1,1)
-  s.graphics.beginFill(0x33AAEE)
-  s.graphics.drawRect(5,5,105,105)
+  Document.add_child(s)
+  s.graphics.line_style(1,1,1)
+  s.graphics.begin_fill(0x33AAEE)
+  s.graphics.draw_rect(5,5,105,105)
 end
 module Draggable
   on :mouse_down do

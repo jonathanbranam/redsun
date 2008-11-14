@@ -17,17 +17,13 @@ public class RubyWindow extends Window
   public var bytecode:String;
   public var rc:RubyCore;
 
-  public function RubyWindow()
+  public function RubyWindow(bytecode:String=null)
   {
+    this.bytecode = bytecode;
     super();
     this.width = 300;
     this.height = 300;
     this.addEventListener(AIREvent.WINDOW_COMPLETE, windowComplete);
-  }
-
-  protected function keyDownH(e:Event):void
-  {
-    trace("keydown: " + e);
   }
 
   protected function windowComplete(e:AIREvent):void
@@ -37,19 +33,15 @@ public class RubyWindow extends Window
     fullUIC.focusEnabled = true;
     fullUIC.x = fullUIC.y = 0;
     fullUIC.percentWidth = fullUIC.percentHeight = 100;
-    fullUIC.addEventListener(FlexEvent.CREATION_COMPLETE, uicCC);
-    fullUIC.addEventListener(KeyboardEvent.KEY_DOWN, keyDownH);
     this.addChild(fullUIC);
-  }
 
-  protected function uicCC(e:Event):void
-  {
     fullUIC.setFocus();
     rc = new RubyCore();
     rc.init();
     rc.variable_c.rb_define_global_const("TopSprite", rc.wrap_flash_obj(fullUIC));
     rc.variable_c.rb_define_global_const("AIRWindow", rc.wrap_flash_obj(this));
     rc.variable_c.rb_define_global_const("Document", rc.wrap_flash_obj(this));
+    rc.define_flash_package("Mx");
     rc.run(bytecode, fullUIC);
   }
 

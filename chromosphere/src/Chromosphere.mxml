@@ -27,16 +27,16 @@
 
   protected var browseFile:File;
 
-  protected var dir_root:String = "/Users/jonathanbranam/work/ruby/redsun/"
+  protected var dir_root:String;
 
   protected function cc():void
   {
+    dir_root = File.userDirectory.nativePath + "/work/ruby/redsun";
     ti.text = "research/rubyconf.rb";
     read_file(ti.text);
     sp = new UIComponent();
     sp.y = 50;
     this.addChild(sp);
-    //sp.addEventListener(FlexEvent.CREATION_COMPLETE, run_ruby);
   }
 
   protected function fileSelected(e:Event=null):void
@@ -47,10 +47,12 @@
 
   protected function read_file(name:String):void
   {
-    var f:File = new File(dir_root+name);
-    var fr:FileStream = new FileStream();
-    fr.open(f,FileMode.READ);
-    ta.text = fr.readUTFBytes(fr.bytesAvailable);
+    var f:File = new File(dir_root+"/"+name);
+    if (f.exists) {
+      var fr:FileStream = new FileStream();
+      fr.open(f,FileMode.READ);
+      ta.text = fr.readUTFBytes(fr.bytesAvailable);
+    }
   }
 
   protected function openButton(filename:String):void
@@ -68,85 +70,44 @@
 
   }
 
-  protected function run_ruby(e:Event):void {
-
-    var rc:RubyCore = new RubyCore();
-    rc.run(get_bytecode(), sp);
-  }
-
-  protected function get_bytecode():String
-  {
-    var s:String =
-    //"[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":2,\"stack_max\":5},\"<compiled>\",\"<compiled>\",\"top\",[\"v\"],0,[],[1,[\"trace\",1],[\"putstring\",\"hi\"],[\"setlocal\",2],2,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"pt\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":3,\"local_size\":4,\"stack_max\":2},\"pt\",\"<compiled>\",\"method\",[\"a\",\"b\",\"c\"],3,[],[4,[\"trace\",8],3,[\"trace\",1],[\"getlocal\",4],[\"getlocal\",3],[\"opt_plus\"],[\"getlocal\",2],[\"opt_plus\"],4,[\"trace\",16],3,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],5,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"mimic\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":1,\"local_size\":2,\"stack_max\":1},\"mimic\",\"<compiled>\",\"method\",[\"a\"],1,[],[7,[\"trace\",8],6,[\"trace\",1],[\"getlocal\",2],7,[\"trace\",16],6,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],8,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"wait\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"wait\",\"<compiled>\",\"method\",[],0,[],[10,[\"trace\",8],9,[\"trace\",1],[\"putstring\",\"done waiting\"],10,[\"trace\",16],9,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],11,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"putstring\",\"wait 5\"],[\"send\",\"mimic\",1,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],12,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"send\",\"wait\",0,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],13,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"col\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"col\",\"<compiled>\",\"method\",[],0,[],[15,[\"trace\",8],14,[\"trace\",1],[\"putobject\",65280],15,[\"trace\",16],14,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],16,[\"trace\",1],\"label_112\",[\"getinlinecache\",null,\"label_119\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_112\"],\"label_119\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",1],[\"putobject\",1],[\"putobject\",1],[\"send\",\"lineStyle\",3,null,0,null],[\"pop\"],17,[\"trace\",1],\"label_140\",[\"getinlinecache\",null,\"label_147\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_140\"],\"label_147\",[\"send\",\"graphics\",0,null,0,null],[\"putnil\"],[\"send\",\"col\",0,null,24,null],[\"send\",\"beginFill\",1,null,0,null],[\"pop\"],18,[\"trace\",1],\"label_169\",[\"getinlinecache\",null,\"label_176\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_169\"],\"label_176\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",5],[\"putobject\",5],[\"putobject\",105],[\"putobject\",105],[\"send\",\"drawRect\",4,null,0,null],[\"leave\"]]]";
-    //"[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":2,\"stack_max\":5},\"<compiled>\",\"<compiled>\",\"top\",[\"v\"],0,[],[1,[\"trace\",1],[\"putstring\",\"hi\"],[\"setlocal\",2],2,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"pt\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":3,\"local_size\":4,\"stack_max\":2},\"pt\",\"<compiled>\",\"method\",[\"a\",\"b\",\"c\"],3,[],[4,[\"trace\",8],3,[\"trace\",1],[\"getlocal\",4],[\"getlocal\",3],[\"opt_plus\"],[\"getlocal\",2],[\"opt_plus\"],4,[\"trace\",16],3,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],5,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"mimic\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":1,\"local_size\":2,\"stack_max\":1},\"mimic\",\"<compiled>\",\"method\",[\"a\"],1,[],[7,[\"trace\",8],6,[\"trace\",1],[\"getlocal\",2],7,[\"trace\",16],6,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],8,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"wait\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"wait\",\"<compiled>\",\"method\",[],0,[],[10,[\"trace\",8],9,[\"trace\",1],[\"putstring\",\"done waiting\"],10,[\"trace\",16],9,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],11,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"putstring\",\"wait 5\"],[\"send\",\"mimic\",1,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],12,[\"trace\",1],[\"putnil\"],[\"putnil\"],[\"send\",\"wait\",0,null,8,null],[\"send\",\"puts\",1,null,8,null],[\"pop\"],13,[\"trace\",1],[\"putspecialobject\",1],[\"putspecialobject\",2],[\"putobject\",\"col\"],[\"putiseq\",[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":1,\"stack_max\":1},\"col\",\"<compiled>\",\"method\",[],0,[],[15,[\"trace\",8],14,[\"trace\",1],[\"putobject\",255],15,[\"trace\",16],14,[\"leave\"]]]],[\"send\",\"core#define_method\",3,null,0,null],[\"pop\"],16,[\"trace\",1],\"label_112\",[\"getinlinecache\",null,\"label_119\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_112\"],\"label_119\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",1],[\"putobject\",1],[\"putobject\",1],[\"send\",\"lineStyle\",3,null,0,null],[\"pop\"],17,[\"trace\",1],\"label_140\",[\"getinlinecache\",null,\"label_147\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_140\"],\"label_147\",[\"send\",\"graphics\",0,null,0,null],[\"putnil\"],[\"send\",\"col\",0,null,24,null],[\"send\",\"beginFill\",1,null,0,null],[\"pop\"],18,[\"trace\",1],\"label_169\",[\"getinlinecache\",null,\"label_176\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_169\"],\"label_176\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",5],[\"putobject\",5],[\"putobject\",105],[\"putobject\",105],[\"send\",\"drawRect\",4,null,0,null],[\"leave\"]]]";
-    "[\"YARVInstructionSequence\\/SimpleDataFormat\",1,1,1,{\"arg_size\":0,\"local_size\":2,\"stack_max\":5},\"<compiled>\",\"<compiled>\",\"top\",[\"a\"],0,[],[1,[\"trace\",1],[\"duparray\",[1,1,1]],[\"setlocal\",2],2,[\"trace\",1],\"label_8\",[\"getinlinecache\",null,\"label_15\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_8\"],\"label_15\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",1],[\"putobject\",1],[\"putobject\",1],[\"send\",\"lineStyle\",3,null,0,null],[\"pop\"],3,[\"trace\",1],\"label_36\",[\"getinlinecache\",null,\"label_43\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_36\"],\"label_43\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",3386094],[\"send\",\"beginFill\",1,null,0,null],[\"pop\"],4,[\"trace\",1],\"label_60\",[\"getinlinecache\",null,\"label_67\"],[\"getconstant\",\"Document\"],[\"setinlinecache\",\"label_60\"],\"label_67\",[\"send\",\"graphics\",0,null,0,null],[\"putobject\",5],[\"putobject\",5],[\"putobject\",105],[\"putobject\",105],[\"send\",\"drawRect\",4,null,0,null],[\"leave\"]]]";
-
-    return s;
-  }
-
   protected function execute(filename:String):void
   {
-    // Call to rails app running
+    // Call to Ramaze app running on localhost
     var http:HTTPService = new HTTPService();
     http.url = "http://localhost:7000/compile_file/"+filename;
     http.resultFormat = "text";
     http.send();
-    http.addEventListener("result", ok);
-    http.addEventListener("fault", okf);
-  }
-
-  protected function preso(filename:String):void
-  {
-    // Call to rails app running
-    var http:HTTPService = new HTTPService();
-    http.url = "http://localhost:7000/compile_file/"+filename;
-    http.resultFormat = "text";
-    http.send();
-    http.addEventListener("result", preso_result);
-    http.addEventListener("fault", okf);
+    http.addEventListener("result", compile_success);
+    http.addEventListener("fault", compile_fault);
   }
 
   protected function execute_bytecode(bytecode:String):void
   {
-    // Call to rails app running
-    "http://localhost:7000/compile/"
-    //var http:HTTPService = new HTTPService("http://localhost:7000/", "http://localhost:7000/compile/scope.rb");
+    // Call to Ramaze app running on localhost
     var http:HTTPService = new HTTPService();
     http.url = "http://localhost:7000/compile/";
     http.resultFormat = "text";
     http.method = "POST";
     http.send({bytecode:bytecode});
-    http.addEventListener("result", ok);
-    http.addEventListener("fault", okf);
+    http.addEventListener("result", compile_success);
+    http.addEventListener("fault", compile_fault);
   }
 
-  protected function ok(e:ResultEvent):void
+  protected function compile_success(e:ResultEvent):void
   {
     var bc:String = e.result.toString();
-    trace("OK! "+bc);
-    //var rc:RubyCore = new RubyCore();
-    //rc.run(bc, sp);
     run_bytecode(bc);
   }
 
   protected function run_bytecode(bytecode:String):void
   {
-    var rw:RubyWindow = new RubyWindow();
-    rw.bytecode = bytecode;
+    var rw:RubyWindow = new RubyWindow(bytecode);
     rw.open();
   }
 
-  protected function preso_result(e:ResultEvent):void
+  protected function compile_fault(e:FaultEvent):void
   {
-    var bc:String = e.result.toString();
-    var p:PresoWindow = new PresoWindow();
-    p.bytecode = bc;
-    p.open();
-  }
-
-  protected function okf(e:FaultEvent):void
-  {
-    trace("FAIL! "+e.fault);
+    trace("Compile fail! "+e.fault);
   }
 
     ]]>
@@ -154,10 +115,9 @@
   <mx:HBox width="100%">
     <mx:TextInput width="100%" id="ti"/>
     <mx:Button id="pb" label="Browse..." click="openButton(ti.text)"/>
-    <mx:Button label="Execute" click="execute(ti.text)"/>
-    <mx:Button label="Launch Preso" click="preso(ti.text)"/>
-    <mx:CheckBox label="New Window" selected="true" id="nw"/>
+    <mx:Button label="Execute from Disk" click="execute(ti.text)"/>
+    <mx:Button label="Execute text below" click="execute_bytecode(ta.text)"/>
+    <mx:CheckBox enabled="false" label="New Window" selected="true" id="nw"/>
   </mx:HBox>
   <mx:TextArea width="100%" height="100%" id="ta" fontFamily="Consolas" fontSize="16"/>
-  <mx:Button label="Run" click="execute_bytecode(ta.text)"/>
 </mx:WindowedApplication>

@@ -167,14 +167,16 @@ public class RubyCore
   init_global_funcs():void
   {
     class_c.rb_define_global_function("wait", wait_func, 1);
-    class_c.rb_define_singleton_method(vm_c.rb_vm_top_self(), "on", on_top_func, 1);
+    class_c.rb_define_singleton_method(vm_c.rb_vm_top_self(), "on",
+                                       on_top_func, 1);
   }
 
   protected function
   on_top_func(recv:Value, event_name:Value):Value
   {
     var top:EventDispatcher;
-    var docval:Value = variable_c.rb_const_get(object_c.rb_cObject, parse_y.rb_intern("TopSprite"));
+    var docval:Value = variable_c.rb_const_get(object_c.rb_cObject,
+                                               parse_y.rb_intern("TopSprite"));
     top = RData(docval).data;
 
     var str:RString = string_c.rb_obj_as_string(event_name);
@@ -476,8 +478,9 @@ public class RubyCore
     class_c.rb_define_method(rb_cFlashClass, "method_missing", fo_method_missing, -1);
     class_c.rb_define_method(rb_cFlashClass, "respond_to?", fo_respond_to, 1);
 
-    rb_mFlash = class_c.rb_define_module("Flash");
-    class_c.rb_define_singleton_method(rb_mFlash, "const_missing", fc_const_missing, 1);
+    //rb_mFlash = class_c.rb_define_module("Flash");
+    //class_c.rb_define_singleton_method(rb_mFlash, "const_missing", fc_const_missing, 1);
+    rb_mFlash = define_flash_package("Flash");
 
     /*
     rb_mFlashDisplay = class_c.rb_define_module_under(rb_mFlash, "Display");
@@ -487,6 +490,15 @@ public class RubyCore
     variable_c.rb_const_set(rb_mFlashText, parse_y.rb_intern("TextFormat"), wrap_flash_class(TextFormat));
     */
 
+  }
+
+  public function
+  define_flash_package(name:String):RClass
+  {
+    var module:RClass = class_c.rb_define_module(name);
+    class_c.rb_define_singleton_method(module, "const_missing", fc_const_missing, 1);
+
+    return module;
   }
 
   public function
@@ -922,8 +934,10 @@ public class RubyCore
     // Look at ruby.c:961 process_options() and vm.c Init_VM
 
     // Pass in null for the node first
-    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<main>"),
-                                              string_c.rb_str_new2("filename.rb"), Qfalse, RbVm.ISEQ_TYPE_TOP);
+    var iseqval:Value = iseq_c.rb_iseq_new(null,
+                                           string_c.rb_str_new2("<main>"),
+                                           string_c.rb_str_new2("filename.rb"),
+                                           Qfalse, RbVm.ISEQ_TYPE_TOP);
 
     // Get the iseq out and assign the function pointer
     var iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
@@ -1017,8 +1031,10 @@ public class RubyCore
     parent = parent ? parent : Qfalse;
 
     // Pass in null for the node first
-    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<main>"),
-                                              string_c.rb_str_new2("filename.rb"), parent, type);
+    var iseqval:Value = iseq_c.rb_iseq_new(null,
+                                           string_c.rb_str_new2("<main>"),
+                                           string_c.rb_str_new2("filename.rb"),
+                                           parent, type);
 
     // Get the iseq out and assign the function pointer
     var iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
@@ -1081,9 +1097,10 @@ public class RubyCore
   public function
   class_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
   {
-    var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2("<class:"+name+">"),
-                                              string_c.rb_str_new2("filename.rb"),
-                                              Qfalse, RbVm.ISEQ_TYPE_CLASS);
+    var iseqval:Value = iseq_c.rb_iseq_new(null,
+                                           string_c.rb_str_new2("<class:"+name+">"),
+                                           string_c.rb_str_new2("filename.rb"),
+                                           Qfalse, RbVm.ISEQ_TYPE_CLASS);
     var class_iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     class_iseq.arg_size = arg_size;
     class_iseq.local_size = local_size;
@@ -1097,8 +1114,8 @@ public class RubyCore
   method_iseq_from_func(name:String, arg_size:int, local_size:int, stack_max:int, func:Function):RbISeq
   {
     var iseqval:Value = iseq_c.rb_iseq_new(null, string_c.rb_str_new2(name),
-                                              string_c.rb_str_new2("filename.rb"),
-                                              Qfalse, RbVm.ISEQ_TYPE_METHOD);
+                                           string_c.rb_str_new2("filename.rb"),
+                                           Qfalse, RbVm.ISEQ_TYPE_METHOD);
     var class_iseq:RbISeq = iseq_c.GetISeqPtr(iseqval);
     class_iseq.arg_size = arg_size;
     class_iseq.local_size = local_size;
