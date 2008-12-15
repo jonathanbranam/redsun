@@ -14,6 +14,28 @@ public class Eval_c
   public function
   Init_eval():void
   {
+    /* TODO: fix position */
+    /*
+    GET_THREAD()->vm->mark_object_ary = rb_ary_new();
+
+    rb_define_virtual_variable("$@", errat_getter, errat_setter);
+    rb_define_virtual_variable("$!", errinfo_getter, 0);
+
+    rb_define_global_function("eval", rb_f_eval, -1);
+    rb_define_global_function("iterator?", rb_f_block_given_p, 0);
+    rb_define_global_function("block_given?", rb_f_block_given_p, 0);
+    */
+
+    rc.class_c.rb_define_global_function("raise", rb_f_raise, -1);
+    rc.class_c.rb_define_global_function("fail", rb_f_raise, -1);
+
+    /*
+    rb_define_global_function("global_variables", rb_f_global_variables, 0);	/ * in variable.c * /
+    rb_define_global_function("local_variables", rb_f_local_variables, 0);
+
+    rb_define_global_function("__method__", rb_f_method_name, 0);
+    rb_define_global_function("__callee__", rb_f_method_name, 0);
+    */
 
     rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "append_features", rb_mod_append_features, 1);
     rc.class_c.rb_define_private_method(rc.object_c.rb_cModule, "extend_object", rb_mod_extend_object, 1);
@@ -26,6 +48,52 @@ public class Eval_c
 
     rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "extend", rb_obj_extend, -1);
 
+  }
+
+  // eval.c:468
+  public function
+  rb_f_raise(argc:int, argv:StackPointer, recv:Value):Value
+  {
+    var err:Value;
+
+    if (argc == 0) {
+      trace("raise with zero arguments is not implemented");
+      argc = 1;
+      argv = new StackPointer([rc.string_c.rb_str_new("Raise called without argument")]);
+      /*
+      err = get_errinfo();
+      if (!rc.NIL_P(err)) {
+        argc = 1;
+        argv = new StackPointer([err]);
+      }
+      */
+    }
+    rb_raise_jump(rb_make_exception(argc, argv));
+
+    return rc.Qnil; // not reached
+  }
+
+  // eval.c:483
+  public function
+  rb_make_exception(argc:int, argv:StackPointer):Value
+  {
+    if (argc == 1 && rc.TYPE(argv.get_at(0)) == Value.T_STRING) {
+      return rc.error_c.rb_exc_new3(rc.error_c.rb_eRuntimeError, argv.get_at(0));
+    } else {
+      trace("rb_make_exception: doesn't handle this case yet.");
+      return rc.error_c.rb_exc_new3(rc.error_c.rb_eRuntimeError,
+        rc.string_c.rb_str_new("rb_make_exception: doesn't handle this case yet."));
+    }
+  }
+
+  // eval.c:529
+  public function
+  rb_raise_jump(mesg:Value):void
+  {
+    var th:RbThread = rc.GET_THREAD();
+    th.cfp = rc.vm_c.RUBY_VM_PREVIOUS_CONTROL_FRAME(th, th.cfp);
+    /* TODO: fix me */
+    throw new RTag(RTag.TAG_RAISE, mesg);
   }
 
   // eval.c:544
@@ -178,13 +246,23 @@ public class Eval_c
   public function
   ruby_exec_node(n:Value, file:String):int
   {
+    var state:int;
     var iseq:Value = n;
     var th:RbThread = rc.GET_THREAD();
 
     // TODO: @skipped PUSH_TAG, EXEC_TAG, POP_TAG");
-    th.base_block = null;
-    rc.vm_c.rb_iseq_eval(iseq);
-    return 0;
+    var tag:RbVmTag = rc.PUSH_TAG(th);
+    try { // EXEC_TAG()
+      // state = EXEC_TAG();
+      // TODO: @skip SAVE_ROOT_JMPBUF
+      th.base_block = null;
+      rc.vm_c.rb_iseq_eval(iseq);
+    } catch (e:RTag) {
+      // state
+      state = e.tag;
+    }
+    rc.POP_TAG(tag, th);
+    return state;
   }
 
 }

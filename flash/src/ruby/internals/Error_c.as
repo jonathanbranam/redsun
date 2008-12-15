@@ -42,7 +42,18 @@ public class Error_c
 
   public function Init_Exception():void {
     rb_eException = rc.class_c.rb_define_class("Exception", rc.object_c.rb_cObject);
-    // exception methods
+
+    //rb_define_singleton_method(rb_eException, "exception", rb_class_new_instance, -1);
+    //rb_define_method(rb_eException, "exception", exc_exception, -1);
+    rc.class_c.rb_define_method(rb_eException, "initialize", exc_initialize, -1);
+    /*
+    rb_define_method(rb_eException, "==", exc_equal, 1);
+    rb_define_method(rb_eException, "to_s", exc_to_s, 0);
+    rb_define_method(rb_eException, "message", exc_message, 0);
+    rb_define_method(rb_eException, "inspect", exc_inspect, 0);
+    rb_define_method(rb_eException, "backtrace", exc_backtrace, 0);
+    rb_define_method(rb_eException, "set_backtrace", exc_set_backtrace, 1);
+    */
 
     rb_eSystemExit = rc.class_c.rb_define_class("SystemExit", rb_eException);
     rb_eFatal = rc.class_c.rb_define_class("fatal", rb_eException);
@@ -88,12 +99,26 @@ public class Error_c
     return rc.Qnil;
   }
 
+  // error.c:369
+  public function
+  exc_initialize(argc:int, argv:StackPointer, exc:Value):Value
+  {
+    var arg:Value;
+
+    //rb_scan_args(argc, argv, "01", &arg);
+    arg = argv.get_at(0);
+    rc.variable_c.rb_iv_set(exc, "mesg", arg);
+    rc.variable_c.rb_iv_set(exc, "bt", rc.Qnil);
+
+    return exc;
+  }
+
   public function
   rb_raise(exc:RClass, mesg:String):void
   {
     var rstring:RString = rc.string_c.rb_str_new(mesg);
     rc.eval_c.rb_exc_raise(rc.error_c.rb_exc_new3(exc, rstring));
-    //throw new Error(exc.toString() + mesg);
+    throw new Error(exc.toString() + mesg);
   }
 
   public function

@@ -1268,6 +1268,24 @@ public class RubyCore
     }
   }
 
+  // eval_intern.h:146
+  public function
+  PUSH_TAG(th:RbThread):RbVmTag
+  {
+    var _tag:RbVmTag = new RbVmTag();
+    _tag.tag = null;
+    _tag.prev = th.tag;
+    th.tag = _tag;
+    return _tag;
+  }
+
+  // eval_intern
+  public function
+  POP_TAG(tag:RbVmTag, th:RbThread):void
+  {
+    th.tag = tag.prev;
+  }
+
 }
 }
 

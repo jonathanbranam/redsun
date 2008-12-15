@@ -32,7 +32,7 @@
   protected function cc():void
   {
     dir_root = File.userDirectory.nativePath + "/work/ruby/redsun";
-    ti.text = "research/rubyconf.rb";
+    ti.text = "research/exceptions.rb";
     read_file(ti.text);
     sp = new UIComponent();
     sp.y = 50;

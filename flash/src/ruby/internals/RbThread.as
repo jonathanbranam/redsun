@@ -58,7 +58,7 @@ public class RbThread extends Value
   public var keeping_mutexes:*;
   public var transition_for_lock:int;
 
-  public var tag:*;
+  public var tag:RbVmTag;
   public var trap_tag:*;
 
   public var parse_in_eval:int;
