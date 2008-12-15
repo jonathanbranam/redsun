@@ -1,10 +1,10 @@
 
 # Testing exceptions
 puts "Before Raise"
-#begin
+begin
   raise "Something"
   puts "Not Rescued"
-#rescue 
-#  puts "Rescued"
-#end
+rescue 
+  puts "Rescued"
+end
 

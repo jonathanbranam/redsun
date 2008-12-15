@@ -118,7 +118,6 @@ public class Error_c
   {
     var rstring:RString = rc.string_c.rb_str_new(mesg);
     rc.eval_c.rb_exc_raise(rc.error_c.rb_exc_new3(exc, rstring));
-    throw new Error(exc.toString() + mesg);
   }
 
   public function

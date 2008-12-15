@@ -55,7 +55,17 @@ module RedSun
               if i and i.length > 0
                 puts "#{indent}["
                 i.each do |label|
-                  puts "#{indent}  #{pp_value(label,as3)},"
+                  if label[1].is_a? Array
+                    puts("#{indent}  [#{pp_value(label[0],as3)},")
+                    pp_yarv(label[1], indent+"    ", as3)
+                    print("#{indent}    ")
+                    label[2..-1].each do |v|
+                      print("#{pp_value(v,as3)}, ")
+                    end
+                    puts("],")
+                  else
+                    puts "#{indent}  #{pp_value(label,as3)},"
+                  end
                 end
                 puts "#{indent}]"
               else

@@ -1,12 +1,8 @@
 package
 {
-import flash.events.Event;
-import flash.events.KeyboardEvent;
-
 import mx.core.UIComponent;
 import mx.core.Window;
 import mx.events.AIREvent;
-import mx.events.FlexEvent;
 
 import ruby.internals.RubyCore;
 
@@ -42,7 +38,8 @@ public class RubyWindow extends Window
     rc.variable_c.rb_define_global_const("AIRWindow", rc.wrap_flash_obj(this));
     rc.variable_c.rb_define_global_const("Document", rc.wrap_flash_obj(this));
     rc.define_flash_package("Mx");
-    rc.run(bytecode, fullUIC);
+    var result:int = rc.run(bytecode, fullUIC);
+    trace("Execution of main ruby bytecode resulting in code: "+result);
   }
 
 }

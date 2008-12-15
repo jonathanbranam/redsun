@@ -28,6 +28,13 @@ public class Vm_c
   public var ruby_vm_redefined_flag:uint = 0;
   public var vm_opt_method_table:Object;
 
+  public const CATCH_TYPE_RESCUE:String = "rescue";
+  public const CATCH_TYPE_ENSURE:String = "ensure";
+  public const CATCH_TYPE_RETRY:String = "retry";
+  public const CATCH_TYPE_BREAK:String = "break";
+  public const CATCH_TYPE_REDO:String = "redo";
+  public const CATCH_TYPE_NEXT:String = "next";
+
   public function Init_VM():void
   {
     var opts:Value;
@@ -404,34 +411,154 @@ public class Vm_c
   public function
   vm_eval_body(th:RbThread):Value
   {
+    var state:int;
     var result:Value;
+    var err:Value;
     var initial:Value;
+    var escape_dfp:StackPointer;
 
+    var tag:RbVmTag;
+
+    tag = rc.PUSH_TAG(th);
+    tag.retval = rc.Qnil;
+
+    var went_to_exception_handler:Boolean = false;
     try {
+      // state = EXEC_TAG()
+      // vm_loop_start:
       result = rc.vm_evalbody_c.vm_eval(th, initial);
-    } catch (e:Error) {
-      trace("error: " +e.message);
-      trace(e.getStackTrace());
 
+      state = th.state;
+      if (state != 0) {
+        err = result;
+        th.state = 0;
+        // goto exception_handler
+        trace("goto exception_handler");
+        went_to_exception_handler = true;
+        throw new RTag(state, rc.Qnil);
+      }
+
+    } catch (e:RTag) {
+      //trace("error: " +e.message);
+      //trace(e.getStackTrace());
+
+      var i:int;
+      var entry:ISeqCatchTableEntry;
+      var epc:int;
+      var cont_pc:int;
+      var cont_sp:int;
+      var catch_iseqval:Value;
+      var cfp:RbControlFrame;
+      var type:Value
+
+      state = e.tag;
 
       // Exception handling.
+      if (!went_to_exception_handler) {
+        err = th.errinfo;
 
-      // if state == TAG_RETRY
-      // search catch_table for RETRY entry
-      // etc.
-
-      th.cfp = th.cfp_stack.pop();
-      if (th.cfp.pc_fn != finish_insn_seq) {
-        trace("goto exception_handler");
-        // goto exception_handler;
-      } else {
-        rc.vm_insnhelper_c.vm_pop_frame(th);
-        // th.errinfo = err;
-        // TH_POP_TAG2();
-        // JUMP_TAG(state);
+        if (state == RTag.TAG_RAISE) {
+          if (rc.OBJ_FROZEN(err)) rc.eval_c.rb_exc_raise(err);
+          rc.variable_c.rb_ivar_set(err, rc.id_c.idThrowState, rc.numeric_c.INT2FIX(state));
+        }
       }
+
+      // exception_handler:
+      do {
+        cont_pc = 0;
+        cont_sp = 0;
+        catch_iseqval = null;
+
+        while (th.cfp.pc_ary == null || th.cfp.iseq == null) {
+          th.cfp = th.cfp_stack.pop();
+        }
+
+        cfp = th.cfp;
+        //epc = cfp.pc - cfp.iseq.iseq_encoded;
+        // this is equivalent to the previous line
+        epc = cfp.pc_index;
+
+        if (state == RTag.TAG_BREAK || state == RTag.TAG_RETURN) {
+          trace("unhandled tags break and return");
+          // LOTS OF CODE HERE
+        }
+
+        if (state == RTag.TAG_RAISE) {
+          for (i = 0; i < cfp.iseq.catch_table_size; i++) {
+            entry = cfp.iseq.catch_table[i];
+            var start_label:int = cfp.iseq.iseq.indexOf(entry.start);
+            var end_label:int = cfp.iseq.iseq.indexOf(entry.end);
+            if (start_label < epc && end_label >= epc) {
+              if (entry.type == CATCH_TYPE_RESCUE ||
+                  entry.type == CATCH_TYPE_ENSURE)
+              {
+                catch_iseqval = entry.iseq;
+                cont_pc = cfp.iseq.iseq.indexOf(entry.cont);
+                cont_sp = entry.sp;
+                break;
+              }
+            }
+          }
+        }
+        else if (state == RTag.TAG_RETRY) {
+          // LOTS OF CODE HERE
+        }
+        else if (state == RTag.TAG_BREAK && escape_dfp == null) {
+          // LOTS OF CODE HERE
+        }
+        else if (state == RTag.TAG_REDO) {
+          // LOTS OF CODE HERE
+        }
+        else if (state == RTag.TAG_NEXT) {
+          // LOTS OF CODE HERE
+        }
+        else {
+          // LOTS OF CODE HERE
+        }
+
+        if (catch_iseqval != null) {
+          var catch_iseq:RbISeq;
+
+          catch_iseq = rc.iseq_c.GetISeqPtr(catch_iseqval);
+          cfp.sp = cfp.bp.clone_down_stack(cont_sp);
+          cfp.pc_index = cont_pc;
+
+          cfp.sp.set_at(0, err);
+          rc.vm_insnhelper_c.vm_push_frame(th, catch_iseq, RbVm.VM_FRAME_MAGIC_BLOCK,
+                                           cfp.self, cfp.dfp.clone(),
+                                           null, catch_iseq.iseq, 0,
+                                           cfp.sp.clone_down_stack(1),
+                                           cfp.lfp.clone(),
+                                           catch_iseq.local_size-1);
+          state = 0;
+          th.errinfo = rc.Qnil;
+          // goto vm_loop_start;
+          vm_eval_body(th);
+
+        }
+        else {
+
+          th.cfp = th.cfp_stack.pop();
+          if (th.cfp.pc_fn != finish_insn_seq) {
+            trace("goto exception_handler");
+            continue;
+            // goto exception_handler;
+          } else {
+            rc.vm_insnhelper_c.vm_pop_frame(th);
+            th.errinfo = err;
+            // TH_POP_TAG2();
+            rc.POP_TAG(tag, th);
+            // JUMP_TAG(state);
+            throw new RTag(state, e.mesg);
+          }
+        }
+        break;
+      } while (1)
     }
 
+    // finish_vme:
+    // TH_POP_TAG();
+    rc.POP_TAG(tag, th);
     return result;
   }
 

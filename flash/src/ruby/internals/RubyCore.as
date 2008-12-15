@@ -116,27 +116,27 @@ public class RubyCore
   }
 
   public function
-  run(bytecode:String, doc_class:DisplayObject=null):void
+  run(bytecode:String, doc_class:DisplayObject=null):int
   {
     var decoder:JSONDecoder = new JSONDecoder( bytecode, this )
-    run_array(decoder.getValue(), doc_class);
+    return run_array(decoder.getValue(), doc_class);
   }
 
   public function
-  run_array(iseq_array:Array, doc_class:DisplayObject=null):void
+  run_array(iseq_array:Array, doc_class:DisplayObject=null):int
   {
     init();
-    run_iseqval(iseqval_from_array(iseq_array), doc_class);
+    return run_iseqval(iseqval_from_array(iseq_array), doc_class);
   }
 
   public function
-  run_iseqval(iseqval:Value, doc_class:DisplayObject=null):void
+  run_iseqval(iseqval:Value, doc_class:DisplayObject=null):int
   {
     init();
     if (doc_class) {
       variable_c.rb_define_global_const("TopSprite", wrap_flash_obj(doc_class));
     }
-    eval_c.ruby_run_node(iseqval);
+    return eval_c.ruby_run_node(iseqval);
   }
 
   public function
@@ -1063,6 +1063,24 @@ public class RubyCore
       }
       iseq.arg_simple = 0;
     }
+
+    var catch_table:Array = new Array();
+
+    for each (var catch_def:Array in iseq_array[10]) {
+      var entry:ISeqCatchTableEntry = new ISeqCatchTableEntry();
+      entry.type = catch_def[0];
+      if (catch_def[1] is Array) {
+        entry.iseq = iseqval_from_array(catch_def[1]);
+      }
+      entry.start = catch_def[2];
+      entry.end = catch_def[3];
+      entry.cont = catch_def[4];
+      entry.sp = catch_def[5];
+      catch_table.push(entry);
+    }
+
+    iseq.catch_table = catch_table;
+    iseq.catch_table_size = catch_table.length;
 
     iseq.iseq = yarv_iseq(iseq_array);
 

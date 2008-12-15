@@ -91,9 +91,9 @@ public class Eval_c
   rb_raise_jump(mesg:Value):void
   {
     var th:RbThread = rc.GET_THREAD();
-    th.cfp = rc.vm_c.RUBY_VM_PREVIOUS_CONTROL_FRAME(th, th.cfp);
+    th.cfp = th.cfp_stack.pop();
     /* TODO: fix me */
-    throw new RTag(RTag.TAG_RAISE, mesg);
+    rb_longjmp(RTag.TAG_RAISE, mesg);
   }
 
   // eval.c:544
@@ -217,20 +217,44 @@ public class Eval_c
   }
 
 
+  // eval.c:349
+  public function
+  rb_longjmp(tag:int, mesg:Value):void
+  {
+    var th:RbThread = rc.GET_THREAD();
+
+    // LOTS OF CODE HERE
+
+    if (rc.NIL_P(mesg)) {
+      mesg = th.errinfo;
+    }
+    if (rc.NIL_P(mesg)) {
+      mesg = rc.error_c.rb_exc_new(rc.error_c.rb_eRuntimeError, null);
+    }
+
+    if (!rc.NIL_P(mesg)) {
+      th.errinfo = mesg;
+    }
+
+    // LOTS OF DEBUGGING CODE HERE
+
+    throw new RTag(tag, mesg);
+  }
+
   // eval.c:424
   public function
   rb_exc_raise(mesg:Value):void
   {
-    throw new RTag(RTag.TAG_RAISE, mesg);
+    rb_longjmp(RTag.TAG_RAISE, mesg);
   }
 
   // eval.c:233
   public function
-  ruby_run_node(n:Value):void
+  ruby_run_node(n:Value):int
   {
     // TODO: @skipped
     // Init_stack(n);
-    ruby_cleanup(ruby_exec_node(n, null));
+    return ruby_cleanup(ruby_exec_node(n, null));
   }
 
   // eval.c:141
@@ -239,6 +263,13 @@ public class Eval_c
   {
     // TODO: @skipped
     // cleanup, GC, stop threads, error hanlding
+
+    if (ex != 0) {
+      trace("Ruby exited with abnormal status.");
+      var errinfo:Value = rc.GET_THREAD().errinfo;
+      trace(""+errinfo);
+      //trace("klass: " + );
+    }
     return ex;
   }
 

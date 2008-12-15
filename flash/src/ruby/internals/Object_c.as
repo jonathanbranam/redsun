@@ -79,6 +79,8 @@ public class Object_c
     rc.class_c.rb_define_private_method(rb_cModule, "method_removed", rb_obj_dummy, 1);
     rc.class_c.rb_define_private_method(rb_cModule, "method_undefined", rb_obj_dummy, 1);
 
+    rc.class_c.rb_define_method(rb_mKernel, "===", rb_equal, 1);
+
     rc.class_c.rb_define_method(rb_mKernel, "class", rb_obj_class, 0);
 
     rc.class_c.rb_define_method(rb_mKernel, "to_s", rb_any_to_s, 0);
@@ -90,6 +92,7 @@ public class Object_c
     rc.variable_c.rb_define_global_const("NIL", rc.Qnil);
 
     // Lots of module methods
+    rc.class_c.rb_define_method(rb_cModule, "===", rb_mod_eqq, 1);
     // Lots of class methods
     rc.class_c.rb_define_method(rb_cClass, "allocate", rb_obj_alloc, 0);
     rc.class_c.rb_define_method(rb_cClass, "new", rb_class_new_instance, -1);
@@ -261,6 +264,37 @@ public class Object_c
     }
 
     return obj;
+  }
+
+  // object.c:452
+  public function
+  rb_obj_is_kind_of(obj:Value, c:RClass):Value
+  {
+    var cl:RClass = rc.CLASS_OF(obj);
+
+    switch (rc.TYPE(c)) {
+      case Value.T_MODULE:
+      case Value.T_CLASS:
+      case Value.T_ICLASS:
+        break;
+      default:
+        rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "class or module required");
+    }
+
+    while (cl) {
+      if (cl == c || cl.klass.m_tbl == c.klass.m_tbl) {
+        return rc.Qtrue;
+      }
+      cl = cl.super_class;
+    }
+    return rc.Qfalse;
+  }
+
+  // object.c:1185
+  public function
+  rb_mod_eqq(mod:RClass, arg:Value):Value
+  {
+    return rb_obj_is_kind_of(arg, mod);
   }
 
 

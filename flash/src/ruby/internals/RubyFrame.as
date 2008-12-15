@@ -34,6 +34,12 @@ public class RubyFrame
   }
 
   public function
+  nop():void
+  {
+
+  }
+
+  public function
   pop():void
   {
     reg_sp.popn(1);
@@ -184,6 +190,10 @@ public class RubyFrame
   putobject(val:*):void
   {
     if (val is String) {
+      if (val == "StandardError") {
+        reg_sp.push(rc.error_c.rb_eStandardError);
+        return;
+      }
       reg_sp.push(rc.string_c.rb_str_new(val));
     } else if (val is int || val is uint) {
       reg_sp.push(rc.numeric_c.INT2FIX(val));

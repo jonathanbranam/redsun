@@ -17,5 +17,10 @@ public class RObject extends RBasic
     this.flags = Value.T_OBJECT;
   }
 
+  public function toString():String
+  {
+    return "<"+klass.name+">";
+  }
+
 }
 }
