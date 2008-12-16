@@ -1,5 +1,26 @@
 
 # Testing exceptions
+puts "start"
+begin
+  raise StandardError, "with description"
+  puts "** didn't raise"
+rescue NoMethodError
+  puts "** caught NoMethodError"
+rescue RuntimeError
+  puts "** caught RuntimeError"
+rescue StandardError => bob
+  puts "caught StandardError: "+bob.to_s
+end
+
+begin
+  raise "runtime error"
+  puts "** didn't raise"
+rescue NoMethodError
+  puts "** caught NoMethodError"
+rescue
+  puts "caught any error"
+end
+
 puts "Before Raise"
 begin
   raise "Something"
@@ -11,9 +32,9 @@ end
 begin
   "corey".i_do_not_exist
 rescue NoMethodError
-  puts "wrong place"
-rescue 
   puts "right place"
+rescue 
+  puts "wrong place"
 end
 
 class A
@@ -31,3 +52,4 @@ begin
 rescue
   puts "Should rescue"
 end
+

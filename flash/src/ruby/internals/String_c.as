@@ -335,6 +335,7 @@ public class String_c
     rb_cSymbol = rc.class_c.rb_define_class("Symbol", rc.object_c.rb_cObject);
 
     // TODO: Lots of Symbol methods
+    rc.class_c.rb_define_method(rb_cString, "+", rb_str_plus, 1);
 
   }
 

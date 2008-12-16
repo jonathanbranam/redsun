@@ -77,6 +77,52 @@ public class Eval_c
   public function
   rb_make_exception(argc:int, argv:StackPointer):Value
   {
+    var mesg:Value;
+    var exception:int;
+    // special value here
+    var n:int = -1;
+
+    mesg = rc.Qnil;
+    switch (argc) {
+      case 0:
+        mesg = rc.Qnil;
+        break;
+      case 1:
+        if (rc.NIL_P(argv.get_at(0)))
+          break;
+        if (rc.TYPE(argv.get_at(0)) == Value.T_STRING) {
+          mesg = rc.error_c.rb_exc_new3(rc.error_c.rb_eRuntimeError, argv.get_at(0));
+          break;
+        }
+        n = 0;
+        // goto exception_call;
+      case 2:
+      case 3:
+        if (n != 0) {
+          n = 1;
+        }
+        // exception_call:
+        exception = rc.CONST_ID("exception");
+        if (!rc.vm_method_c.rb_respond_to(argv.get_at(0), exception)) {
+          rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "exception class/object expected");
+        }
+        mesg = rc.vm_eval_c.rb_funcall(argv.get_at(0), exception, n, argv.get_at(1));
+        break;
+      default:
+        rc.error_c.rb_raise(rc.error_c.rb_eArgError, "wrong number of arguments");
+        break;
+    }
+    if (argc > 0) {
+      if (!rc.object_c.rb_obj_is_kind_of(mesg, rc.error_c.rb_eException)) {
+        rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "exception object expected");
+      }
+      if (argc > 2) {
+        // set_backtrace(mesg, argv.get_at(2));
+        trace("skipping set_backtrace");
+      }
+    }
+    return mesg;
+    /*
     if (argc == 1 && rc.TYPE(argv.get_at(0)) == Value.T_STRING) {
       return rc.error_c.rb_exc_new3(rc.error_c.rb_eRuntimeError, argv.get_at(0));
     } else {
@@ -84,6 +130,7 @@ public class Eval_c
       return rc.error_c.rb_exc_new3(rc.error_c.rb_eRuntimeError,
         rc.string_c.rb_str_new("rb_make_exception: doesn't handle this case yet."));
     }
+    */
   }
 
   // eval.c:529

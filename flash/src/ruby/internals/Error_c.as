@@ -43,12 +43,13 @@ public class Error_c
   public function Init_Exception():void {
     rb_eException = rc.class_c.rb_define_class("Exception", rc.object_c.rb_cObject);
 
-    //rb_define_singleton_method(rb_eException, "exception", rb_class_new_instance, -1);
+    rc.class_c.rb_define_singleton_method(rb_eException, "exception",
+                                          rc.object_c.rb_class_new_instance, -1);
     //rb_define_method(rb_eException, "exception", exc_exception, -1);
     rc.class_c.rb_define_method(rb_eException, "initialize", exc_initialize, -1);
+    rc.class_c.rb_define_method(rb_eException, "to_s", exc_to_s, 0);
     /*
     rb_define_method(rb_eException, "==", exc_equal, 1);
-    rb_define_method(rb_eException, "to_s", exc_to_s, 0);
     rb_define_method(rb_eException, "message", exc_message, 0);
     rb_define_method(rb_eException, "inspect", exc_inspect, 0);
     rb_define_method(rb_eException, "backtrace", exc_backtrace, 0);
@@ -61,8 +62,8 @@ public class Error_c
     rb_eInterrupt = rc.class_c.rb_define_class("Interrupt", rb_eSignal);
 
     rb_eStandardError = rc.class_c.rb_define_class("StandardError", rb_eException);
-    rc.error_c.rb_eTypeError = rc.class_c.rb_define_class("TypeError", rb_eStandardError);
-    rc.error_c.rb_eArgError = rc.class_c.rb_define_class("ArgumentError", rb_eStandardError);
+    rb_eTypeError = rc.class_c.rb_define_class("TypeError", rb_eStandardError);
+    rb_eArgError = rc.class_c.rb_define_class("ArgumentError", rb_eStandardError);
     rb_eIndexError = rc.class_c.rb_define_class("IndexError", rb_eStandardError);
     rb_eKeyError = rc.class_c.rb_define_class("KeyError", rb_eIndexError);
     rb_eRangeError = rc.class_c.rb_define_class("RangeError", rb_eStandardError);
@@ -109,7 +110,7 @@ public class Error_c
     var arg:Value;
 
     //rb_scan_args(argc, argv, "01", &arg);
-    arg = argv.get_at(1);
+    arg = argv.get_at(0);
     rc.variable_c.rb_iv_set(exc, "mesg", arg);
     rc.variable_c.rb_iv_set(exc, "bt", rc.Qnil);
 
@@ -242,6 +243,17 @@ public class Error_c
   rb_exc_new2(etype:Value, s:String):RObject
   {
     return rb_exc_new(etype, s);
+  }
+
+  // error.c:415
+  public function
+  exc_to_s(exc:Value):Value
+  {
+    var mesg:Value = rc.variable_c.rb_attr_get(exc, rc.parse_y.rb_intern("mesg"));
+
+    if (rc.NIL_P(mesg)) return rc.variable_c.rb_class_name(rc.CLASS_OF(exc));
+    if (rc.OBJ_TAINTED(exc)) rc.OBJ_TAINT(mesg);
+    return mesg;
   }
 
   // error.c:645
