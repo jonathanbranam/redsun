@@ -433,7 +433,7 @@ public class Vm_c
         err = result;
         th.state = 0;
         // goto exception_handler
-        trace("goto exception_handler");
+        //trace("goto exception_handler");
         went_to_exception_handler = true;
         throw new RTag(state, rc.Qnil);
       }
@@ -540,7 +540,7 @@ public class Vm_c
 
           th.cfp = th.cfp_stack.pop();
           if (th.cfp.pc_fn != finish_insn_seq) {
-            trace("goto exception_handler");
+            //trace("goto exception_handler");
             continue;
             // goto exception_handler;
           } else {

@@ -199,8 +199,7 @@ public class Eval_c
   public function
   rb_obj_call_init(obj:Value, argc:int, argv:StackPointer):void
   {
-    // TODO: @skipped pass passed block
-    // PASS_PASSED_BLOCK();
+    rc.PASS_PASSED_BLOCK();
     rc.vm_eval_c.rb_funcall2(obj, rc.id_c.idInitialize, argc, argv);
   }
 

@@ -397,10 +397,11 @@ public class Vm_insnhelper_c
     var argv:StackPointer = STACK_ADDR_FROM_TOP(reg_cfp, num+1);
     var val:Value;
     // This does appear to wack the stack at this point, I guess it's appropriate?
+    // It is replacing the original receiver's spot on the stack.
     argv.set_at(0, rc.ID2SYM(id));
     th.method_missing_reason = opt;
     th.passed_block = blockptr;
-    val = rc.vm_eval_c.rb_funcall2(recv, rc.id_c.idMethodMissing, num + 1, argv);
+    val = rc.vm_eval_c.rb_funcall2(recv, rc.id_c.idMethodMissing, num + 1, argv.clone());
     POPN(reg_cfp, num + 1);
     return val;
   }
@@ -786,8 +787,8 @@ public class Vm_insnhelper_c
   }
 
   // vm_insnhelper.c:1089
-  protected function
-  vm_search_normal_superclass(klass:Value, recv:Value):Value
+  public function
+  vm_search_normal_superclass(klass:RClass, recv:Value):RClass
   {
     if (klass.BUILTIN_TYPE() == Value.T_CLASS) {
       klass = RClass(klass).super_class;

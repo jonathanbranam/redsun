@@ -1070,7 +1070,7 @@ public class RubyCore
       var entry:ISeqCatchTableEntry = new ISeqCatchTableEntry();
       entry.type = catch_def[0];
       if (catch_def[1] is Array) {
-        entry.iseq = iseqval_from_array(catch_def[1]);
+        entry.iseq = iseqval_from_array(catch_def[1], iseqval);
       }
       entry.start = catch_def[2];
       entry.end = catch_def[3];
@@ -1302,6 +1302,23 @@ public class RubyCore
   POP_TAG(tag:RbVmTag, th:RbThread):void
   {
     th.tag = tag.prev;
+  }
+
+  public function
+  MEMCPY(p1:StackPointer, p2:StackPointer, n:int):void
+  {
+    for (var i:int = 0; i < n; i++) {
+      p1.set_at(i, p2.get_at(i));
+    }
+  }
+
+  // eval_intern.h:10
+  public function
+  PASS_PASSED_BLOCK():void
+  {
+    var th:RbThread = GET_THREAD();
+    th.passed_block = th.cfp.lfp.get_at(0);
+    th.cfp.flag |= RbVm.VM_FRAME_FLAG_PASSED;
   }
 
 }

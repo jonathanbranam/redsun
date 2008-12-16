@@ -43,7 +43,7 @@ public class RbISeq extends Node
 
   // Linked list of Nodes
   public var cref_stack:Node;
-  public var klass:Value;
+  public var klass:RClass;
 
   public var defined_method_id:int;
   public var profile:*;

@@ -18,7 +18,7 @@ public class RbControlFrame extends RbBlock
   //public var block_iseq:RbISeq;
   //public var proc:Value;
   public var method_id:int;
-  public var method_class:Value;
+  public var method_class:RClass;
   public var prof_time_self:Value;
   public var prof_time_child:Value;
 

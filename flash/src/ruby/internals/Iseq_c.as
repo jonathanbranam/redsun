@@ -63,6 +63,9 @@ public class Iseq_c
       piseq = GetISeqPtr(parent);
       iseq.cref_stack = piseq.cref_stack;
     }
+    else {
+      trace("not setting cref_stack");
+    }
 
     if (type == RbVm.ISEQ_TYPE_TOP ||
         type == RbVm.ISEQ_TYPE_METHOD || type == RbVm.ISEQ_TYPE_CLASS) {

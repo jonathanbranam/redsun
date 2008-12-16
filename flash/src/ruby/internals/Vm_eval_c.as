@@ -18,7 +18,7 @@ public class Vm_eval_c
 
     //rc.class_c.rb_define_method(rb_cBasicObject, "instance_eval", rb_obj_instance_eval, -1);
     rc.class_c.rb_define_method(rc.object_c.rb_cBasicObject, "instance_exec", rb_obj_instance_exec, -1);
-    //rc.class_c.rb_define_private_method(rb_cBasicObject, "method_missing", rb_method_missing, -1);
+    rc.class_c.rb_define_private_method(rc.object_c.rb_cBasicObject, "method_missing", rb_method_missing, -1);
 
     rc.class_c.rb_define_method(rc.object_c.rb_cBasicObject, "__send__", rb_f_send, -1);
     rc.class_c.rb_define_method(rc.object_c.rb_mKernel, "send", rb_f_send, -1);
@@ -31,6 +31,58 @@ public class Vm_eval_c
 
   }
 
+  // vm_eval.c:123
+  public function
+  vm_call_super(th:RbThread, argc:int, argv:StackPointer):Value
+  {
+    var recv:Value = th.cfp.self;
+    var klass:RClass;
+    var id:int;
+    var body:Node;
+    var cfp:RbControlFrame = th.cfp;
+
+    if (!cfp.iseq) {
+      klass = cfp.method_class;
+      klass = klass.super_class;
+
+      if (klass == null) {
+        klass = rc.vm_insnhelper_c.vm_search_normal_superclass(cfp.method_class, recv);
+      }
+
+      id = cfp.method_id;
+    }
+    else {
+      rc.error_c.rb_bug("vm_call_super: should not be reached");
+    }
+
+    body = rc.vm_method_c.rb_method_node(klass, id); // this returns NODE_METHOD
+
+    if (body) {
+      body = body.nd_body;
+    }
+    else {
+      var argv_m:StackPointer;
+      var result:Value;
+      argv_m = new StackPointer(new Array(argc+1));
+      rc.MEMCPY(argv_m.clone_down_stack(1), argv, argc);
+      argv_m.set_at(0, rc.ID2SYM(id));
+      th.method_missing_reason = 0;
+      th.passed_block = null;
+      result = rc.vm_eval_c.rb_funcall2(recv, rc.id_c.idMethodMissing, argc + 1, argv_m);
+      return result;
+    }
+
+    return vm_call0(th, klass, recv, id, id, argc, argv, body, Node.CALL_SUPER);
+  }
+
+  // vm_eval.c:172
+  public function
+  rb_call_super(argc:int, argv:StackPointer):Value
+  {
+    rc.PASS_PASSED_BLOCK();
+    return vm_call_super(rc.GET_THREAD(), argc, argv);
+  }
+
   // vm_eval.c:354
   public function
   method_missing(obj:Value, id:int, argc:int, argv:StackPointer, call_status:int):Value
@@ -40,7 +92,7 @@ public class Vm_eval_c
     rc.GET_THREAD().method_missing_reason = call_status;
 
     if (id == rc.vm_method_c.missing) {
-      rb_method_missing(argc, argv, obj);
+      rb_method_missing(argc, argv.clone(), obj);
     } else if (id == rc.ID_ALLOCATOR) {
       rc.error_c.rb_raise(rc.error_c.rb_eTypeError, "allocator undefined for "+rc.variable_c.rb_class2name(RClass(obj)));
     }
@@ -57,6 +109,13 @@ public class Vm_eval_c
   // vm_eval.c:410
   public function
   rb_funcall2(recv:Value, mid:int, argc:int, argv:StackPointer):Value
+  {
+    return rb_call(rc.CLASS_OF(recv), recv, mid, argc, argv, Node.CALL_FCALL);
+  }
+
+  // vm_eval.c:416
+  public function
+  rb_funcall3(recv:Value, mid:int, argc:int, argv:StackPointer):Value
   {
     return rb_call(rc.CLASS_OF(recv), recv, mid, argc, argv, Node.CALL_PUBLIC);
   }
@@ -112,7 +171,7 @@ public class Vm_eval_c
   rb_method_missing(argc:int, argv:StackPointer, obj:Value):Value
   {
     var id:int;
-    var exc:RClass = rc.error_c.rb_eNoMethodError;
+    var exc:Value = rc.error_c.rb_eNoMethodError;
     var format:String = null;
     var th:RbThread = rc.GET_THREAD();
     var last_call_status:int = th.method_missing_reason;
@@ -142,21 +201,19 @@ public class Vm_eval_c
       format = "undefined method '"+rc.parse_y.rb_id2name(id)+"' for "+rc.string_c.rb_obj_as_string(obj).string
     }
 
-    // TODO: @skipped create class instance of message error - needs array support
-    /*
     var n:int = 0;
-    var args:Array = new Array(3);
-    args[n++] = rb_funcall(rb_const_get(exc, rc.parse_y.rb_intern("message")), "!".charCodeAt(), 3, rb_str_new2(format), obj, argv[0]);
-    args[n++] = argv[0];
-    if (exc == rb_eNoMethodError) {
-      //args[n++] = rb_ary_new4(argc - 1, argv + 1);
+    var args:StackPointer = new StackPointer(new Array(3));
+    args.set_at(n++, rb_funcall(rc.variable_c.rb_const_get(RClass(exc), rc.parse_y.rb_intern("message")),
+                          "!".charCodeAt(), 3, rc.string_c.rb_str_new2(format),
+                          obj, argv.get_at(0)));
+    args.set_at(n++, argv.get_at(0));
+    if (exc == rc.error_c.rb_eNoMethodError) {
+      args.set_at(n++, rc.array_c.rb_ary_new4(argc - 1, argv.clone_down_stack(1)));
     }
-    exc = RClass(rb_class_new_instance(n, args, exc));
-    */
+    exc = rc.object_c.rb_class_new_instance(n, args, RClass(exc));
 
     th.cfp = th.cfp_stack.pop();
-    rc.error_c.rb_raise(exc, format);
-    //rb_exc_raise(exc);
+    rc.eval_c.rb_exc_raise(exc);
 
     // will not be reached
     return rc.Qnil;
@@ -228,7 +285,6 @@ public class Vm_eval_c
       }
 
       rc.vm_insnhelper_c.vm_setup_method(th, reg_cfp, argc, blockptr, 0, iseqval, recv, klass);
-      //val = rc.Qundef;
       val = rc.vm_c.vm_eval_body(th);
       break;
     }

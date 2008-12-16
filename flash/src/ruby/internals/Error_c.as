@@ -74,7 +74,10 @@ public class Error_c
     rb_eNotImpError = rc.class_c.rb_define_class("NotImplementedError", rb_eScriptError);
 
     rb_eNameError = rc.class_c.rb_define_class("NameError", rb_eStandardError);
+    rc.class_c.rb_define_method(rb_eNameError, "initialize", name_err_initialize, -1);
     rb_cNameErrorMesg = rc.class_c.rb_define_class_under(rb_eNameError, "message", rc.object_c.rb_cData);
+    rc.class_c.rb_define_singleton_method(rb_cNameErrorMesg, "!", name_err_mesg_new, 3);
+
 
     rb_eNoMethodError = rc.class_c.rb_define_class("NoMethodError", rb_eNameError);
 
@@ -106,7 +109,7 @@ public class Error_c
     var arg:Value;
 
     //rb_scan_args(argc, argv, "01", &arg);
-    arg = argv.get_at(0);
+    arg = argv.get_at(1);
     rc.variable_c.rb_iv_set(exc, "mesg", arg);
     rc.variable_c.rb_iv_set(exc, "bt", rc.Qnil);
 
@@ -239,6 +242,29 @@ public class Error_c
   rb_exc_new2(etype:Value, s:String):RObject
   {
     return rb_exc_new(etype, s);
+  }
+
+  // error.c:645
+  public function
+  name_err_initialize(argc:int, argv:StackPointer, self:Value):Value
+  {
+    var name:Value;
+
+    name = (argc > 1) ? argv.get_at(--argc) : rc.Qnil;
+    rc.vm_eval_c.rb_call_super(argc, argv);
+    rc.variable_c.rb_iv_set(self, "name", name);
+    return self;
+  }
+
+  // error.c:718
+  public function
+  name_err_mesg_new(obj:Value, mesg:Value, recv:Value, method:Value):Value
+  {
+    var ptr:Array = new Array(3);
+    ptr[0] = mesg;
+    ptr[1] = recv;
+    ptr[2] = method;
+    return rc.Data_Wrap_Struct(rb_cNameErrorMesg, ptr, null, null);
   }
 
 }
